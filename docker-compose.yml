@@ -1,0 +1,209 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: njangi-postgres
+    environment:
+      POSTGRES_USER: njangi
+      POSTGRES_PASSWORD: njangi_secret
+      POSTGRES_DB: njangi
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-schemas.sql:/docker-entrypoint-initdb.d/init-schemas.sql
+    networks:
+      - njangi-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: njangi-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - njangi-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: njangi-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - njangi-network
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: njangi-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - ms-auth
+      - ms-membres
+      - ms-groupes
+    networks:
+      - njangi-network
+
+  ms-auth:
+    build: ./ms-auth
+    container_name: njangi-ms-auth
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=auth
+      SPRING_DATASOURCE_USERNAME: njangi
+      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - njangi-network
+
+  ms-membres:
+    build: ./ms-membres
+    container_name: njangi-ms-membres
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=membres
+      SPRING_DATASOURCE_USERNAME: njangi
+      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - njangi-network
+
+  ms-groupes:
+    build: ./ms-groupes
+    container_name: njangi-ms-groupes
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=groupes
+      SPRING_DATASOURCE_USERNAME: njangi
+      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - njangi-network
+
+  ms-reunions:
+    build: ./ms-reunions
+    container_name: njangi-ms-reunions
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=reunions
+      SPRING_DATASOURCE_USERNAME: njangi
+      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - njangi-network
+
+  ms-cotisations:
+    build: ./ms-cotisations
+    container_name: njangi-ms-cotisations
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=cotisations
+      SPRING_DATASOURCE_USERNAME: njangi
+      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - njangi-network
+
+  ms-paiements:
+    build: ./ms-paiements
+    container_name: njangi-ms-paiements
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=paiements
+      SPRING_DATASOURCE_USERNAME: njangi
+      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - njangi-network
+
+  ms-penalites:
+    build: ./ms-penalites
+    container_name: njangi-ms-penalites
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=penalites
+      SPRING_DATASOURCE_USERNAME: njangi
+      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - njangi-network
+
+  ms-notifications:
+    build: ./ms-notifications
+    container_name: njangi-ms-notifications
+    ports:
+      - "8088:8088"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=notifications
+      SPRING_DATASOURCE_USERNAME: njangi
+      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - njangi-network
+
+  ms-statistiques:
+    build: ./ms-statistiques
+    container_name: njangi-ms-statistiques
+    ports:
+      - "8089:8089"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=statistiques
+      SPRING_DATASOURCE_USERNAME: njangi
+      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - njangi-network
+
+volumes:
+  postgres_data:
+
+networks:
+  njangi-network:
+    driver: bridge

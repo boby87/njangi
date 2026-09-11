@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:9000}
+
+njangi:
+  services:
+    auth-url: ${MS_AUTH_URL:http://localhost:8081}
+    membres-url: ${MS_MEMBRES_URL:http://localhost:8082}
+    groupes-url: ${MS_GROUPES_URL:http://localhost:8083}
+    reunions-url: ${MS_REUNIONS_URL:http://localhost:8084}
+    cotisations-url: ${MS_COTISATIONS_URL:http://localhost:8085}
+    paiements-url: ${MS_PAIEMENTS_URL:http://localhost:8086}
+    penalites-url: ${MS_PENALITES_URL:http://localhost:8087}
+    notifications-url: ${MS_NOTIFICATIONS_URL:http://localhost:8088}
+    statistiques-url: ${MS_STATISTIQUES_URL:http://localhost:8089}
+  cors:
+    allow-origins:
+      - http://localhost:4200
+      - http://localhost:8100
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.njangi.gateway: DEBUG
+    org.springframework.security: INFO
+    org.springframework.web: INFO

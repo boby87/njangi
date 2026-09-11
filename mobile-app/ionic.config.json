@@ -1,0 +1,7 @@
+{
+  "name": "njangi-mobile",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

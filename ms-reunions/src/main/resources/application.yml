@@ -1,0 +1,26 @@
+server:
+  port: 8084
+spring:
+  application:
+    name: ms-reunions
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:njangi}?currentSchema=reunions
+    username: ${DB_USER:njangi}
+    password: ${DB_PASS:njangi}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: reunions
+  flyway:
+    schemas: reunions
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: ms-reunions
+      auto-offset-reset: earliest
