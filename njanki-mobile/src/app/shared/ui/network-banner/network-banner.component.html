@@ -1,0 +1,38 @@
+@if (!networkService.isOnline() || networkService.is3GOrDegraded() || tontineState.offlineQueue().length > 0) {
+  <aside aria-label="État de connexion réseau" class="px-3 py-1.5 text-xs font-semibold flex items-center justify-between transition-all duration-300 shadow-sm"
+       [class.bg-amber-500]="networkService.isOnline() && networkService.is3GOrDegraded()"
+       [class.text-amber-950]="networkService.isOnline() && networkService.is3GOrDegraded()"
+       [class.bg-rose-600]="!networkService.isOnline()"
+       [class.text-white]="!networkService.isOnline()"
+       [class.bg-emerald-600]="networkService.isOnline() && !networkService.is3GOrDegraded() && tontineState.offlineQueue().length > 0"
+       [class.text-white]="networkService.isOnline() && !networkService.is3GOrDegraded() && tontineState.offlineQueue().length > 0">
+
+    <div class="flex items-center gap-2">
+      @if (!networkService.isOnline()) {
+        <ion-icon name="cloud-offline-outline" class="text-base animate-pulse"></ion-icon>
+        <span>Mode Hors-Ligne (Stockage local actif)</span>
+      } @else if (networkService.is3GOrDegraded()) {
+        <ion-icon name="cellular-outline" class="text-base"></ion-icon>
+        <span>Réseau 3G dégradé</span>
+      } @else {
+        <ion-icon name="checkmark-circle-outline" class="text-base"></ion-icon>
+        <span>Connexion rétablie</span>
+      }
+
+      @if (tontineState.offlineQueue().length > 0) {
+        <span class="ml-1 px-1.5 py-0.5 rounded-full bg-black/20 text-[10px] font-bold">
+          {{ tontineState.offlineQueue().length }} action(s) en attente
+        </span>
+      }
+    </div>
+
+    @if (networkService.isOnline() && tontineState.offlineQueue().length > 0) {
+      <button
+        (click)="onSync()"
+        class="flex items-center gap-1 px-2 py-0.5 rounded bg-black/30 hover:bg-black/40 text-[11px] font-bold active:scale-95 transition-transform">
+        <ion-icon name="sync-outline" class="text-xs"></ion-icon>
+        Synchroniser
+      </button>
+    }
+  </aside>
+}

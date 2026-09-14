@@ -1,6 +1,7 @@
 package com.njangi.penalites.exception;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,14 +12,33 @@ import java.net.URI;
 import java.time.Instant;
 
 @RestControllerAdvice
-@Slf4j
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(NotFoundException.class)
+    public ProblemDetail handleNotFound(NotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Ressource non trouvée");
+        problem.setType(URI.create("https://njangi.app/errors/not-found"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
 
     @ExceptionHandler(PenaliteNotFoundException.class)
     public ProblemDetail handlePenaliteNotFound(PenaliteNotFoundException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problem.setTitle("Pénalité non trouvée");
         problem.setType(URI.create("https://njangi.app/errors/penalite-not-found"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ProblemDetail handleBusinessException(BusinessException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        problem.setTitle("Erreur métier");
+        problem.setType(URI.create("https://njangi.app/errors/business-error"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
@@ -58,9 +78,9 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleGeneric(Exception ex) {
         log.error("Erreur inattendue dans ms-penalites", ex);
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.INTERNAL_SERVER_ERROR, "Une erreur interne est survenue");
-        problem.setTitle("Erreur interne du serveur");
-        problem.setType(URI.create("https://njangi.app/errors/internal"));
+                HttpStatus.INTERNAL_SERVER_ERROR, "Une erreur interne s'est produite");
+        problem.setTitle("Erreur interne");
+        problem.setType(URI.create("https://njangi.app/errors/internal-error"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }

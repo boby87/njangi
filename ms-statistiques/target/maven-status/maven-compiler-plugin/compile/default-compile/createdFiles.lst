@@ -1,0 +1,16 @@
+com\njangi\statistiques\dto\StatistiqueGroupeDto.class
+com\njangi\statistiques\dto\ApiResponse.class
+com\njangi\statistiques\config\SecurityConfig.class
+com\njangi\statistiques\event\StatistiqueEventConsumer.class
+com\njangi\statistiques\StatistiquesApplication.class
+com\njangi\statistiques\exception\StatistiqueNotFoundException.class
+com\njangi\statistiques\entity\StatistiqueGroupe.class
+com\njangi\statistiques\config\OpenApiConfig.class
+com\njangi\statistiques\exception\BusinessException.class
+com\njangi\statistiques\exception\GlobalExceptionHandler.class
+com\njangi\statistiques\service\StatistiqueService.class
+com\njangi\statistiques\config\KafkaConfig.class
+com\njangi\statistiques\controller\StatistiqueController.class
+com\njangi\statistiques\dto\BilanFinancierDto.class
+com\njangi\statistiques\event\StatistiqueEventPublisher.class
+com\njangi\statistiques\repository\StatistiqueGroupeRepository.class

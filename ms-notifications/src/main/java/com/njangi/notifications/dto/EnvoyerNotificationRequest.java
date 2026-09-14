@@ -1,28 +1,30 @@
 package com.njangi.notifications.dto;
 
-import com.njangi.notifications.entity.TypeNotification;
+import com.njangi.notifications.entity.Canal;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
 public record EnvoyerNotificationRequest(
-        @NotNull(message = "L'identifiant du membre est obligatoire")
-        UUID membreId,
+        @NotNull(message = "L'identifiant du destinataire est obligatoire")
+        UUID destinataireId,
 
-        @NotNull(message = "Le type de notification est obligatoire")
-        TypeNotification type,
+        UUID groupeId,
 
-        @NotBlank(message = "Le sujet est obligatoire")
-        String sujet,
+        @NotNull(message = "Le canal de notification est obligatoire")
+        Canal canal,
+
+        @NotBlank(message = "Le type de notification est obligatoire")
+        String type,
+
+        @NotBlank(message = "Le titre est obligatoire")
+        String titre,
 
         @NotBlank(message = "Le contenu est obligatoire")
         String contenu,
 
-        @NotBlank(message = "Le destinataire est obligatoire")
-        String destinataire,
-
         String referenceObjet,
-
-        String typeObjet
+        String typeObjet,
+        String destinataireContact
 ) {}

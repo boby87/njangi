@@ -12,8 +12,11 @@ import java.util.UUID;
 @Repository
 public interface TarificationPenaliteRepository extends JpaRepository<TarificationPenalite, UUID> {
 
-    List<TarificationPenalite> findByGroupeIdAndActifTrue(UUID groupeId);
+    Optional<TarificationPenalite> findByGroupeIdAndTypeInfraction(UUID groupeId, TypeInfraction typeInfraction);
 
-    Optional<TarificationPenalite> findByGroupeIdAndTypeInfractionAndActifTrue(
-            UUID groupeId, TypeInfraction typeInfraction);
+    Optional<TarificationPenalite> findByGroupeIdAndTypeInfractionAndActifTrue(UUID groupeId, TypeInfraction typeInfraction);
+
+    List<TarificationPenalite> findByGroupeId(UUID groupeId);
+
+    List<TarificationPenalite> findByGroupeIdAndActifTrue(UUID groupeId);
 }

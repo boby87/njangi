@@ -119,7 +119,152 @@ Refactorisation intégrale de `ms-membres` pour respecter strictement la section
 - **[GatewayProxyController.java](file:///d:/projet/njangi/api-gateway/src/main/java/com/njangi/gateway/controller/GatewayProxyController.java)** : Routage dynamique HTTP vers les microservices (`/api/v1/{service}/**`).
 - **[LoggingFilter.java](file:///d:/projet/njangi/api-gateway/src/main/java/com/njangi/gateway/filter/LoggingFilter.java)** : Traçabilité des requêtes transitant par la passerelle.
 
-#### 5. Schémas PostgreSQL Isolés
+#### 5. Microservice Réunions & Séances (`ms-reunions`)
+- **[ReunionsApplication.java](file:///d:/projet/njangi/ms-reunions/src/main/java/com/njangi/reunions/ReunionsApplication.java)** : Microservice de gestion des réunions, séances en direct, émargements et procès-verbaux sur le port standard **8004** avec `@EnableDiscoveryClient`.
+- **Architecture en Couches Standard (GEMINI.md)** : Controller → Service → Repository avec records Java 25 et entités POJO sans Lombok.
+- **Entités JPA (Schéma `reunions`)** :
+  - [Reunion.java](file:///d:/projet/njangi/ms-reunions/src/main/java/com/njangi/reunions/entity/Reunion.java) : ID, groupeId, sessionTontineId, titre, dateReunion, lieuReunion, typeSiege (`FIXE` vs `ROTATIF`), hoteId, statut (`PLANIFIEE`, `EN_COURS`, `TERMINEE`, `ANNULEE`), ordreJour, compteRendu, présidence et trésorerie.
+  - [Presence.java](file:///d:/projet/njangi/ms-reunions/src/main/java/com/njangi/reunions/entity/Presence.java) : reunionId, membreId, statut (`PRESENT`, `RETARD`, `EXCUSE`, `ABSENT`), heureArrivee, justification, procuration, mandataireId.
+- **Cycle de Vie & Conduite de Séance en Direct** :
+  - Démarrage direct (`PUT /api/v1/reunions/{id}/demarrer`) déclenchant l'événement Kafka `reunion.demarree`.
+  - Clôture et archivage du PV (`PUT /api/v1/reunions/{id}/cloturer`) déclenchant `reunion.terminee`.
+  - Émargement unitaire et appel nominatif par lot (`POST /api/v1/reunions/{id}/presences/batch`).
+  - Calcul dynamique du quorum et statistiques de présence (`GET /api/v1/reunions/{id}/quorum`).
+- **Événements Kafka** : [ReunionEventPublisher.java](file:///d:/projet/njangi/ms-reunions/src/main/java/com/njangi/reunions/event/ReunionEventPublisher.java) publiant sur `reunion.events` et `reunion.terminee`.
+- **Documentation Swagger UI** : [OpenApiConfig.java](file:///d:/projet/njangi/ms-reunions/src/main/java/com/njangi/reunions/config/OpenApiConfig.java) accessible sur `http://localhost:8004/swagger-ui.html`.
+- **Contrôleur REST** : [ReunionController.java](file:///d:/projet/njangi/ms-reunions/src/main/java/com/njangi/reunions/controller/ReunionController.java) avec réponses uniformes [ApiResponse.java](file:///d:/projet/njangi/ms-reunions/src/main/java/com/njangi/reunions/dto/ApiResponse.java).
+- **Tests Unitaires** : [ReunionServiceTest.java](file:///d:/projet/njangi/ms-reunions/src/test/java/com/njangi/reunions/service/ReunionServiceTest.java) et [PresenceServiceTest.java](file:///d:/projet/njangi/ms-reunions/src/test/java/com/njangi/reunions/service/PresenceServiceTest.java) (**10/10 tests réussis**).
+
+#### 6. Microservice Groupes, Sessions & Mandats (`ms-groupes`)
+- **[GroupesApplication.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/GroupesApplication.java)** : Microservice de gestion des tontines, adhésions, sessions et mandats du bureau sur le port standard **8003** avec `@EnableDiscoveryClient`.
+- **Architecture en Couches Standard (GEMINI.md)** : Controller → Service → Repository avec records Java 25 et entités POJO sans Lombok.
+- **Entités JPA (Schéma `groupes`)** :
+  - [Groupe.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/entity/Groupe.java) : ID, nom, description, typeSiege (`FIXE` vs `ROTATIF`), adresseSiege, codeInvitation, createurId, actif.
+  - [GroupeMembre.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/entity/GroupeMembre.java) : groupeId, membreId, role (`CREATEUR`, `PRESIDENT`, `TRESORIER`, `SECRETAIRE`, `MEMBRE`, `AUDITEUR`), dateAdhesion, actif.
+  - [SessionTontine.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/entity/SessionTontine.java) : Distinction clé **Session vs Mandat**, cycle annuel ou pluri-mensuel du pot (`PLANIFIEE`, `EN_COURS`, `CLOTUREE`), montantPotEstime, nbToursPrevu, unicité stricte de la session active par groupe.
+  - [MandatBureau.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/entity/MandatBureau.java) : Gouvernance du bureau exécutif (président, trésorier, secrétaire), dates de début/fin, statut (`ACTIF`, `EXPIRE`, `REVOQUE`).
+- **Règle Métier Critique — Démotion du Créateur** :
+  - Le créateur dispose des privilèges initiaux pour paramétrer le groupe.
+  - Dès l'élection du premier bureau (`POST /api/v1/groupes/{id}/bureau`), le créateur est **automatiquement rétrogradé en simple MEMBRE** dans `GroupeMembre` et un événement Kafka `bureau.elu` est émis.
+- **Services Métier & Événements Kafka** :
+  - [GroupeService.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/service/GroupeService.java) : Création de tontine, génération cryptographique de code d'invitation, adhésion par code, attribution de rôles.
+  - [SessionTontineService.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/service/SessionTontineService.java) : Planification, démarrage avec contrôle d'unicité, clôture.
+  - [MandatBureauService.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/service/MandatBureauService.java) : Élection, expiration automatique des anciens mandats, rétrogradation du créateur.
+  - [GroupeEventPublisher.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/event/GroupeEventPublisher.java) : Publication sur `groupe.events`, `session.events`, `bureau.events`.
+- **Documentation Swagger UI & Sécurité** :
+  - [OpenApiConfig.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/config/OpenApiConfig.java) accessible sur `http://localhost:8003/swagger-ui.html`.
+  - [SecurityConfig.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/config/SecurityConfig.java) : Stateless avec filtres de sécurité.
+- **Contrôleurs REST** :
+  - [GroupeController.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/controller/GroupeController.java) (`/api/v1/groupes`).
+  - [SessionTontineController.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/controller/SessionTontineController.java) (`/api/v1/groupes/{groupeId}/sessions`).
+  - [MandatBureauController.java](file:///d:/projet/njangi/ms-groupes/src/main/java/com/njangi/groupes/controller/MandatBureauController.java) (`/api/v1/groupes/{groupeId}/bureau`).
+- **Tests Unitaires** : [GroupeServiceTest.java](file:///d:/projet/njangi/ms-groupes/src/test/java/com/njangi/groupes/service/GroupeServiceTest.java), [SessionTontineServiceTest.java](file:///d:/projet/njangi/ms-groupes/src/test/java/com/njangi/groupes/service/SessionTontineServiceTest.java), [MandatBureauServiceTest.java](file:///d:/projet/njangi/ms-groupes/src/test/java/com/njangi/groupes/service/MandatBureauServiceTest.java) (**10/10 tests réussis**).
+
+#### 7. Microservice Cotisations & Cagnottes (`ms-cotisations`)
+- **[CotisationsApplication.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/CotisationsApplication.java)** : Microservice de gestion des multi-cotisations simultanées, cycles de pot rotatif, appels de fonds et décaissements sur le port standard **8005** avec `@EnableDiscoveryClient`.
+- **Architecture en Couches Standard (GEMINI.md)** : Controller → Service → Repository avec records Java 25 et entités POJO sans Lombok.
+- **Entités JPA (Schéma `cotisations`)** :
+  - [TypeCotisation.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/entity/TypeCotisation.java) : ID, groupeId, libelle, description, categorie (`ROTATIVE_POT`, `SECOURS_DECES`, `CAISSE_RESERVE`, `EVENEMENTIELLE`), montant en XAF, estRotatif, estObligatoire, statut.
+  - [Cotisation.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/entity/Cotisation.java) : ID, groupeId, membreId, typeCotisationId, reunionId, montantDu, montantPaye, statut (`EN_ATTENTE`, `PARTIEL`, `PAYE`, `EN_RETARD`, `PENALISE`), dateLimitePaiement, datePaiement.
+  - [PotSession.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/entity/PotSession.java) : ID, groupeId, sessionTontineId, reunionId, membreBeneficiaireId, ordrePassage, montantTotal, montantNet, statut (`PLANIFIE`, `ATTRIBUE`, `DECAISSE`, `ANNULE`), modeVersement (`CASH`, `MTN_MOMO`, `ORANGE_MONEY`, `VIREMENT`), referencePaiement, dateAttribution, dateVersement.
+- **Multi-Cotisations Simultanées & Tour de Pot** :
+  - Paramétrage flexible par groupe des différentes caisses (Cagnotte rotative, Secours mutuel, Réserve bloquée).
+  - Planification complète du tour de pot par session avec ordre de passage des bénéficiaires.
+  - Génération automatique par lot des cotisations dues pour tous les membres actifs lors d'une séance.
+  - Gestion des versements partiels ou totaux avec transition automatique vers `PAYE` et publication Kafka.
+  - Attribution du pot en séance et décaissement traçable par le trésorier (reçu ou référence MoMo).
+- **Services Métier & Événements Kafka** :
+  - [TypeCotisationService.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/service/TypeCotisationService.java) : Création, consultation et désactivation des caisses.
+  - [CotisationService.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/service/CotisationService.java) : Génération par réunion, enregistrement de paiement, pointage des retards.
+  - [PotSessionService.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/service/PotSessionService.java) : Planification du tour, attribution et décaissement du pot.
+  - [CotisationEventPublisher.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/event/CotisationEventPublisher.java) : Publication sur `cotisation.events`, `cotisation.payee`, `pot.verse`.
+- **Documentation Swagger UI & Sécurité** :
+  - [OpenApiConfig.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/config/OpenApiConfig.java) accessible sur `http://localhost:8005/swagger-ui.html`.
+  - [SecurityConfig.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/config/SecurityConfig.java) : Stateless avec filtres de sécurité.
+- **Contrôleurs REST** :
+  - [TypeCotisationController.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/controller/TypeCotisationController.java) (`/api/v1/cotisations/types`).
+  - [CotisationController.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/controller/CotisationController.java) (`/api/v1/cotisations`).
+  - [PotSessionController.java](file:///d:/projet/njangi/ms-cotisations/src/main/java/com/njangi/cotisations/controller/PotSessionController.java) (`/api/v1/cotisations/pots`).
+- **Tests Unitaires** : [TypeCotisationServiceTest.java](file:///d:/projet/njangi/ms-cotisations/src/test/java/com/njangi/cotisations/service/TypeCotisationServiceTest.java), [CotisationServiceTest.java](file:///d:/projet/njangi/ms-cotisations/src/test/java/com/njangi/cotisations/service/CotisationServiceTest.java), [PotSessionServiceTest.java](file:///d:/projet/njangi/ms-cotisations/src/test/java/com/njangi/cotisations/service/PotSessionServiceTest.java) (**11/11 tests réussis**).
+
+#### 8. Microservice Caisse & Paiements (`ms-paiements`)
+- **[PaiementsApplication.java](file:///d:/projet/njangi/ms-paiements/src/main/java/com/njangi/paiements/PaiementsApplication.java)** : Microservice de gestion et traçabilité des règlements de cotisations sur le port standard **8006** avec `@EnableDiscoveryClient`.
+- **Architecture en Couches Standard (GEMINI.md)** : Controller → Service → Repository avec records Java 25 et entités POJO sans Lombok.
+- **Entités JPA (Schéma `paiements`)** :
+  - [Paiement.java](file:///d:/projet/njangi/ms-paiements/src/main/java/com/njangi/paiements/entity/Paiement.java) : ID, cotisationId, membreId, groupeId, montant en XAF, modePaiement (`CASH`, `MTN_MOMO`, `ORANGE_MONEY`), cleIdempotence (unique), reference (unique), pieceJointeUrl, numeroTelephone, operateur, statut (`EN_ATTENTE_VALIDATION`, `EN_COURS`, `VALIDE`, `REJETE`, `ECHOUE`), validePar, dateValidation, commentaire.
+- **Règles Métier Financières Strictes (GEMINI.md)** :
+  - **Règle Cash & Preuve Obligatoire** : Tout versement en espèces exige impérativement une pièce jointe (reçu physique signé / photo du bordereau). Le paiement reste en attente (`EN_ATTENTE_VALIDATION`) jusqu'à validation formelle par le trésorier.
+  - **Validation / Rejet Trésorier** : Le trésorier examine la preuve visuelle et valide (`VALIDE`) ou rejette (`REJETE`) le versement avec horodatage et justification.
+  - **Mobile Money MTN & Orange** : Génération de références de transaction uniques, statut initial `EN_COURS`.
+  - **Idempotence Obligatoire** : Clé d'idempotence unique protégeant contre les doubles paiements lors d'instabilité réseau 3G.
+  - **Webhooks Opérateurs Idempotents** : Endpoint partenaire réconciliant les statuts de paiement avec prise en charge d'appels multiples sans altération d'état.
+- **Services Métier & Événements Kafka** :
+  - [PaiementService.java](file:///d:/projet/njangi/ms-paiements/src/main/java/com/njangi/paiements/service/PaiementService.java) : Initiation cash avec preuve obligatoire, validation trésorier, initiation Mobile Money, traitement webhook idempotent.
+  - [PaiementEventPublisher.java](file:///d:/projet/njangi/ms-paiements/src/main/java/com/njangi/paiements/event/PaiementEventPublisher.java) : Publication sur `paiement.events` et `paiement.valide`.
+- **Documentation Swagger UI & Sécurité** :
+  - [OpenApiConfig.java](file:///d:/projet/njangi/ms-paiements/src/main/java/com/njangi/paiements/config/OpenApiConfig.java) accessible sur `http://localhost:8006/swagger-ui.html`.
+  - [SecurityConfig.java](file:///d:/projet/njangi/ms-paiements/src/main/java/com/njangi/paiements/config/SecurityConfig.java) : Stateless avec filtres de sécurité.
+- **Contrôleur REST** :
+  - [PaiementController.java](file:///d:/projet/njangi/ms-paiements/src/main/java/com/njangi/paiements/controller/PaiementController.java) (`/api/v1/paiements/cash`, `/valider-cash`, `/mobile-money`, `/webhooks/{operateur}`).
+- **Tests Unitaires** : [PaiementServiceTest.java](file:///d:/projet/njangi/ms-paiements/src/test/java/com/njangi/paiements/service/PaiementServiceTest.java) (**7/7 tests réussis**).
+
+#### 9. Microservice Pénalités & Sanctions (`ms-penalites`)
+- **[PenalitesApplication.java](file:///d:/projet/njangi/ms-penalites/src/main/java/com/njangi/penalites/PenalitesApplication.java)** : Microservice de gestion du barème disciplinaire, sanctions infligées en séance et recouvrement des amendes sur le port standard **8007** avec `@EnableDiscoveryClient`.
+- **Architecture en Couches Standard (GEMINI.md)** : Controller → Service → Repository avec records Java 25 et entités POJO sans Lombok.
+- **Entités JPA (Schéma `penalites`)** :
+  - [TarificationPenalite.java](file:///d:/projet/njangi/ms-penalites/src/main/java/com/njangi/penalites/entity/TarificationPenalite.java) : ID, groupeId, typeInfraction (`RETARD_PAIEMENT`, `ABSENCE`, `RETARD_REUNION`, `NON_RESPECT_REGLES`, `TROUBLE_SEANCE`), montant en XAF, actif, contrainte d'unicité `(groupe_id, type_infraction)`.
+  - [Penalite.java](file:///d:/projet/njangi/ms-penalites/src/main/java/com/njangi/penalites/entity/Penalite.java) : ID, membreId, groupeId, sessionId, reunionId, typeInfraction, montant en XAF, statut (`EN_ATTENTE`, `PAYEE`, `ANNULEE`), motif, datePaiement, creeLe.
+- **Règles Métier Disciplinaires & Traçabilité** :
+  - **Barème Paramétrable par Groupe** : Chaque tontine fixe librement ses amendes (ex: 1 000 XAF pour retard, 5 000 XAF pour absence, 2 500 XAF pour bavardage ou sonnerie de téléphone).
+  - **Résolution Automatique du Tarif** : Lors de l'application d'une sanction, le montant est automatiquement résolu depuis le barème actif du groupe (ou ajusté manuellement par le bureau).
+  - **Recouvrement & Encaissement** : Suivi des statuts d'amendes avec horodatage du règlement (`PAYEE`) ou dispense motivée par le bureau (`ANNULEE`).
+  - **Écoute Automatique des Retards** : Détection des retards de paiement de cotisations via écoute Kafka sur `cotisation.events` et génération automatique de l'amende `RETARD_PAIEMENT`.
+- **Services Métier & Événements Kafka** :
+  - [TarificationService.java](file:///d:/projet/njangi/ms-penalites/src/main/java/com/njangi/penalites/service/TarificationService.java) : Définition, mise à jour et consultation des tarifs.
+  - [PenaliteService.java](file:///d:/projet/njangi/ms-penalites/src/main/java/com/njangi/penalites/service/PenaliteService.java) : Application d'amende, paiement, annulation avec motif.
+  - [PenaliteEventPublisher.java](file:///d:/projet/njangi/ms-penalites/src/main/java/com/njangi/penalites/event/PenaliteEventPublisher.java) : Publication sur `sanction.events` (`sanction.infligee`, `sanction.payee`, `sanction.annulee`).
+  - [PenaliteEventConsumer.java](file:///d:/projet/njangi/ms-penalites/src/main/java/com/njangi/penalites/kafka/PenaliteEventConsumer.java) : Consommation des événements de retard sur `cotisation.events`.
+- **Documentation Swagger UI & Sécurité** :
+  - [OpenApiConfig.java](file:///d:/projet/njangi/ms-penalites/src/main/java/com/njangi/penalites/config/OpenApiConfig.java) accessible sur `http://localhost:8007/swagger-ui.html`.
+  - [SecurityConfig.java](file:///d:/projet/njangi/ms-penalites/src/main/java/com/njangi/penalites/config/SecurityConfig.java) : Stateless avec filtres de sécurité.
+- **Contrôleurs REST** :
+  - [TarificationController.java](file:///d:/projet/njangi/ms-penalites/src/main/java/com/njangi/penalites/controller/TarificationController.java) (`/api/v1/penalites/tarifs`).
+  - [PenaliteController.java](file:///d:/projet/njangi/ms-penalites/src/main/java/com/njangi/penalites/controller/PenaliteController.java) (`/api/v1/penalites`).
+- **Tests Unitaires** : [TarificationServiceTest.java](file:///d:/projet/njangi/ms-penalites/src/test/java/com/njangi/penalites/service/TarificationServiceTest.java) et [PenaliteServiceTest.java](file:///d:/projet/njangi/ms-penalites/src/test/java/com/njangi/penalites/service/PenaliteServiceTest.java) (**9/9 tests réussis**).
+
+#### 10. Microservice Notifications (`ms-notifications`)
+- **[NotificationsApplication.java](file:///d:/projet/njangi/ms-notifications/src/main/java/com/njangi/notifications/NotificationsApplication.java)** : Microservice de distribution des notifications multi-canaux sur le port standard **8008** avec `@EnableDiscoveryClient`.
+- **Architecture en Couches Standard (GEMINI.md)** : Controller → Service → Repository avec records Java 25 et entités POJO sans Lombok.
+- **Entités JPA (Schéma `notifications`)** :
+  - [Notification.java](file:///d:/projet/njangi/ms-notifications/src/main/java/com/njangi/notifications/entity/Notification.java) : ID, destinataireId, groupeId, canal (`PUSH`, `SMS`, `EMAIL`, `IN_APP`), type, titre, contenu, statut (`EN_ATTENTE`, `ENVOYEE`, `ECHEC`), lue, creeLe, envoyeeLe, referenceObjet, typeObjet, destinataireContact.
+- **Multi-Canaux & Résilience** :
+  - **Push FCM (Firebase Cloud Messaging)** : [FirebaseMessagingService.java](file:///d:/projet/njangi/ms-notifications/src/main/java/com/njangi/notifications/service/FirebaseMessagingService.java) avec initialisation résiliente et simulation transparente en environnement de développement / test.
+  - **SMS Fallback** : [SmsService.java](file:///d:/projet/njangi/ms-notifications/src/main/java/com/njangi/notifications/service/SmsService.java) prenant en charge les numéros camerounais (`+237...`) et la diaspora E.164 pour les alertes critiques (retards de cotisation, convocations) en cas de réseau 3G dégradé.
+  - **Email** : [EmailService.java](file:///d:/projet/njangi/ms-notifications/src/main/java/com/njangi/notifications/service/EmailService.java) via `JavaMailSender` avec simulation transparente.
+  - **In-App** : Distribution instantanée pour affichage dans le centre de notifications web et mobile.
+- **Consommateur d'Événements Kafka** :
+  - [NotificationEventConsumer.java](file:///d:/projet/njangi/ms-notifications/src/main/java/com/njangi/notifications/event/NotificationEventConsumer.java) : Écoute et réagit automatiquement aux événements du domaine (`groupe.cree`, `membre.inscrit`, `cotisation.payee`, `cotisation.retard`, `penalite.appliquee`, `pot.verse`, `notification.demandee`).
+- **Contrôleur REST & Swagger** :
+  - [NotificationController.java](file:///d:/projet/njangi/ms-notifications/src/main/java/com/njangi/notifications/controller/NotificationController.java) (`/api/v1/notifications`, `/destinataire/{id}`, `/non-lues`, `/count-non-lues`, `/{id}/lue`, `/tout-lire`). Swagger sur `http://localhost:8008/swagger-ui.html`.
+- **Tests Unitaires & MockMvc** : [NotificationServiceTest.java](file:///d:/projet/njangi/ms-notifications/src/test/java/com/njangi/notifications/service/NotificationServiceTest.java) et [NotificationControllerTest.java](file:///d:/projet/njangi/ms-notifications/src/test/java/com/njangi/notifications/controller/NotificationControllerTest.java) (**15/15 tests réussis**).
+
+#### 11. Microservice Statistiques & Reporting (`ms-statistiques`)
+- **[StatistiquesApplication.java](file:///d:/projet/njangi/ms-statistiques/src/main/java/com/njangi/statistiques/StatistiquesApplication.java)** : Microservice d'agrégation financière, reporting et bilans de trésorerie sur le port standard **8009** avec `@EnableDiscoveryClient`.
+- **Architecture en Couches Standard (GEMINI.md)** : Controller → Service → Repository avec records Java 25 et entités POJO sans Lombok.
+- **Entités JPA (Schéma `statistiques`)** :
+  - [StatistiqueGroupe.java](file:///d:/projet/njangi/ms-statistiques/src/main/java/com/njangi/statistiques/entity/StatistiqueGroupe.java) : ID, groupeId, sessionId, totalCollecte, totalDecaisse, soldeCaisse, totalPenalites, totalCash, totalMomo, nbMembres, nbReunions, tauxParticipation, tauxPresence, calculeLe.
+- **Reporting Financier & Ratios Clés** :
+  - **Ventilation de Trésorerie** : Ségrégation stricte des flux en espèces (`totalCash`) et Mobile Money MTN/Orange (`totalMomo`).
+  - **Équilibre de Caisse Immuable** : `soldeCaisse = totalCollecte + totalPenalites - totalDecaisse`.
+  - **Taux de Recouvrement & Assiduité** : Calcul lissé du taux de présence aux séances et du taux de recouvrement des cotisations.
+  - **Bilan Financier Consolidé** : Diagnostic automatique de santé financière (`EXCELLENTE`, `DÉFICITAIRE`, `ATTENTION_ASSIDUITE_FAIBLE`).
+- **Consommateur d'Événements Kafka** :
+  - [StatistiqueEventConsumer.java](file:///d:/projet/njangi/ms-statistiques/src/main/java/com/njangi/statistiques/event/StatistiqueEventConsumer.java) : Agrégation en temps réel sur `cotisation.payee`, `pot.verse`, `penalite.appliquee`, `reunion.terminee`, `membre.inscrit`.
+- **Contrôleur REST & Swagger** :
+  - [StatistiqueController.java](file:///d:/projet/njangi/ms-statistiques/src/main/java/com/njangi/statistiques/controller/StatistiqueController.java) (`/api/v1/statistiques/groupe/{id}`, `/session/{id}`, `/calculer`, `/bilan`). Swagger sur `http://localhost:8009/swagger-ui.html`.
+- **Tests Unitaires & MockMvc** : [StatistiqueServiceTest.java](file:///d:/projet/njangi/ms-statistiques/src/test/java/com/njangi/statistiques/service/StatistiqueServiceTest.java) et [StatistiqueControllerTest.java](file:///d:/projet/njangi/ms-statistiques/src/test/java/com/njangi/statistiques/controller/StatistiqueControllerTest.java) (**12/12 tests réussis**).
+
+#### 12. Schémas PostgreSQL Isolés
 - **[init-schemas.sql](file:///d:/projet/njangi/init-schemas.sql)** : 9 schémas isolés créés avec droits applicatifs (`auth`, `membres`, `groupes`, `reunions`, `cotisations`, `paiements`, `penalites`, `notifications`, `statistiques`).
 
 ---
@@ -129,15 +274,24 @@ Refactorisation intégrale de `ms-membres` pour respecter strictement la section
 | Module / Périmètre | Commande de Validation | Résultat | Conformité |
 |---|---|---|---|
 | **Microservice Auth** (`ms-auth/`) | `mvn test -pl ms-auth` | **BUILD SUCCESS** (7/7 tests passés, Port 8001, `@EnableDiscoveryClient`) | SSO, OTP, JJWT, Diaspora E.164, Swagger OpenAPI 3, OAuth2 Google & Facebook |
+| **Microservice Groupes** (`ms-groupes/`) | `mvn test -pl ms-groupes` | **BUILD SUCCESS** (10/10 tests passés, Port 8003, `@EnableDiscoveryClient`) | Session vs Mandat, Siège Fixe/Rotatif, Démotion créateur, Swagger OpenAPI 3 |
+| **Microservice Réunions** (`ms-reunions/`) | `mvn test -pl ms-reunions` | **BUILD SUCCESS** (10/10 tests passés, Port 8004, `@EnableDiscoveryClient`) | Séances direct, émargement, quorum, PV, Kafka, Swagger OpenAPI 3 |
+| **Microservice Cotisations** (`ms-cotisations/`) | `mvn test -pl ms-cotisations` | **BUILD SUCCESS** (11/11 tests passés, Port 8005, `@EnableDiscoveryClient`) | Multi-cotisations, Tour de pot, Décaissement Cash/MoMo, Swagger OpenAPI 3 |
+| **Microservice Paiements** (`ms-paiements/`) | `mvn test -pl ms-paiements` | **BUILD SUCCESS** (7/7 tests passés, Port 8006, `@EnableDiscoveryClient`) | Cash avec reçu signé, MoMo MTN/Orange, Idempotence, Webhooks, Swagger OpenAPI 3 |
+| **Microservice Pénalités** (`ms-penalites/`) | `mvn test -pl ms-penalites` | **BUILD SUCCESS** (9/9 tests passés, Port 8007, `@EnableDiscoveryClient`) | Barème d'amendes, sanctions en séance, écoute retards, Swagger OpenAPI 3 |
+| **Microservice Notifications** (`ms-notifications/`) | `mvn test -pl ms-notifications` | **BUILD SUCCESS** (15/15 tests passés, Port 8008, `@EnableDiscoveryClient`) | Push FCM, SMS fallback E.164/+237, Email JavaMail, In-App, Kafka Consumer, Swagger 3 |
+| **Microservice Statistiques** (`ms-statistiques/`) | `mvn test -pl ms-statistiques` | **BUILD SUCCESS** (12/12 tests passés, Port 8009, `@EnableDiscoveryClient`) | Reporting financier, caisse cash vs momo, bilans consolidés, Kafka Consumer, Swagger 3 |
 | **Eureka Server** (`eureka-server/`) | `mvn compile -pl eureka-server` | **BUILD SUCCESS** (Port 8761, `@EnableEurekaServer`) | Serveur de découverte Netflix Eureka |
 | **API Gateway** (`api-gateway/`) | `mvn compile -pl api-gateway` | **BUILD SUCCESS** (Port 9090, `@EnableDiscoveryClient`) | Virtual Threads, ProblemDetail RFC 9457, Eureka Client |
 | **Microservice Membres** (`ms-membres/`) | `mvn compile -pl ms-membres` | **BUILD SUCCESS** (Port 8002, `@EnableDiscoveryClient`) | Hexagonale pure & DDD, Swagger / OpenAPI 3, Zéro Lombok, Flyway |
-| **Multi-Module Backend** | `mvn compile -pl eureka-server,api-gateway,ms-auth,ms-membres` | **BUILD SUCCESS** (4/4 modules compilés en 5.4s) | Réacteur Maven Spring Cloud 2023 / Boot 3.3 / Java 25 |
+| **Multi-Module Backend** | `mvn compile -pl eureka-server,api-gateway,ms-auth,ms-membres,ms-groupes,ms-reunions,ms-cotisations,ms-paiements,ms-penalites,ms-notifications,ms-statistiques` | **BUILD SUCCESS** (11/11 modules compilés avec succès) | Réacteur Maven Spring Cloud 2023 / Boot 3.3 / Java 25 |
 | **Frontend Web** (`njanki/`) | `npm run build` | **BUILD SUCCESS** (0 erreur, 11 routes SSR pré-rendues) | Signal Forms purs, Zéro Promise, 3 fichiers distincts, Tailwind, Google & Facebook |
 | **Frontend Mobile** (`njanki-mobile/`) | `npm run build` | **BUILD SUCCESS** (0 erreur, bundle `www` généré) | Ionic 8, Capacitor Preferences & Network, Signal Forms, Zéro Promise, Google & Facebook |
+| **Android Native APK** (`njanki-mobile/android/`) | `.\gradlew assembleDebug` | **BUILD SUCCESSFUL** (APK 4.4 MB généré) | Capacitor 8, Cleartext Gateway `http://10.0.2.2:9090`, Permissions 3G, Stockage & Caméra |
 | **Authentification Sociale** | Google & Facebook OAuth2 JIT | **100% Conforme** | Just-In-Time provisioning + étape de liaison téléphone obligatoire |
 | **Support Téléphonique** | Validation unitaire (`AuthServiceTest`) | **100% Conforme** | Cameroun (`+237...`) + Diaspora internationale E.164 (`+33...`, etc.) |
 | **Bannissement des Promises** | Analyse statique | **100% Conforme** | Uniquement Angular Signals + RxJS |
 | **Bannissement FormBuilder/ngModel** | Analyse statique | **100% Conforme** | Signal Forms exclusifs (`signal()` + `computed()`) |
 | **Format Monétaire Camerounais** | Analyse statique | **100% Conforme** | Strictement `XAF` sans décimales |
 | **Téléphone Camerounais** | Regex & Value Object | **100% Conforme** | Validé via `+237[236]XXXXXXXX` ou international E.164 |
+| **Kafka Mode KRaft** | `docker compose config` | **100% Conforme** | Consensus Raft natif (`broker,controller`), ZooKeeper éliminé |

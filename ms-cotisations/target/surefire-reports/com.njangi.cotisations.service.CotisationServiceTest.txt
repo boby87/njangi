@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.njangi.cotisations.service.CotisationServiceTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.131 s -- in com.njangi.cotisations.service.CotisationServiceTest

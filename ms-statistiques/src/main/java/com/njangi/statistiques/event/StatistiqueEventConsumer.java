@@ -1,8 +1,8 @@
 package com.njangi.statistiques.event;
 
 import com.njangi.statistiques.service.StatistiqueService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
@@ -12,61 +12,102 @@ import java.util.Map;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
-@Slf4j
 public class StatistiqueEventConsumer {
+
+    private static final Logger log = LoggerFactory.getLogger(StatistiqueEventConsumer.class);
 
     private final StatistiqueService statistiqueService;
 
-    @KafkaListener(topics = "groupe.cree", groupId = "ms-statistiques-group")
-    public void onGroupeCree(@Payload Map<String, Object> event) {
-        log.info("Événement groupe.cree reçu : {}", event);
-        // Initialisation des stats — l'appel à getOrCreate() dans le service créera la stat au premier événement réel
-    }
-
-    @KafkaListener(topics = "reunion.terminee", groupId = "ms-statistiques-group")
-    public void onReunionTerminee(@Payload Map<String, Object> event) {
-        log.info("Événement reunion.terminee reçu : {}", event);
-        try {
-            UUID groupeId = UUID.fromString(event.get("groupeId").toString());
-            statistiqueService.incrementerReunions(groupeId);
-        } catch (Exception e) {
-            log.error("Erreur traitement reunion.terminee : {}", e.getMessage(), e);
-        }
+    public StatistiqueEventConsumer(StatistiqueService statistiqueService) {
+        this.statistiqueService = statistiqueService;
     }
 
     @KafkaListener(topics = "cotisation.payee", groupId = "ms-statistiques-group")
     public void onCotisationPayee(@Payload Map<String, Object> event) {
-        log.info("Événement cotisation.payee reçu : {}", event);
+        log.info("Événement Kafka cotisation.payee reçu pour calcul des agrégats");
         try {
             UUID groupeId = UUID.fromString(event.get("groupeId").toString());
-            BigDecimal montant = new BigDecimal(event.get("montant").toString());
-            statistiqueService.addCotisation(groupeId, montant);
-        } catch (Exception e) {
-            log.error("Erreur traitement cotisation.payee : {}", e.getMessage(), e);
+            UUID sessionId = event.get("sessionId") != null
+                    ? UUID.fromString(event.get("sessionId").toString())
+                    : groupeId; // Fallback groupeId si sessionId manquant
+            BigDecimal montant = extractBigDecimal(event.get("montant"));
+            String mode = event.get("modePaiement") != null ? event.get("modePaiement").toString() : "CASH";
+
+            statistiqueService.enregistrerCotisation(groupeId, sessionId, montant, mode);
+        } catch (Exception ex) {
+            log.error("Erreur traitement événement cotisation.payee : {}", ex.getMessage(), ex);
         }
     }
 
     @KafkaListener(topics = "pot.verse", groupId = "ms-statistiques-group")
     public void onPotVerse(@Payload Map<String, Object> event) {
-        log.info("Événement pot.verse reçu : {}", event);
+        log.info("Événement Kafka pot.verse reçu");
         try {
             UUID groupeId = UUID.fromString(event.get("groupeId").toString());
-            statistiqueService.addPot(groupeId);
-        } catch (Exception e) {
-            log.error("Erreur traitement pot.verse : {}", e.getMessage(), e);
+            UUID sessionId = event.get("sessionId") != null
+                    ? UUID.fromString(event.get("sessionId").toString())
+                    : groupeId;
+            BigDecimal montant = extractBigDecimal(event.get("montant"));
+
+            statistiqueService.enregistrerDecaissement(groupeId, sessionId, montant);
+        } catch (Exception ex) {
+            log.error("Erreur traitement événement pot.verse : {}", ex.getMessage(), ex);
         }
     }
 
     @KafkaListener(topics = "penalite.appliquee", groupId = "ms-statistiques-group")
     public void onPenaliteAppliquee(@Payload Map<String, Object> event) {
-        log.info("Événement penalite.appliquee reçu : {}", event);
+        log.info("Événement Kafka penalite.appliquee reçu");
         try {
             UUID groupeId = UUID.fromString(event.get("groupeId").toString());
-            BigDecimal montant = new BigDecimal(event.get("montant").toString());
-            statistiqueService.addPenalite(groupeId, montant);
-        } catch (Exception e) {
-            log.error("Erreur traitement penalite.appliquee : {}", e.getMessage(), e);
+            UUID sessionId = event.get("sessionId") != null
+                    ? UUID.fromString(event.get("sessionId").toString())
+                    : groupeId;
+            BigDecimal montant = extractBigDecimal(event.get("montant"));
+
+            statistiqueService.enregistrerPenalite(groupeId, sessionId, montant);
+        } catch (Exception ex) {
+            log.error("Erreur traitement événement penalite.appliquee : {}", ex.getMessage(), ex);
         }
+    }
+
+    @KafkaListener(topics = "reunion.terminee", groupId = "ms-statistiques-group")
+    public void onReunionTerminee(@Payload Map<String, Object> event) {
+        log.info("Événement Kafka reunion.terminee reçu");
+        try {
+            UUID groupeId = UUID.fromString(event.get("groupeId").toString());
+            UUID sessionId = event.get("sessionId") != null
+                    ? UUID.fromString(event.get("sessionId").toString())
+                    : groupeId;
+            int presents = event.get("nbPresents") != null ? Integer.parseInt(event.get("nbPresents").toString()) : 1;
+            int total = event.get("nbTotalMembres") != null ? Integer.parseInt(event.get("nbTotalMembres").toString()) : presents;
+
+            statistiqueService.enregistrerReunion(groupeId, sessionId, presents, total);
+        } catch (Exception ex) {
+            log.error("Erreur traitement événement reunion.terminee : {}", ex.getMessage(), ex);
+        }
+    }
+
+    @KafkaListener(topics = "membre.inscrit", groupId = "ms-statistiques-group")
+    public void onMembreInscrit(@Payload Map<String, Object> event) {
+        log.info("Événement Kafka membre.inscrit reçu");
+        try {
+            UUID groupeId = UUID.fromString(event.get("groupeId").toString());
+            UUID sessionId = event.get("sessionId") != null
+                    ? UUID.fromString(event.get("sessionId").toString())
+                    : groupeId;
+
+            statistiqueService.enregistrerMembre(groupeId, sessionId);
+        } catch (Exception ex) {
+            log.error("Erreur traitement événement membre.inscrit : {}", ex.getMessage(), ex);
+        }
+    }
+
+    private BigDecimal extractBigDecimal(Object val) {
+        if (val == null) return BigDecimal.ZERO;
+        if (val instanceof Number n) {
+            return BigDecimal.valueOf(n.doubleValue());
+        }
+        return new BigDecimal(val.toString());
     }
 }

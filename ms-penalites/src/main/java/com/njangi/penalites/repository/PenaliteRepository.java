@@ -1,8 +1,7 @@
 package com.njangi.penalites.repository;
 
 import com.njangi.penalites.entity.Penalite;
-import com.njangi.penalites.entity.Penalite.StatutPenalite;
-import com.njangi.penalites.entity.TypeInfraction;
+import com.njangi.penalites.entity.StatutPenalite;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,12 +15,11 @@ public interface PenaliteRepository extends JpaRepository<Penalite, UUID> {
 
     List<Penalite> findByGroupeId(UUID groupeId);
 
-    List<Penalite> findByGroupeIdAndSessionId(UUID groupeId, UUID sessionId);
+    List<Penalite> findBySessionId(UUID sessionId);
 
-    List<Penalite> findByMembreIdAndStatut(UUID membreId, StatutPenalite statut);
+    List<Penalite> findByReunionId(UUID reunionId);
 
     List<Penalite> findByGroupeIdAndStatut(UUID groupeId, StatutPenalite statut);
 
-    boolean existsByMembreIdAndGroupeIdAndSessionIdAndTypeInfraction(
-            UUID membreId, UUID groupeId, UUID sessionId, TypeInfraction typeInfraction);
+    List<Penalite> findByMembreIdAndStatut(UUID membreId, StatutPenalite statut);
 }

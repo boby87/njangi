@@ -1,2 +1,7 @@
 package com.njangi.groupes.entity;
-public enum StatutGroupe { ACTIF, INACTIF, EN_ATTENTE, DISSOUT }
+
+public enum StatutGroupe {
+    ACTIF,
+    SUSPENDU,
+    CLOTURE
+}

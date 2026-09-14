@@ -22,6 +22,8 @@ import {
 import { NetworkService } from '../../core/services/network.service';
 import { MobileTontineStateService } from '../../core/services/tontine-state.service';
 
+import { NetworkBannerComponent } from '../../shared/ui/network-banner/network-banner.component';
+
 @Component({
   selector: 'app-tabs',
   standalone: true,
@@ -33,7 +35,8 @@ import { MobileTontineStateService } from '../../core/services/tontine-state.ser
     IonTabButton,
     IonIcon,
     IonLabel,
-    IonBadge
+    IonBadge,
+    NetworkBannerComponent
   ],
   templateUrl: './tabs.page.html',
   styleUrl: './tabs.page.scss',

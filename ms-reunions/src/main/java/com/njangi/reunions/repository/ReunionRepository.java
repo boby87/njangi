@@ -11,9 +11,11 @@ import java.util.UUID;
 @Repository
 public interface ReunionRepository extends JpaRepository<Reunion, UUID> {
 
-    List<Reunion> findByGroupeId(UUID groupeId);
+    List<Reunion> findByGroupeIdOrderByDateReunionDesc(UUID groupeId);
+
+    List<Reunion> findByGroupeIdAndStatut(UUID groupeId, StatutReunion statut);
+
+    List<Reunion> findBySessionTontineId(UUID sessionTontineId);
 
     List<Reunion> findByStatut(StatutReunion statut);
-
-    List<Reunion> findByGroupeIdOrderByDateReunionDesc(UUID groupeId);
 }

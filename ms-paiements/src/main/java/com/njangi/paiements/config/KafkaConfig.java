@@ -8,20 +8,20 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaConfig {
 
-    public static final String TOPIC_COTISATION_PAYEE = "cotisation.payee";
-    public static final String TOPIC_POT_VERSE = "pot.verse";
+    public static final String TOPIC_PAIEMENT_EVENTS = "paiement.events";
+    public static final String TOPIC_PAIEMENT_VALIDE = "paiement.valide";
 
     @Bean
-    public NewTopic cotisationPayeeTopic() {
-        return TopicBuilder.name(TOPIC_COTISATION_PAYEE)
+    public NewTopic paiementEventsTopic() {
+        return TopicBuilder.name(TOPIC_PAIEMENT_EVENTS)
                 .partitions(3)
                 .replicas(1)
                 .build();
     }
 
     @Bean
-    public NewTopic potVerseTopic() {
-        return TopicBuilder.name(TOPIC_POT_VERSE)
+    public NewTopic paiementValideTopic() {
+        return TopicBuilder.name(TOPIC_PAIEMENT_VALIDE)
                 .partitions(3)
                 .replicas(1)
                 .build();

@@ -2,27 +2,37 @@ package com.njangi.groupes.service;
 
 import com.njangi.groupes.dto.*;
 import com.njangi.groupes.entity.*;
+import com.njangi.groupes.event.GroupeEventPublisher;
 import com.njangi.groupes.exception.BusinessException;
 import com.njangi.groupes.exception.NotFoundException;
 import com.njangi.groupes.repository.GroupeMembreRepository;
 import com.njangi.groupes.repository.GroupeRepository;
-import com.njangi.groupes.event.GroupeEventPublisher;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 @Transactional(readOnly = true)
 public class GroupeService {
+
+    private static final Logger log = LoggerFactory.getLogger(GroupeService.class);
 
     private final GroupeRepository groupeRepository;
     private final GroupeMembreRepository groupeMembreRepository;
     private final GroupeEventPublisher eventPublisher;
+
+    public GroupeService(GroupeRepository groupeRepository,
+                         GroupeMembreRepository groupeMembreRepository,
+                         GroupeEventPublisher eventPublisher) {
+        this.groupeRepository = groupeRepository;
+        this.groupeMembreRepository = groupeMembreRepository;
+        this.eventPublisher = eventPublisher;
+    }
 
     public List<GroupeDto> findAll() {
         return groupeRepository.findAll().stream().map(this::toDto).toList();
@@ -31,70 +41,160 @@ public class GroupeService {
     public GroupeDto findById(UUID id) {
         return groupeRepository.findById(id)
                 .map(this::toDto)
-                .orElseThrow(() -> new NotFoundException("Groupe introuvable : " + id));
+                .orElseThrow(() -> new NotFoundException("Groupe", id));
+    }
+
+    public GroupeDto findByCodeInvitation(String code) {
+        return groupeRepository.findByCodeInvitation(code)
+                .map(this::toDto)
+                .orElseThrow(() -> new NotFoundException("Groupe avec le code d'invitation " + code + " introuvable"));
+    }
+
+    public List<GroupeDto> findByCreateur(UUID createurId) {
+        return groupeRepository.findByCreateurMembreId(createurId).stream().map(this::toDto).toList();
     }
 
     @Transactional
-    public GroupeDto create(CreateGroupeRequest request) {
-        Groupe groupe = Groupe.builder()
-                .nom(request.nom())
-                .description(request.description())
-                .createurMembreId(request.createurMembreId())
-                .typeSiege(request.typeSiege())
-                .adresseSiege(request.adresseSiege())
-                .montantCotisationPrincipale(request.montantCotisationPrincipale())
-                .frequenceReunion(request.frequenceReunion())
-                .nombreMembresMax(request.nombreMembresMax())
-                .build();
+    public GroupeDto create(CreerGroupeRequest request) {
+        String code = genererCodeInvitation(request.nom());
+
+        Groupe groupe = new Groupe();
+        groupe.setNom(request.nom());
+        groupe.setDescription(request.description());
+        groupe.setCreateurMembreId(request.createurMembreId());
+        groupe.setTypeSiege(request.typeSiege() != null ? request.typeSiege() : TypeSiege.FIXE);
+        groupe.setAdresseSiege(request.adresseSiege());
+        groupe.setMontantCotisationPrincipale(request.montantCotisationPrincipale());
+        groupe.setFrequenceReunion(request.frequenceReunion());
+        groupe.setNombreMembresMax(request.nombreMembresMax());
+        groupe.setCodeInvitation(code);
+        groupe.setReglementInterieur(request.reglementInterieur());
+        groupe.setStatut(StatutGroupe.ACTIF);
 
         Groupe saved = groupeRepository.save(groupe);
 
-        // Le createur devient membre du groupe avec le role CREATEUR
-        GroupeMembre createur = GroupeMembre.builder()
-                .groupeId(saved.getId())
-                .membreId(request.createurMembreId())
-                .role(RoleMembre.CREATEUR)
-                .build();
-        groupeMembreRepository.save(createur);
+        // Attribution automatique du créateur comme premier membre avec le rôle technique CREATEUR
+        GroupeMembre createurAdhesion = new GroupeMembre();
+        createurAdhesion.setGroupeId(saved.getId());
+        createurAdhesion.setMembreId(request.createurMembreId());
+        createurAdhesion.setRole(RoleMembre.CREATEUR);
+        createurAdhesion.setStatut(StatutMembreGroupe.ACTIF);
+        createurAdhesion.setDateAdhesion(LocalDateTime.now());
+        groupeMembreRepository.save(createurAdhesion);
 
-        eventPublisher.publishGroupeCree(saved);
-        log.info("Groupe cree : {}", saved.getId());
+        log.info("Groupe cree avec succes : id={}, nom='{}', code='{}'", saved.getId(), saved.getNom(), code);
+        eventPublisher.publierGroupeCree(saved.getId(), saved.getNom(), saved.getCreateurMembreId(), saved.getTypeSiege().name());
+
         return toDto(saved);
     }
 
     @Transactional
+    public GroupeDto update(UUID id, ModifierGroupeRequest request) {
+        Groupe groupe = groupeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Groupe", id));
+
+        if (groupe.getStatut() == StatutGroupe.CLOTURE) {
+            throw new BusinessException("Impossible de modifier un groupe cloture");
+        }
+
+        groupe.setNom(request.nom());
+        groupe.setDescription(request.description());
+        groupe.setTypeSiege(request.typeSiege());
+        groupe.setAdresseSiege(request.adresseSiege());
+        groupe.setMontantCotisationPrincipale(request.montantCotisationPrincipale());
+        groupe.setFrequenceReunion(request.frequenceReunion());
+        groupe.setNombreMembresMax(request.nombreMembresMax());
+        groupe.setReglementInterieur(request.reglementInterieur());
+
+        Groupe updated = groupeRepository.save(groupe);
+        log.info("Groupe mis a jour : id={}", id);
+        return toDto(updated);
+    }
+
+    @Transactional
     public GroupeMembreDto ajouterMembre(UUID groupeId, AjouterMembreRequest request) {
-        if (!groupeRepository.existsById(groupeId)) {
-            throw new NotFoundException("Groupe introuvable : " + groupeId);
+        Groupe groupe = groupeRepository.findById(groupeId)
+                .orElseThrow(() -> new NotFoundException("Groupe", groupeId));
+
+        if (groupe.getStatut() != StatutGroupe.ACTIF) {
+            throw new BusinessException("Ce groupe n'est pas actif");
         }
+
         if (groupeMembreRepository.existsByGroupeIdAndMembreId(groupeId, request.membreId())) {
-            throw new BusinessException("Le membre est deja dans ce groupe");
+            throw new BusinessException("Le membre fait deja partie de ce groupe");
         }
 
-        GroupeMembre membre = GroupeMembre.builder()
-                .groupeId(groupeId)
-                .membreId(request.membreId())
-                .role(request.role())
-                .build();
+        if (groupe.getNombreMembresMax() != null) {
+            long effectifActuel = groupeMembreRepository.countByGroupeIdAndStatut(groupeId, StatutMembreGroupe.ACTIF);
+            if (effectifActuel >= groupe.getNombreMembresMax()) {
+                throw new BusinessException("Le quota maximal de membres pour ce groupe est atteint (" + groupe.getNombreMembresMax() + ")");
+            }
+        }
 
-        GroupeMembre saved = groupeMembreRepository.save(membre);
-        log.info("Membre {} ajoute au groupe {}", request.membreId(), groupeId);
+        GroupeMembre gm = new GroupeMembre();
+        gm.setGroupeId(groupeId);
+        gm.setMembreId(request.membreId());
+        gm.setRole(request.role() != null ? request.role() : RoleMembre.MEMBRE);
+        gm.setStatut(StatutMembreGroupe.ACTIF);
+        gm.setDateAdhesion(LocalDateTime.now());
+
+        GroupeMembre saved = groupeMembreRepository.save(gm);
+        log.info("Membre {} ajoute au groupe {} avec le role {}", request.membreId(), groupeId, saved.getRole());
+
+        eventPublisher.publierMembreRejoint(groupeId, request.membreId(), saved.getRole().name());
         return toMembreDto(saved);
     }
 
+    @Transactional
+    public GroupeMembreDto rejoindreParCode(String codeInvitation, UUID membreId) {
+        GroupeDto groupe = findByCodeInvitation(codeInvitation);
+        return ajouterMembre(groupe.id(), new AjouterMembreRequest(membreId, RoleMembre.MEMBRE));
+    }
+
     public List<GroupeMembreDto> getMembres(UUID groupeId) {
-        return groupeMembreRepository.findByGroupeId(groupeId).stream()
-                .map(this::toMembreDto).toList();
+        if (!groupeRepository.existsById(groupeId)) {
+            throw new NotFoundException("Groupe", groupeId);
+        }
+        return groupeMembreRepository.findByGroupeId(groupeId).stream().map(this::toMembreDto).toList();
     }
 
-    private GroupeDto toDto(Groupe g) {
-        return new GroupeDto(g.getId(), g.getNom(), g.getDescription(), g.getCreateurMembreId(),
-                g.getTypeSiege(), g.getAdresseSiege(), g.getMontantCotisationPrincipale(),
-                g.getFrequenceReunion(), g.getNombreMembresMax(), g.getStatut(), g.getCreatedAt());
+    private String genererCodeInvitation(String nom) {
+        String base = nom.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+        if (base.length() > 6) {
+            base = base.substring(0, 6);
+        }
+        String suffix = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+        return "NJG-" + base + "-" + suffix;
     }
 
-    private GroupeMembreDto toMembreDto(GroupeMembre gm) {
-        return new GroupeMembreDto(gm.getId(), gm.getGroupeId(), gm.getMembreId(),
-                gm.getRole(), gm.getStatut(), gm.getDateAdhesion());
+    public GroupeDto toDto(Groupe g) {
+        return new GroupeDto(
+                g.getId(),
+                g.getNom(),
+                g.getDescription(),
+                g.getCreateurMembreId(),
+                g.getTypeSiege(),
+                g.getAdresseSiege(),
+                g.getMontantCotisationPrincipale(),
+                g.getFrequenceReunion(),
+                g.getNombreMembresMax(),
+                g.getCodeInvitation(),
+                g.getReglementInterieur(),
+                g.getStatut(),
+                g.getCreatedAt(),
+                g.getUpdatedAt()
+        );
+    }
+
+    public GroupeMembreDto toMembreDto(GroupeMembre gm) {
+        return new GroupeMembreDto(
+                gm.getId(),
+                gm.getGroupeId(),
+                gm.getMembreId(),
+                gm.getRole(),
+                gm.getStatut(),
+                gm.getDateAdhesion(),
+                gm.getDateFin()
+        );
     }
 }

@@ -1,8 +1,8 @@
 package com.njangi.cotisations.event;
 
 import com.njangi.cotisations.config.KafkaConfig;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -12,45 +12,66 @@ import java.util.Map;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
-@Slf4j
 public class CotisationEventPublisher {
 
+    private static final Logger log = LoggerFactory.getLogger(CotisationEventPublisher.class);
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void publierCotisationPayee(UUID cotisationId, UUID membreId, UUID groupeId, BigDecimal montant) {
+    public CotisationEventPublisher(KafkaTemplate<String, Object> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
+
+    public void publierCotisationGeneree(UUID cotisationId, UUID membreId, UUID groupeId, BigDecimal montant) {
         Map<String, Object> event = Map.of(
+                "type", "cotisation.generee",
                 "cotisationId", cotisationId.toString(),
                 "membreId", membreId.toString(),
                 "groupeId", groupeId.toString(),
                 "montant", montant,
                 "timestamp", Instant.now().toString()
         );
-        kafkaTemplate.send(KafkaConfig.TOPIC_COTISATION_PAYEE, cotisationId.toString(), event)
-                .whenComplete((result, ex) -> {
-                    if (ex != null) {
-                        log.error("Echec publication cotisation.payee pour cotisationId={}", cotisationId, ex);
-                    } else {
-                        log.info("Evenement cotisation.payee publie pour cotisationId={}", cotisationId);
-                    }
-                });
+        kafkaTemplate.send(KafkaConfig.TOPIC_COTISATION_EVENTS, cotisationId.toString(), event);
+        log.info("Evenement cotisation.generee publie : cotisationId={}, membreId={}, montant={}", cotisationId, membreId, montant);
     }
 
-    public void publierPotVerse(UUID potSessionId, UUID groupeId, UUID membreBeneficiaireId, BigDecimal montantTotal) {
+    public void publierCotisationPayee(UUID cotisationId, UUID membreId, UUID groupeId, BigDecimal montant) {
         Map<String, Object> event = Map.of(
+                "type", "cotisation.payee",
+                "cotisationId", cotisationId.toString(),
+                "membreId", membreId.toString(),
+                "groupeId", groupeId.toString(),
+                "montant", montant,
+                "timestamp", Instant.now().toString()
+        );
+        kafkaTemplate.send(KafkaConfig.TOPIC_COTISATION_PAYEE, cotisationId.toString(), event);
+        kafkaTemplate.send(KafkaConfig.TOPIC_COTISATION_EVENTS, cotisationId.toString(), event);
+        log.info("Evenement cotisation.payee publie : cotisationId={}, membreId={}, montant={}", cotisationId, membreId, montant);
+    }
+
+    public void publierPotAttribue(UUID potSessionId, UUID groupeId, UUID membreBeneficiaireId, BigDecimal montantTotal) {
+        Map<String, Object> event = Map.of(
+                "type", "pot.attribue",
                 "potSessionId", potSessionId.toString(),
                 "groupeId", groupeId.toString(),
                 "membreBeneficiaireId", membreBeneficiaireId.toString(),
                 "montantTotal", montantTotal,
                 "timestamp", Instant.now().toString()
         );
-        kafkaTemplate.send(KafkaConfig.TOPIC_POT_VERSE, potSessionId.toString(), event)
-                .whenComplete((result, ex) -> {
-                    if (ex != null) {
-                        log.error("Echec publication pot.verse pour potSessionId={}", potSessionId, ex);
-                    } else {
-                        log.info("Evenement pot.verse publie pour potSessionId={}", potSessionId);
-                    }
-                });
+        kafkaTemplate.send(KafkaConfig.TOPIC_COTISATION_EVENTS, potSessionId.toString(), event);
+        log.info("Evenement pot.attribue publie : potSessionId={}, beneficiaire={}", potSessionId, membreBeneficiaireId);
+    }
+
+    public void publierPotVerse(UUID potSessionId, UUID groupeId, UUID membreBeneficiaireId, BigDecimal montantTotal) {
+        Map<String, Object> event = Map.of(
+                "type", "pot.verse",
+                "potSessionId", potSessionId.toString(),
+                "groupeId", groupeId.toString(),
+                "membreBeneficiaireId", membreBeneficiaireId.toString(),
+                "montantTotal", montantTotal,
+                "timestamp", Instant.now().toString()
+        );
+        kafkaTemplate.send(KafkaConfig.TOPIC_POT_VERSE, potSessionId.toString(), event);
+        kafkaTemplate.send(KafkaConfig.TOPIC_COTISATION_EVENTS, potSessionId.toString(), event);
+        log.info("Evenement pot.verse publie : potSessionId={}, beneficiaire={}, montant={}", potSessionId, membreBeneficiaireId, montantTotal);
     }
 }

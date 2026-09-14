@@ -137,10 +137,10 @@ Application Android-first optimisée pour une utilisation sur le terrain avec r�
 
 ### Étape 1 : Démarrer l'Infrastructure Docker
 
-Lance PostgreSQL (9 schémas isolés), ZooKeeper, Kafka et Eureka Server :
+Lance PostgreSQL (9 schémas isolés), Kafka en mode KRaft (sans ZooKeeper) et Eureka Server :
 
 ```bash
-docker-compose up -d postgres kafka zookeeper eureka-server
+docker-compose up -d postgres kafka eureka-server
 ```
 
 ---

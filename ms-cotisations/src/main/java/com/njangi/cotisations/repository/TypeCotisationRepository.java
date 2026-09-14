@@ -11,4 +11,8 @@ import java.util.UUID;
 public interface TypeCotisationRepository extends JpaRepository<TypeCotisation, UUID> {
 
     List<TypeCotisation> findByGroupeId(UUID groupeId);
+
+    List<TypeCotisation> findByGroupeIdAndStatut(UUID groupeId, String statut);
+
+    List<TypeCotisation> findByGroupeIdAndEstObligatoireTrueAndStatut(UUID groupeId, String statut);
 }

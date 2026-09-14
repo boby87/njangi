@@ -1,0 +1,16 @@
+com\njangi\cotisations\service\PotSessionService.class
+com\njangi\cotisations\controller\TypeCotisationController.class
+com\njangi\cotisations\dto\MettreAJourPaiementCotisationRequest.class
+com\njangi\cotisations\entity\ModeVersement.class
+com\njangi\cotisations\config\SecurityConfig.class
+com\njangi\cotisations\dto\CreerTypeCotisationRequest.class
+com\njangi\cotisations\controller\PotSessionController.class
+com\njangi\cotisations\dto\AttribuerPotRequest.class
+com\njangi\cotisations\entity\CategorieCotisation.class
+com\njangi\cotisations\config\OpenApiConfig.class
+com\njangi\cotisations\dto\PlanifierTourPotRequest.class
+com\njangi\cotisations\event\CotisationEvent.class
+com\njangi\cotisations\service\TypeCotisationService.class
+com\njangi\cotisations\dto\ApiResponse.class
+com\njangi\cotisations\dto\DecaisserPotRequest.class
+com\njangi\cotisations\dto\GenererCotisationsReunionRequest.class

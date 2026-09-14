@@ -8,9 +8,11 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaConfig {
 
+    public static final String TOPIC_SANCTION_EVENTS = "sanction.events";
+
     @Bean
-    public NewTopic penaliteAppliquee() {
-        return TopicBuilder.name("penalite.appliquee")
+    public NewTopic sanctionEventsTopic() {
+        return TopicBuilder.name(TOPIC_SANCTION_EVENTS)
                 .partitions(3)
                 .replicas(1)
                 .build();

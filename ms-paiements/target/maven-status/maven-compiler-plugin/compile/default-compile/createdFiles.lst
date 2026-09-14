@@ -1,0 +1,8 @@
+com\njangi\paiements\dto\InitierPaiementMobileMoneyRequest.class
+com\njangi\paiements\dto\ValiderPaiementCashRequest.class
+com\njangi\paiements\event\PaiementEvent.class
+com\njangi\paiements\config\SecurityConfig.class
+com\njangi\paiements\config\OpenApiConfig.class
+com\njangi\paiements\dto\ApiResponse.class
+com\njangi\paiements\dto\WebhookPaiementRequest.class
+com\njangi\paiements\dto\InitierPaiementCashRequest.class

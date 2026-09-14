@@ -1,18 +1,6 @@
 <ion-tabs>
-  <!-- Bandeau mode hors ligne / réseau dégradé 3G -->
-  @if (!networkService.isOnline()) {
-    <div class="bg-amber-500 text-slate-950 px-3 py-1.5 text-xs font-bold flex items-center justify-between shadow-md z-50">
-      <div class="flex items-center gap-1.5">
-        <ion-icon name="cloud-offline-outline" class="text-base"></ion-icon>
-        <span>Mode Hors-Ligne (3G instable) : saisies sauvegardées localement</span>
-      </div>
-      @if (tontineState.offlineQueue().length > 0) {
-        <span class="bg-slate-900 text-amber-300 px-2 py-0.5 rounded-full text-[10px]">
-          {{ tontineState.offlineQueue().length }} en attente
-        </span>
-      }
-    </div>
-  }
+  <!-- Bandeau interactif de surveillance réseau et synchronisation 3G/Offline -->
+  <app-network-banner></app-network-banner>
 
   <ion-tab-bar slot="bottom" class="border-t border-slate-800 bg-slate-950/95 backdrop-blur-md">
     <ion-tab-button tab="dashboard" class="text-slate-400 hover:text-emerald-400">

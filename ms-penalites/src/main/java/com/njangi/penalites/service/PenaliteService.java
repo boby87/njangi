@@ -1,103 +1,151 @@
 package com.njangi.penalites.service;
 
+import com.njangi.penalites.dto.InfligerPenaliteRequest;
 import com.njangi.penalites.dto.PenaliteDto;
 import com.njangi.penalites.entity.Penalite;
-import com.njangi.penalites.entity.Penalite.StatutPenalite;
+import com.njangi.penalites.entity.StatutPenalite;
 import com.njangi.penalites.entity.TarificationPenalite;
-import com.njangi.penalites.exception.PenaliteNotFoundException;
-import com.njangi.penalites.kafka.PenaliteEventPublisher;
+import com.njangi.penalites.event.PenaliteEventPublisher;
+import com.njangi.penalites.exception.BusinessException;
+import com.njangi.penalites.exception.NotFoundException;
 import com.njangi.penalites.repository.PenaliteRepository;
 import com.njangi.penalites.repository.TarificationPenaliteRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 @Transactional
 public class PenaliteService {
+
+    private static final Logger log = LoggerFactory.getLogger(PenaliteService.class);
 
     private final PenaliteRepository penaliteRepository;
     private final TarificationPenaliteRepository tarificationRepository;
     private final PenaliteEventPublisher eventPublisher;
 
-    /**
-     * Applique une pénalité à un membre.
-     * Le montant est automatiquement résolu depuis la tarification active du groupe.
-     * Si aucune tarification n'existe, le montant du DTO est utilisé (doit être non nul).
-     */
-    public PenaliteDto appliquer(PenaliteDto dto) {
-        log.info("Application d'une pénalité type={} pour membre={} dans groupe={}",
-                dto.typeInfraction(), dto.membreId(), dto.groupeId());
+    public PenaliteService(PenaliteRepository penaliteRepository,
+                           TarificationPenaliteRepository tarificationRepository,
+                           PenaliteEventPublisher eventPublisher) {
+        this.penaliteRepository = penaliteRepository;
+        this.tarificationRepository = tarificationRepository;
+        this.eventPublisher = eventPublisher;
+    }
 
-        // Résolution du montant via la tarification active du groupe
-        var montant = tarificationRepository
-                .findByGroupeIdAndTypeInfractionAndActifTrue(dto.groupeId(), dto.typeInfraction())
-                .map(TarificationPenalite::getMontant)
-                .orElse(dto.montant());
-
+    public PenaliteDto infligerPenalite(InfligerPenaliteRequest request) {
+        // Résolution dynamique du montant via le barème actif du groupe
+        BigDecimal montant = request.montant();
         if (montant == null) {
-            throw new IllegalArgumentException(
-                "Aucune tarification active trouvée pour le type " + dto.typeInfraction()
-                + " dans le groupe " + dto.groupeId() + " et aucun montant fourni");
+            montant = tarificationRepository
+                    .findByGroupeIdAndTypeInfractionAndActifTrue(request.groupeId(), request.typeInfraction())
+                    .map(TarificationPenalite::getMontant)
+                    .orElseThrow(() -> new BusinessException(
+                            "Aucun tarif actif n'est configuré pour l'infraction " + request.typeInfraction()
+                            + " dans le groupe " + request.groupeId()));
         }
 
-        Penalite penalite = Penalite.builder()
-                .membreId(dto.membreId())
-                .groupeId(dto.groupeId())
-                .sessionId(dto.sessionId())
-                .typeInfraction(dto.typeInfraction())
-                .montant(montant)
-                .statut(StatutPenalite.EN_ATTENTE)
-                .build();
+        Penalite penalite = new Penalite(
+                null,
+                request.membreId(),
+                request.groupeId(),
+                request.sessionId(),
+                request.reunionId(),
+                request.typeInfraction(),
+                montant,
+                StatutPenalite.EN_ATTENTE,
+                request.motif()
+        );
 
         Penalite saved = penaliteRepository.save(penalite);
-        eventPublisher.publishPenaliteAppliquee(saved);
-        log.info("Pénalité appliquée avec id={}", saved.getId());
-        return PenaliteDto.from(saved);
+        eventPublisher.publierPenaliteInfligee(saved);
+
+        log.info("Penalite infligee : id={}, membre={}, type={}, montant={}",
+                saved.getId(), saved.getMembreId(), saved.getTypeInfraction(), saved.getMontant());
+        return toDto(saved);
     }
 
     public PenaliteDto payer(UUID id) {
-        log.info("Paiement de la pénalité id={}", id);
         Penalite penalite = penaliteRepository.findById(id)
-                .orElseThrow(() -> new PenaliteNotFoundException(id));
+                .orElseThrow(() -> new NotFoundException("Penalite non trouvee : " + id));
+
         if (penalite.getStatut() != StatutPenalite.EN_ATTENTE) {
-            throw new IllegalStateException(
-                "La pénalité id=" + id + " ne peut pas être payée (statut: " + penalite.getStatut() + ")");
+            throw new BusinessException("La penalite " + id + " ne peut pas etre payee (statut actuel: " + penalite.getStatut() + ")");
         }
+
         penalite.setStatut(StatutPenalite.PAYEE);
-        return PenaliteDto.from(penaliteRepository.save(penalite));
+        penalite.setDatePaiement(LocalDateTime.now());
+        Penalite saved = penaliteRepository.save(penalite);
+        eventPublisher.publierPenalitePayee(saved);
+
+        log.info("Penalite reglee : id={}, montant={}", saved.getId(), saved.getMontant());
+        return toDto(saved);
     }
 
-    public PenaliteDto annuler(UUID id) {
-        log.info("Annulation de la pénalité id={}", id);
+    public PenaliteDto annuler(UUID id, String motif) {
         Penalite penalite = penaliteRepository.findById(id)
-                .orElseThrow(() -> new PenaliteNotFoundException(id));
+                .orElseThrow(() -> new NotFoundException("Penalite non trouvee : " + id));
+
+        if (penalite.getStatut() == StatutPenalite.PAYEE) {
+            throw new BusinessException("Une penalite deja payee ne peut pas etre annulee");
+        }
+
         penalite.setStatut(StatutPenalite.ANNULEE);
-        return PenaliteDto.from(penaliteRepository.save(penalite));
+        if (motif != null && !motif.isBlank()) {
+            penalite.setMotif(motif);
+        }
+        Penalite saved = penaliteRepository.save(penalite);
+        eventPublisher.publierPenaliteAnnulee(saved);
+
+        log.info("Penalite annulee : id={}", saved.getId());
+        return toDto(saved);
     }
 
     @Transactional(readOnly = true)
-    public List<PenaliteDto> findByMembre(UUID membreId) {
+    public PenaliteDto obtenirParId(UUID id) {
+        Penalite entity = penaliteRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Penalite non trouvee : " + id));
+        return toDto(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PenaliteDto> obtenirParMembre(UUID membreId) {
         return penaliteRepository.findByMembreId(membreId)
-                .stream().map(PenaliteDto::from).toList();
+                .stream()
+                .map(this::toDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<PenaliteDto> findByGroupe(UUID groupeId) {
+    public List<PenaliteDto> obtenirParGroupe(UUID groupeId) {
         return penaliteRepository.findByGroupeId(groupeId)
-                .stream().map(PenaliteDto::from).toList();
+                .stream()
+                .map(this::toDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public PenaliteDto findById(UUID id) {
-        return penaliteRepository.findById(id)
-                .map(PenaliteDto::from)
-                .orElseThrow(() -> new PenaliteNotFoundException(id));
+    public List<PenaliteDto> obtenirParReunion(UUID reunionId) {
+        return penaliteRepository.findByReunionId(reunionId)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PenaliteDto> obtenirParSession(UUID sessionId) {
+        return penaliteRepository.findBySessionId(sessionId)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    public PenaliteDto toDto(Penalite p) {
+        return PenaliteDto.from(p);
     }
 }

@@ -12,13 +12,15 @@ import java.util.UUID;
 @Repository
 public interface PaiementRepository extends JpaRepository<Paiement, UUID> {
 
+    Optional<Paiement> findByCleIdempotence(String cleIdempotence);
+
+    Optional<Paiement> findByReference(String reference);
+
     List<Paiement> findByCotisationId(UUID cotisationId);
 
     List<Paiement> findByMembreId(UUID membreId);
 
     List<Paiement> findByGroupeId(UUID groupeId);
 
-    List<Paiement> findByStatut(StatutPaiement statut);
-
-    Optional<Paiement> findByReference(String reference);
+    List<Paiement> findByGroupeIdAndStatut(UUID groupeId, StatutPaiement statut);
 }

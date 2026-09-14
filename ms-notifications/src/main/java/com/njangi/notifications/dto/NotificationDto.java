@@ -1,32 +1,32 @@
 package com.njangi.notifications.dto;
 
+import com.njangi.notifications.entity.Canal;
 import com.njangi.notifications.entity.Notification;
-import com.njangi.notifications.entity.Notification.Canal;
-import com.njangi.notifications.entity.Notification.StatutNotification;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import com.njangi.notifications.entity.StatutNotification;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record NotificationDto(
         UUID id,
-        /** Identifiant du membre destinataire (correspond à destinataire_id en base) */
-        @NotNull(message = "L'identifiant du destinataire est obligatoire") UUID destinatreId,
+        UUID destinataireId,
         UUID groupeId,
-        @NotNull(message = "Le canal est obligatoire") Canal canal,
-        @NotBlank(message = "Le type est obligatoire") String type,
-        @NotBlank(message = "Le titre est obligatoire") String titre,
-        @NotBlank(message = "Le contenu est obligatoire") String contenu,
+        Canal canal,
+        String type,
+        String titre,
+        String contenu,
         StatutNotification statut,
         boolean lue,
         LocalDateTime creeLe,
-        LocalDateTime envoyeeLe
+        LocalDateTime envoyeeLe,
+        String referenceObjet,
+        String typeObjet,
+        String destinataireContact
 ) {
     public static NotificationDto from(Notification n) {
         return new NotificationDto(
                 n.getId(),
-                n.getDestinatreId(),
+                n.getDestinataireId(),
                 n.getGroupeId(),
                 n.getCanal(),
                 n.getType(),
@@ -35,7 +35,10 @@ public record NotificationDto(
                 n.getStatut(),
                 n.isLue(),
                 n.getCreeLe(),
-                n.getEnvoyeeLe()
+                n.getEnvoyeeLe(),
+                n.getReferenceObjet(),
+                n.getTypeObjet(),
+                n.getDestinataireContact()
         );
     }
 }

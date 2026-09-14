@@ -8,13 +8,18 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record CreateReunionRequest(
-        @NotNull UUID groupeId,
-        @NotBlank String titre,
-        @NotNull LocalDateTime dateReunion,
+        @NotNull(message = "L'identifiant du groupe est obligatoire")
+        UUID groupeId,
+        UUID sessionTontineId,
+        @NotBlank(message = "Le titre de la réunion est obligatoire")
+        String titre,
+        @NotNull(message = "La date de la réunion est obligatoire")
+        LocalDateTime dateReunion,
         String lieuReunion,
-        @NotNull TypeSiege typeSiege,
+        TypeSiege typeSiege,
+        UUID hoteId,
         String ordreJour,
         UUID presidentReunionId,
-        UUID tresorierReunionId,
-        UUID sessionTontineId
+        UUID secretaireReunionId,
+        UUID tresorierReunionId
 ) {}

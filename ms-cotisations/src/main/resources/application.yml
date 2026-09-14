@@ -1,9 +1,12 @@
 server:
-  port: 8085
+  port: 8005
 
 spring:
   application:
     name: ms-cotisations
+  threads:
+    virtual:
+      enabled: true
 
   datasource:
     url: jdbc:postgresql://localhost:5432/njangi?currentSchema=cotisations
@@ -18,6 +21,7 @@ spring:
       hibernate:
         default_schema: cotisations
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
     show-sql: false
 
   flyway:
@@ -37,11 +41,22 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:8080/realms/njangi
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
 
 logging:
   level:

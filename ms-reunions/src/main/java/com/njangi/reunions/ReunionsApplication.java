@@ -1,7 +1,14 @@
 package com.njangi.reunions;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
 @SpringBootApplication
+@EnableDiscoveryClient
 public class ReunionsApplication {
-    public static void main(String[] args) { SpringApplication.run(ReunionsApplication.class, args); }
+
+    public static void main(String[] args) {
+        SpringApplication.run(ReunionsApplication.class, args);
+    }
 }
