@@ -1,0 +1,217 @@
+<div class="space-y-8 animate-fade-in">
+
+  <!-- En-tête de rôle : Vue Président -->
+  <div class="p-6 rounded-2xl bg-gradient-to-r from-purple-950/60 via-slate-900 to-slate-900 border border-purple-800/40 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="p-1.5 rounded-lg bg-purple-500/20 text-purple-300 font-bold text-xs">Vue Président</span>
+        <span class="text-xs text-slate-400">Mandat 2025-2027</span>
+      </div>
+      <h2 class="text-xl sm:text-2xl font-bold text-white font-heading">
+        Gouvernance & Conduite de la Séance
+      </h2>
+      <p class="text-xs text-slate-300 mt-1 max-w-2xl">
+        Présidence des réunions, discipline des membres, nomination du bureau et supervision de la cagnotte pour 
+        <strong class="text-purple-300">{{ groupe().nom }}</strong>.
+      </p>
+    </div>
+
+    <!-- Actions rapides du Président -->
+    <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+      <button 
+        type="button" 
+        (click)="ouvrirModalSanction()"
+        class="px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-rose-600/90 hover:bg-rose-500 active:bg-rose-700 shadow-lg shadow-rose-950/50 transition-all flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+        <span>Prononcer une Sanction</span>
+      </button>
+
+      <a 
+        routerLink="/reunions"
+        class="px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 shadow-lg shadow-emerald-950/50 transition-all flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+        </svg>
+        <span>Ouvrir la Séance en direct</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Cartes d'indicateurs de gouvernance -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    
+    <!-- Membres actifs -->
+    <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 glass-panel-hover">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-medium uppercase tracking-wider">Membres Actifs</span>
+        <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-2xl font-bold text-white font-heading">{{ groupe().nombreMembresActuels }}</span>
+        <span class="text-xs text-slate-400">/ {{ groupe().nombreMembresMax }} max</span>
+      </div>
+      <p class="text-[11px] text-emerald-400 mt-2 font-medium">100% de régularité d'adhésion</p>
+    </div>
+
+    <!-- Taux de collecte -->
+    <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 glass-panel-hover">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-medium uppercase tracking-wider">Taux de Collecte</span>
+        <span class="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+          </svg>
+        </span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-2xl font-bold text-amber-400 font-heading">{{ stats().tauxCollecte }}%</span>
+        <span class="text-xs text-slate-400">de la session</span>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-2 font-medium">
+        {{ stats().totalCollecte.toLocaleString('fr-FR') }} XAF recouvrés
+      </p>
+    </div>
+
+    <!-- Bénéficiaire du tour actuel -->
+    <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 glass-panel-hover">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-medium uppercase tracking-wider">Bénéficiaire du Pot</span>
+        <span class="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+          </svg>
+        </span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-base font-bold text-purple-300 truncate">
+          {{ potEnCours()?.beneficiaireNom || 'Non défini' }}
+        </span>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-2 font-medium">
+        Pot : <strong class="text-white">{{ (potEnCours()?.montantTheoriqueXaf || 600000).toLocaleString('fr-FR') }} XAF</strong>
+      </p>
+    </div>
+
+    <!-- Sanctions en suspens -->
+    <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 glass-panel-hover">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-medium uppercase tracking-wider">Sanctions Impayées</span>
+        <span class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+          </svg>
+        </span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-2xl font-bold text-rose-400 font-heading">
+          {{ (stats().totalPenalitesImpayees).toLocaleString('fr-FR') }}
+        </span>
+        <span class="text-xs text-slate-400">XAF</span>
+      </div>
+      <p class="text-[11px] text-rose-300 mt-2 font-medium">
+        {{ stats().membresEnRetardCount }} membre(s) en infraction
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Section principale : Prochaine Séance & Ordre du Jour -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <!-- Ordre du jour de la réunion en cours / prochaine -->
+    <div class="lg:col-span-2 p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-white font-heading">
+            {{ prochaineReunion()?.titre || 'Ordre du Jour — Prochaine Réunion' }}
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">
+            📅 {{ prochaineReunion()?.dateReunion || '2026-09-15' }} à {{ prochaineReunion()?.heureDebut || '17:30' }}
+            • Siège chez : <strong class="text-emerald-400">{{ prochaineReunion()?.hoteNom || 'Mme Ngo Bikoï' }}</strong>
+          </p>
+        </div>
+        <app-status-badge [status]="prochaineReunion()?.statut || 'EN_COURS'"></app-status-badge>
+      </div>
+
+      <!-- Liste de l'ordre du jour -->
+      <div class="space-y-2">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Points inscrits à l'ordre du jour :</p>
+        <ul class="space-y-2 text-sm text-slate-200">
+          @for (pt of prochaineReunion()?.ordreDuJour; track pt) {
+            <li class="p-3 rounded-xl bg-slate-950/60 border border-slate-850 flex items-center gap-3">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span>{{ pt }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <div class="pt-2 flex items-center justify-between text-xs text-slate-400 border-t border-slate-850">
+        <span>Lieu : {{ prochaineReunion()?.lieuAdresse || 'Douala, Cameroun' }}</span>
+        <a routerLink="/reunions" class="text-emerald-400 hover:text-emerald-300 font-semibold">
+          Gérer les présences & PV →
+        </a>
+      </div>
+    </div>
+
+    <!-- Composition du Bureau Élu (Mandat) -->
+    <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+      <div class="border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white font-heading">Bureau Exécutif Élu</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Mandat actif sous votre autorité</p>
+      </div>
+
+      <div class="space-y-3">
+        <!-- Président -->
+        <div class="p-3 rounded-xl bg-purple-950/20 border border-purple-800/30 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold uppercase text-purple-400 tracking-wider">Président</span>
+            <p class="text-sm font-semibold text-white">{{ mandat()?.presidentNom || 'Jean-Paul Mbarga' }}</p>
+          </div>
+          <span class="text-xs text-purple-400">Vous</span>
+        </div>
+
+        <!-- Trésorier -->
+        <div class="p-3 rounded-xl bg-amber-950/20 border border-amber-800/30 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold uppercase text-amber-400 tracking-wider">Trésorier</span>
+            <p class="text-sm font-semibold text-white">{{ mandat()?.tresorierNom || 'Chantal Ngo Bikoï' }}</p>
+          </div>
+          <span class="text-xs text-slate-400 font-mono">Caisse & MoMo</span>
+        </div>
+
+        <!-- Secrétaire -->
+        <div class="p-3 rounded-xl bg-blue-950/20 border border-blue-800/30 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold uppercase text-blue-400 tracking-wider">Secrétaire</span>
+            <p class="text-sm font-semibold text-white">{{ mandat()?.secretaireNom || 'Pierre Kamga' }}</p>
+          </div>
+          <span class="text-xs text-slate-400 font-mono">PV & Convocations</span>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-850 text-xs text-slate-400">
+        <p class="text-[11px] leading-relaxed">
+          <strong class="text-slate-200">Règle de gouvernance :</strong> Le bureau actuel a été élu par vote en assemblée. Le créateur initial a été automatiquement rétrogradé.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modale d'attribution d'amende -->
+  @if (showPenaltyModal()) {
+    <app-penalty-modal 
+      [membres]="membres()" 
+      (close)="fermerModalSanction()" 
+      (submitSanction)="appliquerSanction($event)">
+    </app-penalty-modal>
+  }
+
+</div>

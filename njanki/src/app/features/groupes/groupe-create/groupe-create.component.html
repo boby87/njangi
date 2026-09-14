@@ -1,0 +1,231 @@
+<div class="max-w-3xl mx-auto space-y-6 animate-fade-in">
+
+  <!-- En-tête -->
+  <div class="p-6 rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-800/40 shadow-xl">
+    <span class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold text-xs">F-03 — Cahier des Charges</span>
+    <h2 class="text-2xl font-bold text-white font-heading mt-1">Créer un Nouveau Groupe Njangi</h2>
+    <p class="text-xs text-slate-300 mt-1">
+      En tant que créateur initial, vous définissez les règles fondamentales (siège fixe/rotatif, multi-cotisations, fréquence). Vos droits techniques provisoires seront automatiquement transmis dès l'élection du premier bureau.
+    </p>
+  </div>
+
+  <!-- Formulaire Signal Forms pur -->
+  <div class="p-6 sm:p-8 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-6">
+
+    <!-- Section 1 : Informations Générales -->
+    <div class="space-y-4">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-400 border-b border-slate-800 pb-2">
+        1. Identité du Groupe
+      </h3>
+
+      <div>
+        <label for="create-nom" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          Nom de la Tontine *
+        </label>
+        <input 
+          type="text" 
+          id="create-nom"
+          [value]="nom()"
+          (input)="onNomInput($any($event.target).value)"
+          placeholder="Ex: Njangi Solidarité Entrepreneurs Yaoundé"
+          class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+        />
+      </div>
+
+      <div>
+        <label for="create-desc" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          Description & Objet communautaire *
+        </label>
+        <textarea 
+          id="create-desc"
+          [value]="description()"
+          (input)="onDescriptionInput($any($event.target).value)"
+          rows="3"
+          placeholder="Ex: Tontine d'entraide fraternelle, caisse de secours et investissement rotatif..."
+          class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-xl p-4 focus:ring-2 focus:ring-emerald-500 outline-none transition-all resize-none">
+        </textarea>
+      </div>
+    </div>
+
+    <!-- Section 2 : Règle Fondamentale du Siège (Obligatoire) -->
+    <div class="space-y-4">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-400 border-b border-slate-800 pb-2">
+        2. Lieu de Réunion — Type de Siège (Cahier des charges)
+      </h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <label 
+          class="p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3"
+          [class.border-emerald-500]="typeSiege() === 'ROTATIF'"
+          [class.bg-emerald-950/20]="typeSiege() === 'ROTATIF'"
+          [class.border-slate-700]="typeSiege() !== 'ROTATIF'">
+          <input 
+            type="radio" 
+            name="typeSiege" 
+            value="ROTATIF"
+            [checked]="typeSiege() === 'ROTATIF'"
+            (change)="onTypeSiegeChange('ROTATIF')"
+            class="mt-1 text-emerald-500 focus:ring-emerald-500"
+          />
+          <div>
+            <span class="text-sm font-bold text-white flex items-center gap-1.5">
+              <span>🔄 Siège Rotatif</span>
+            </span>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+              Chaque réunion se tient chez un membre différent, selon l'ordre du tour de pot ou tirage au sort.
+            </p>
+          </div>
+        </label>
+
+        <label 
+          class="p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3"
+          [class.border-emerald-500]="typeSiege() === 'FIXE'"
+          [class.bg-emerald-950/20]="typeSiege() === 'FIXE'"
+          [class.border-slate-700]="typeSiege() !== 'FIXE'">
+          <input 
+            type="radio" 
+            name="typeSiege" 
+            value="FIXE"
+            [checked]="typeSiege() === 'FIXE'"
+            (change)="onTypeSiegeChange('FIXE')"
+            class="mt-1 text-emerald-500 focus:ring-emerald-500"
+          />
+          <div>
+            <span class="text-sm font-bold text-white flex items-center gap-1.5">
+              <span>📍 Siège Fixe</span>
+            </span>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+              Adresse permanente unique (foyer associatif, salle louée, domicile désigné).
+            </p>
+          </div>
+        </label>
+      </div>
+
+      @if (typeSiege() === 'FIXE') {
+        <div class="animate-fade-in">
+          <label for="create-adresse" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            Adresse permanente du siège fixe *
+          </label>
+          <input 
+            type="text" 
+            id="create-adresse"
+            [value]="adresseSiegeFixe()"
+            (input)="onAdresseInput($any($event.target).value)"
+            placeholder="Ex: Salle des Fêtes Bamiléké, Rue Njo-Njo, Bonapriso, Douala"
+            class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+          />
+        </div>
+      }
+    </div>
+
+    <!-- Section 3 : Fréquence & Multi-Cotisations Simultanées -->
+    <div class="space-y-4">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-400 border-b border-slate-800 pb-2">
+        3. Règles Financières & Multi-Cotisations
+      </h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="create-freq" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            Périodicité des séances *
+          </label>
+          <select 
+            id="create-freq"
+            [value]="frequenceReunion()"
+            (change)="onFrequenceChange($any($event.target).value)"
+            class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
+            <option value="HEBDOMADAIRE">Hebdomadaire (toutes les semaines)</option>
+            <option value="BIMENSUELLE">Bimensuelle (toutes les 2 semaines)</option>
+            <option value="MENSUELLE">Mensuelle (tous les mois)</option>
+            <option value="PERSONNALISEE">Personnalisée</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="create-membres-max" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            Nombre maximal de membres *
+          </label>
+          <input 
+            type="number" 
+            id="create-membres-max"
+            [value]="nombreMembresMax()"
+            (input)="onNombreMembresInput($any($event.target).value)"
+            min="3" 
+            max="50"
+            class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
+          />
+        </div>
+      </div>
+
+      <!-- Multi-cotisations simultanées -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+        <div>
+          <label for="create-pot" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            💰 Pot Rotatif (XAF) *
+          </label>
+          <input 
+            type="number" 
+            id="create-pot"
+            [value]="montantPotTourXaf()"
+            (input)="onMontantPotInput($any($event.target).value)"
+            step="5000"
+            class="w-full bg-slate-800 border border-slate-700 text-slate-100 font-semibold text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
+          />
+          <span class="text-[11px] text-slate-400 mt-1 block">Par membre et par tour</span>
+        </div>
+
+        <div>
+          <label for="create-secours" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            🤝 Secours/Décès (XAF)
+          </label>
+          <input 
+            type="number" 
+            id="create-secours"
+            [value]="montantSecoursXaf()"
+            (input)="onMontantSecoursInput($any($event.target).value)"
+            step="1000"
+            class="w-full bg-slate-800 border border-slate-700 text-slate-100 font-semibold text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
+          />
+          <span class="text-[11px] text-slate-400 mt-1 block">Caisse d'entraide</span>
+        </div>
+
+        <div>
+          <label for="create-reserve" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            🛡️ Réserve (XAF)
+          </label>
+          <input 
+            type="number" 
+            id="create-reserve"
+            [value]="montantReserveXaf()"
+            (input)="onMontantReserveInput($any($event.target).value)"
+            step="500"
+            class="w-full bg-slate-800 border border-slate-700 text-slate-100 font-semibold text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
+          />
+          <span class="text-[11px] text-slate-400 mt-1 block">Épargne collective</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+      <button 
+        type="button" 
+        (click)="onAnnuler()"
+        class="px-5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors">
+        Annuler
+      </button>
+      <button 
+        type="button" 
+        [disabled]="!isValid()"
+        (click)="onSubmit()"
+        class="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-950/50 transition-all flex items-center gap-2">
+        <span>Créer la tontine et inviter les membres</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+
+</div>

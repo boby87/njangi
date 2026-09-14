@@ -1,0 +1,98 @@
+<div class="space-y-6 animate-fade-in">
+  
+  <!-- En-tête -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-2xl font-bold text-white font-heading">Mes Groupes de Tontine</h2>
+      <p class="text-xs text-slate-400 mt-1">
+        Vous appartenez à plusieurs tontines simultanément. Votre rôle et vos privilèges s'adaptent à chaque groupe.
+      </p>
+    </div>
+
+    <a 
+      routerLink="/groupes/creer"
+      class="px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-950/50 transition-all flex items-center gap-2 self-start sm:self-auto">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+      </svg>
+      <span>Créer une Tontine (Njangi)</span>
+    </a>
+  </div>
+
+  <!-- Cartes des groupes -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    @for (grp of groupes(); track grp.id) {
+      <div 
+        class="p-6 rounded-2xl bg-slate-900/80 border transition-all flex flex-col justify-between"
+        [class.border-emerald-500]="grp.id === groupeActif().id"
+        [class.border-slate-800]="grp.id !== groupeActif().id"
+        [class.shadow-xl]="grp.id === groupeActif().id"
+        [class.shadow-emerald-950/20]="grp.id === groupeActif().id">
+        
+        <div class="space-y-3">
+          <!-- Haut de carte -->
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                {{ grp.frequenceReunion }}
+              </span>
+              <h3 class="text-lg font-bold text-white font-heading mt-0.5">{{ grp.nom }}</h3>
+            </div>
+            <app-role-badge [role]="getMonRole(grp.id)" size="sm"></app-role-badge>
+          </div>
+
+          <p class="text-xs text-slate-300 line-clamp-2">{{ grp.description }}</p>
+
+          <!-- Type de siège -->
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            <span>Siège :</span>
+            @if (grp.typeSiege === 'ROTATIF') {
+              <span class="text-emerald-400 font-semibold">🔄 Siège Rotatif</span>
+            } @else {
+              <span class="text-amber-400 font-semibold">📍 Siège Fixe</span>
+            }
+          </div>
+
+          <!-- Métriques -->
+          <div class="pt-3 border-t border-slate-850 grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <span class="text-slate-400">Membres :</span>
+              <p class="font-bold text-slate-100">{{ grp.nombreMembresActuels }} / {{ grp.nombreMembresMax }}</p>
+            </div>
+            <div>
+              <span class="text-slate-400">Caisse totale :</span>
+              <p class="font-bold text-amber-400">
+                {{ (grp.soldeCaisseCashXaf + grp.soldeCaisseMobileMoneyXaf).toLocaleString('fr-FR') }} XAF
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="mt-5 pt-3 border-t border-slate-850 flex items-center justify-between">
+          @if (grp.id === groupeActif().id) {
+            <span class="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              Groupe sélectionné
+            </span>
+          } @else {
+            <button 
+              type="button" 
+              (click)="selectionnerGroupe(grp.id)"
+              class="text-xs font-medium text-slate-300 hover:text-white underline">
+              Basculer ici
+            </button>
+          }
+
+          <a 
+            [routerLink]="['/groupes', grp.id]" 
+            class="text-xs font-semibold text-emerald-400 hover:text-emerald-300">
+            Détails & Mandats →
+          </a>
+        </div>
+
+      </div>
+    }
+  </div>
+
+</div>

@@ -1,0 +1,123 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-slate-950 text-white border-b border-slate-800">
+    <div class="px-4 py-2 flex items-center justify-between">
+      <div>
+        <div class="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">Séance Live en direct</div>
+        <h1 class="text-base font-bold text-white">Appel & Conduite de Séance</h1>
+      </div>
+      <button
+        (click)="openSanctionModal()"
+        class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 shadow">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>Sanctionner</span>
+      </button>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-slate-950 text-slate-100">
+  <div class="p-4 space-y-4">
+
+    <!-- Bannière Séance & Quorum -->
+    <div class="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs text-slate-400">Lieu : Maison du Peuple, Yaoundé</span>
+        <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+          Quorum 80% (4/5)
+        </span>
+      </div>
+      <h2 class="text-base font-bold text-white mb-1">Séance Mensuelle #03</h2>
+      <p class="text-xs text-slate-300">
+        Président de séance : <strong class="text-white">Maurice KAMDEM</strong> · Secrétaire : <strong class="text-white">Alain TCHOUA</strong>
+      </p>
+    </div>
+
+    <!-- Feuille d'émargement dynamique (Appel nominatif direct) -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold text-white">Feuille d'Émargement</h3>
+        <span class="text-[11px] text-slate-400">Tapez pour changer le statut</span>
+      </div>
+
+      <div class="space-y-2.5">
+        @for (m of tontineState.membres(); track m.id) {
+          @let presence = tontineState.presences().find(p => p.membreId === m.id);
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-800 text-xs">
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <div class="font-bold text-white">{{ m.nom }} {{ m.prenom }}</div>
+                <div class="text-[10px] text-slate-400">Arrivée : {{ presence?.heureArrivee || 'Non pointé' }}</div>
+              </div>
+              <app-status-badge [status]="presence?.statut || 'ABSENT'"></app-status-badge>
+            </div>
+
+            <!-- Boutons de pointage rapide (Accessible au Secrétaire et Président) -->
+            <div class="grid grid-cols-4 gap-1.5">
+              <button
+                (click)="onMarkPresence(m.id, 'PRESENT')"
+                [class.bg-emerald-600]="presence?.statut === 'PRESENT'"
+                [class.bg-slate-800]="presence?.statut !== 'PRESENT'"
+                class="py-1 rounded text-[10px] font-bold transition text-slate-200">
+                Présent
+              </button>
+              <button
+                (click)="onMarkPresence(m.id, 'RETARD')"
+                [class.bg-amber-600]="presence?.statut === 'RETARD'"
+                [class.bg-slate-800]="presence?.statut !== 'RETARD'"
+                class="py-1 rounded text-[10px] font-bold transition text-slate-200">
+                Retard
+              </button>
+              <button
+                (click)="onMarkPresence(m.id, 'EXCUSE')"
+                [class.bg-blue-600]="presence?.statut === 'EXCUSE'"
+                [class.bg-slate-800]="presence?.statut !== 'EXCUSE'"
+                class="py-1 rounded text-[10px] font-bold transition text-slate-200">
+                Excusé
+              </button>
+              <button
+                (click)="onMarkPresence(m.id, 'ABSENT')"
+                [class.bg-rose-600]="presence?.statut === 'ABSENT'"
+                [class.bg-slate-800]="presence?.statut !== 'ABSENT'"
+                class="py-1 rounded text-[10px] font-bold transition text-slate-200">
+                Absent
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Sanctions prises durant la séance -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold text-white">Sanctions Prononcées</h3>
+        <span class="text-xs text-rose-400 font-semibold">{{ tontineState.sanctions().length }} sanction(s)</span>
+      </div>
+
+      <div class="space-y-2">
+        @for (s of tontineState.sanctions(); track s.id) {
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+            <div>
+              <div class="font-bold text-rose-300">{{ s.motif }}</div>
+              <div class="text-[10px] text-slate-400">Infraction : {{ s.typeInfraction }}</div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-white"><app-amount-badge [amount]="s.montantXaf"></app-amount-badge></div>
+              <app-status-badge [status]="s.statut"></app-status-badge>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal de sanction en direct -->
+  @if (isSanctionModalOpen()) {
+    <app-penalty-modal
+      [membres]="tontineState.membres()"
+      (close)="closeSanctionModal()"
+      (submitSanction)="onSubmitSanction($event)">
+    </app-penalty-modal>
+  }
+</ion-content>

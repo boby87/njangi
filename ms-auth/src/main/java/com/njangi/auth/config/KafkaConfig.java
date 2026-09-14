@@ -8,17 +8,11 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaConfig {
 
-    @Bean
-    public NewTopic membreInscritTopic() {
-        return TopicBuilder.name("membre.inscrit")
-                .partitions(3)
-                .replicas(1)
-                .build();
-    }
+    public static final String AUTH_EVENTS_TOPIC = "auth.events";
 
     @Bean
-    public NewTopic notificationDemandee() {
-        return TopicBuilder.name("notification.demandee")
+    public NewTopic authEventsTopic() {
+        return TopicBuilder.name(AUTH_EVENTS_TOPIC)
                 .partitions(3)
                 .replicas(1)
                 .build();

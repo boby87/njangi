@@ -1,0 +1,121 @@
+<div class="space-y-6 animate-fade-in">
+
+  <!-- En-tête -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-2xl font-bold text-white font-heading">Multi-Cotisations Simultanées</h2>
+      <p class="text-xs text-slate-400 mt-1">
+        Suivi transparent des 3 caisses Njangi : Pot rotatif, Fonds de secours/décès et Caisse de réserve
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <a 
+        routerLink="/cotisations/pot"
+        class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 transition-colors">
+        🎯 Ordre du Pot Rotatif →
+      </a>
+      <a 
+        routerLink="/paiements"
+        class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors">
+        + Enregistrer un Paiement
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtres par type de cotisation simultanée -->
+  <div class="flex flex-wrap items-center gap-2 p-1.5 rounded-xl bg-slate-900 border border-slate-800 self-start">
+    <button 
+      type="button" 
+      (click)="setFiltre('TOUS')"
+      [class.bg-emerald-600]="filtreType() === 'TOUS'"
+      [class.text-white]="filtreType() === 'TOUS'"
+      [class.text-slate-400]="filtreType() !== 'TOUS'"
+      class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">
+      Toutes les caisses
+    </button>
+
+    <button 
+      type="button" 
+      (click)="setFiltre('ROTATIVE_POT')"
+      [class.bg-emerald-600]="filtreType() === 'ROTATIVE_POT'"
+      [class.text-white]="filtreType() === 'ROTATIVE_POT'"
+      [class.text-slate-400]="filtreType() !== 'ROTATIVE_POT'"
+      class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">
+      💰 Pot Rotatif ({{ (session()?.montantPotParTourXaf || 100000).toLocaleString('fr-FR') }} XAF)
+    </button>
+
+    <button 
+      type="button" 
+      (click)="setFiltre('SECOURS_DECES')"
+      [class.bg-emerald-600]="filtreType() === 'SECOURS_DECES'"
+      [class.text-white]="filtreType() === 'SECOURS_DECES'"
+      [class.text-slate-400]="filtreType() !== 'SECOURS_DECES'"
+      class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">
+      🤝 Secours / Décès ({{ (session()?.montantSecoursXaf || 5000).toLocaleString('fr-FR') }} XAF)
+    </button>
+
+    <button 
+      type="button" 
+      (click)="setFiltre('CAISSE_RESERVE')"
+      [class.bg-emerald-600]="filtreType() === 'CAISSE_RESERVE'"
+      [class.text-white]="filtreType() === 'CAISSE_RESERVE'"
+      [class.text-slate-400]="filtreType() !== 'CAISSE_RESERVE'"
+      class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">
+      🛡️ Caisse de Réserve ({{ (session()?.montantReserveXaf || 2000).toLocaleString('fr-FR') }} XAF)
+    </button>
+  </div>
+
+  <!-- Tableau des cotisations -->
+  <div class="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm text-slate-300">
+        <thead class="bg-slate-950/80 text-xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+          <tr>
+            <th class="px-5 py-3.5">Membre</th>
+            <th class="px-5 py-3.5">Type de Caisse</th>
+            <th class="px-5 py-3.5">Montant Attendu</th>
+            <th class="px-5 py-3.5">Montant Réglé</th>
+            <th class="px-5 py-3.5">Échéance</th>
+            <th class="px-5 py-3.5">Statut</th>
+            <th class="px-5 py-3.5 text-right">Pénalité</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-850 text-xs">
+          @for (cot of cotisationsFiltrees(); track cot.id) {
+            <tr class="hover:bg-slate-800/40 transition-colors">
+              <td class="px-5 py-3.5 font-bold text-white">{{ cot.membreNom }}</td>
+              <td class="px-5 py-3.5">
+                @if (cot.typeCotisation === 'ROTATIVE_POT') {
+                  <span class="text-amber-400 font-semibold">Pot Rotatif</span>
+                } @else if (cot.typeCotisation === 'SECOURS_DECES') {
+                  <span class="text-blue-400 font-semibold">Secours / Décès</span>
+                } @else {
+                  <span class="text-emerald-400 font-semibold">Caisse Réserve</span>
+                }
+              </td>
+              <td class="px-5 py-3.5">
+                <app-amount-badge [amount]="cot.montantAttenduXaf" variant="neutral" size="sm"></app-amount-badge>
+              </td>
+              <td class="px-5 py-3.5">
+                <app-amount-badge [amount]="cot.montantPayeXaf" [variant]="cot.montantPayeXaf >= cot.montantAttenduXaf ? 'success' : 'warning'" size="sm"></app-amount-badge>
+              </td>
+              <td class="px-5 py-3.5 text-slate-400 font-mono">{{ cot.dateEcheance }}</td>
+              <td class="px-5 py-3.5">
+                <app-status-badge [status]="cot.statut"></app-status-badge>
+              </td>
+              <td class="px-5 py-3.5 text-right">
+                @if (cot.penaliteAppliqueeXaf) {
+                  <span class="text-rose-400 font-bold font-mono">+{{ cot.penaliteAppliqueeXaf.toLocaleString('fr-FR') }} XAF</span>
+                } @else {
+                  <span class="text-slate-500">-</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

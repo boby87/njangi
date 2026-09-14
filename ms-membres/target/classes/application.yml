@@ -1,9 +1,18 @@
 server:
-  port: 8082
+  port: 8002
 
 spring:
   application:
     name: ms-membres
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
   datasource:
     url: jdbc:postgresql://localhost:5432/njangi?currentSchema=membres
     username: njangi
@@ -41,3 +50,17 @@ spring:
 logging:
   level:
     com.njangi: DEBUG
+
+spring:
+  threads:
+    virtual:
+      enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
+    display-request-duration: true

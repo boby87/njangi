@@ -1,0 +1,211 @@
+<div class="max-w-2xl mx-auto space-y-6 animate-fade-in">
+
+  <!-- En-tête -->
+  <div class="p-6 rounded-2xl bg-gradient-to-r from-amber-950/60 via-slate-900 to-slate-900 border border-amber-800/40 shadow-xl">
+    <span class="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 font-bold text-xs">F-07 — Sécurité Financière</span>
+    <h2 class="text-2xl font-bold text-white font-heading mt-1">Enregistrer un Versement de Cotisation</h2>
+    <p class="text-xs text-slate-300 mt-1">
+      Pour les versements en espèces (Cash), la traçabilité exige obligatoirement le téléversement de la photo du reçu physique signé par le Trésorier.
+    </p>
+  </div>
+
+  <!-- Formulaire Signal Forms pur -->
+  <div class="p-6 sm:p-8 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-5">
+    
+    <!-- Membre payeur -->
+    <div>
+      <label for="pay-membre" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+        Membre cotisant *
+      </label>
+      <select 
+        id="pay-membre"
+        [value]="membreId()"
+        (change)="onMembreChange($any($event.target).value)"
+        class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 outline-none">
+        @for (m of membres(); track m.id) {
+          <option [value]="m.id">{{ m.prenom }} {{ m.nom }} ({{ m.telephone }})</option>
+        }
+      </select>
+    </div>
+
+    <!-- Type de cotisation -->
+    <div>
+      <label for="pay-type" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+        Type de Caisse de Cotisation *
+      </label>
+      <select 
+        id="pay-type"
+        [value]="typeCotisation()"
+        (change)="onTypeCotisationChange($any($event.target).value)"
+        class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 outline-none">
+        <option value="ROTATIVE_POT">💰 Pot Rotatif (Cagnotte) — 100 000 XAF</option>
+        <option value="SECOURS_DECES">🤝 Caisse de Secours & Événements — 5 000 XAF</option>
+        <option value="CAISSE_RESERVE">🛡️ Caisse de Réserve & Solidarité — 2 000 XAF</option>
+        <option value="EVENEMENTIELLE">🎉 Cotisation Événementielle Spéciale</option>
+      </select>
+    </div>
+
+    <!-- Montant -->
+    <div>
+      <label for="pay-montant" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+        Montant versé (XAF) *
+      </label>
+      <div class="relative">
+        <input 
+          type="number"
+          id="pay-montant"
+          [value]="montantXaf()"
+          (input)="onMontantInput($any($event.target).value)"
+          min="500"
+          step="1000"
+          class="w-full bg-slate-800 border border-slate-700 text-slate-100 font-bold text-base rounded-xl px-4 py-3 pr-16 focus:ring-2 focus:ring-amber-500 outline-none"
+        />
+        <span class="absolute right-4 top-3 text-sm font-bold text-amber-400">XAF</span>
+      </div>
+    </div>
+
+    <!-- Mode de paiement -->
+    <div>
+      <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+        Canal de règlement *
+      </label>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <label 
+          class="p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-2.5"
+          [class.border-amber-500]="modePaiement() === 'CASH'"
+          [class.bg-amber-950/20]="modePaiement() === 'CASH'"
+          [class.border-slate-700]="modePaiement() !== 'CASH'">
+          <input 
+            type="radio" 
+            name="modePaiement" 
+            value="CASH"
+            [checked]="modePaiement() === 'CASH'"
+            (change)="onModePaiementChange('CASH')"
+            class="text-amber-500 focus:ring-amber-500"
+          />
+          <span class="text-xs font-bold text-white">💵 Espèces (Cash)</span>
+        </label>
+
+        <label 
+          class="p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-2.5"
+          [class.border-amber-500]="modePaiement() === 'MTN_MOMO'"
+          [class.bg-amber-950/20]="modePaiement() === 'MTN_MOMO'"
+          [class.border-slate-700]="modePaiement() !== 'MTN_MOMO'">
+          <input 
+            type="radio" 
+            name="modePaiement" 
+            value="MTN_MOMO"
+            [checked]="modePaiement() === 'MTN_MOMO'"
+            (change)="onModePaiementChange('MTN_MOMO')"
+            class="text-amber-500 focus:ring-amber-500"
+          />
+          <span class="text-xs font-bold text-yellow-300">🟡 MTN MoMo</span>
+        </label>
+
+        <label 
+          class="p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-2.5"
+          [class.border-amber-500]="modePaiement() === 'ORANGE_MONEY'"
+          [class.bg-amber-950/20]="modePaiement() === 'ORANGE_MONEY'"
+          [class.border-slate-700]="modePaiement() !== 'ORANGE_MONEY'">
+          <input 
+            type="radio" 
+            name="modePaiement" 
+            value="ORANGE_MONEY"
+            [checked]="modePaiement() === 'ORANGE_MONEY'"
+            (change)="onModePaiementChange('ORANGE_MONEY')"
+            class="text-amber-500 focus:ring-amber-500"
+          />
+          <span class="text-xs font-bold text-orange-400">🟠 Orange Money</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Référence transaction si Mobile Money -->
+    @if (modePaiement() !== 'CASH') {
+      <div class="animate-fade-in">
+        <label for="pay-ref" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          ID Transaction Mobile Money *
+        </label>
+        <input 
+          type="text" 
+          id="pay-ref"
+          [value]="referenceTransaction()"
+          (input)="onRefInput($any($event.target).value)"
+          placeholder="Ex: MTN-99823412 ou OM-CM-883719"
+          class="w-full bg-slate-800 border border-slate-700 text-slate-100 font-mono text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 outline-none"
+        />
+      </div>
+    }
+
+    <!-- Pièce jointe obligatoire pour Cash (Règle Métier GEMINI.md) -->
+    @if (modePaiement() === 'CASH') {
+      <div class="p-4 rounded-xl bg-amber-950/20 border border-amber-800/40 space-y-3 animate-fade-in">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold uppercase tracking-wider text-amber-300">
+            Reçu signé physique obligatoire (Preuve) *
+          </label>
+          @if (preuveRecuBase64()) {
+            <button 
+              type="button" 
+              (click)="voirPreuve()" 
+              class="text-xs text-amber-400 hover:text-amber-300 font-semibold underline">
+              Voir l'aperçu
+            </button>
+          }
+        </div>
+
+        <input 
+          type="file" 
+          accept="image/*"
+          (change)="onFileSelected($event)"
+          class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-500 cursor-pointer"
+        />
+        <p class="text-[11px] text-slate-400 leading-tight">
+          Photographiez le reçu remis par le Trésorier pour garantir l'absence de litige financier.
+        </p>
+      </div>
+    }
+
+    <!-- Commentaire -->
+    <div>
+      <label for="pay-com" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+        Observations / Justificatif
+      </label>
+      <input 
+        type="text" 
+        id="pay-com"
+        [value]="commentaire()"
+        (input)="onCommentaireInput($any($event.target).value)"
+        class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 outline-none"
+      />
+    </div>
+
+    <!-- Actions -->
+    <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+      <button 
+        type="button" 
+        (click)="onAnnuler()"
+        class="px-5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors">
+        Annuler
+      </button>
+      <button 
+        type="button" 
+        [disabled]="!isValid()"
+        (click)="onSubmit()"
+        class="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-500 active:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-950/50 transition-all flex items-center gap-2">
+        <span>Valider l'encaissement et générer le reçu</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Visionneuse de preuve -->
+  @if (showProofModal()) {
+    <app-proof-preview 
+      [imageUrl]="preuveRecuBase64()" 
+      title="Aperçu du Reçu Signé" 
+      (close)="fermerPreuve()">
+    </app-proof-preview>
+  }
+
+</div>

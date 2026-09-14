@@ -1,0 +1,210 @@
+<div class="space-y-8 animate-fade-in">
+
+  <!-- En-tête de rôle : Vue Trésorier -->
+  <div class="p-6 rounded-2xl bg-gradient-to-r from-amber-950/60 via-slate-900 to-slate-900 border border-amber-800/40 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 font-bold text-xs">Vue Trésorier</span>
+        <span class="text-xs text-slate-400">Gestion Financière & Recouvrement</span>
+      </div>
+      <h2 class="text-xl sm:text-2xl font-bold text-white font-heading">
+        Caisses, Encaissements & Décaissements
+      </h2>
+      <p class="text-xs text-slate-300 mt-1 max-w-2xl">
+        Responsable de la conformité des encaissements en espèces avec reçu signé, validations Mobile Money et versement du pot rotatif.
+      </p>
+    </div>
+
+    <!-- Actions du Trésorier -->
+    <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+      <a 
+        routerLink="/paiements" 
+        class="px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-amber-600 hover:bg-amber-500 active:bg-amber-700 shadow-lg shadow-amber-950/50 transition-all flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        <span>Enregistrer un Paiement Cash</span>
+      </a>
+
+      @if (potEnCours()?.statut === 'PRET_POUR_VERSEMENT') {
+        <button 
+          type="button" 
+          (click)="decaisserPot()"
+          class="px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 shadow-lg shadow-emerald-950/50 transition-all flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+          <span>Décaisser le Pot ({{ (potEnCours()?.montantTheoriqueXaf || 600000).toLocaleString('fr-FR') }} XAF)</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Bilan des Caisses Njangi (Cash en coffre vs Mobile Money) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    
+    <!-- Caisse Cash en Coffre -->
+    <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 glass-panel-hover">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-medium uppercase tracking-wider">Caisse Espèces (Cash)</span>
+        <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">💵</span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-2xl font-bold text-white font-heading">
+          {{ stats().soldeCash.toLocaleString('fr-FR') }}
+        </span>
+        <span class="text-xs text-slate-400">XAF</span>
+      </div>
+      <p class="text-[11px] text-emerald-400 mt-2 font-medium">Reçus physiques certifiés</p>
+    </div>
+
+    <!-- Caisse Mobile Money (Orange & MTN) -->
+    <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 glass-panel-hover">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-medium uppercase tracking-wider">Mobile Money</span>
+        <span class="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">📱</span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-2xl font-bold text-amber-400 font-heading">
+          {{ stats().soldeMobileMoney.toLocaleString('fr-FR') }}
+        </span>
+        <span class="text-xs text-slate-400">XAF</span>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-2 font-medium">Comptes MTN MoMo & Orange Money</p>
+    </div>
+
+    <!-- Total Disponible -->
+    <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 glass-panel-hover">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-medium uppercase tracking-wider">Total Disponible</span>
+        <span class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">🏦</span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-2xl font-bold text-emerald-400 font-heading">
+          {{ stats().soldeTotal.toLocaleString('fr-FR') }}
+        </span>
+        <span class="text-xs text-slate-400">XAF</span>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-2 font-medium">Trésorerie nette du groupe</p>
+    </div>
+
+    <!-- Retards à recouvrer -->
+    <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 glass-panel-hover">
+      <div class="flex items-center justify-between text-slate-400 mb-2">
+        <span class="text-xs font-medium uppercase tracking-wider">Cotisations en Retard</span>
+        <span class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400">⚠️</span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-2xl font-bold text-rose-400 font-heading">
+          {{ stats().membresEnRetardCount }}
+        </span>
+        <span class="text-xs text-slate-400">membres</span>
+      </div>
+      <p class="text-[11px] text-rose-300 mt-2 font-medium">Action de recouvrement requise</p>
+    </div>
+
+  </div>
+
+  <!-- Tableaux de travail du Trésorier -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <!-- Liste des membres en retard avec action rapide -->
+    <div class="lg:col-span-2 p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-white font-heading">Cotisations en Retard — Recouvrement</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Membres n'ayant pas honoré leur tour avant échéance</p>
+        </div>
+        <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-rose-500/20 text-rose-400">
+          {{ stats().membresEnRetardCount }} en retard
+        </span>
+      </div>
+
+      @if (stats().membresEnRetard.length > 0) {
+        <div class="space-y-3">
+          @for (cot of stats().membresEnRetard; track cot.id) {
+            <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-850 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-white">{{ cot.membreNom }}</span>
+                  <app-status-badge [status]="cot.statut"></app-status-badge>
+                </div>
+                <div class="flex items-center gap-3 text-xs text-slate-400 mt-1">
+                  <span>Type : <strong class="text-slate-300">{{ cot.typeCotisation }}</strong></span>
+                  <span>Échéance : <strong class="text-rose-400">{{ cot.dateEcheance }}</strong></span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <app-amount-badge [amount]="cot.montantAttenduXaf" variant="danger" size="md"></app-amount-badge>
+                <button 
+                  type="button" 
+                  (click)="relancerMembre(cot.membreNom)"
+                  class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 transition-colors">
+                  Relancer SMS
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="p-8 text-center text-slate-400 text-xs">
+          ✅ Aucun membre en retard sur cette séance. Toutes les cotisations sont à jour !
+        </div>
+      }
+    </div>
+
+    <!-- Derniers encaissements avec reçu signé obligatoire -->
+    <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+      <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-white font-heading">Derniers Paiements</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Traçabilité & pièces jointes</p>
+        </div>
+        <a routerLink="/paiements" class="text-xs text-emerald-400 hover:text-emerald-300 font-semibold">
+          Tout voir →
+        </a>
+      </div>
+
+      <div class="space-y-3">
+        @for (pay of paiements().slice(0, 4); track pay.id) {
+          <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-850 flex items-center justify-between">
+            <div class="space-y-1">
+              <p class="text-xs font-semibold text-white">{{ pay.membreNom }}</p>
+              <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                <span>{{ pay.modePaiement }}</span>
+                <span>•</span>
+                <span>{{ pay.datePaiement }}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <app-amount-badge [amount]="pay.montantXaf" variant="success" size="sm"></app-amount-badge>
+              @if (pay.preuveUrl) {
+                <button 
+                  type="button" 
+                  (click)="voirPreuve(pay.preuveUrl)"
+                  title="Voir le reçu signé"
+                  class="p-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition-colors">
+                  📎
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Visionneuse de preuve de reçu signed -->
+  @if (previewRecuUrl()) {
+    <app-proof-preview 
+      [imageUrl]="previewRecuUrl()" 
+      title="Reçu Signé Cash (Preuve Trésorier)" 
+      (close)="fermerPreuve()">
+    </app-proof-preview>
+  }
+
+</div>

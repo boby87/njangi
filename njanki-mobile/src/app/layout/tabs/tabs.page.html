@@ -1,0 +1,46 @@
+<ion-tabs>
+  <!-- Bandeau mode hors ligne / réseau dégradé 3G -->
+  @if (!networkService.isOnline()) {
+    <div class="bg-amber-500 text-slate-950 px-3 py-1.5 text-xs font-bold flex items-center justify-between shadow-md z-50">
+      <div class="flex items-center gap-1.5">
+        <ion-icon name="cloud-offline-outline" class="text-base"></ion-icon>
+        <span>Mode Hors-Ligne (3G instable) : saisies sauvegardées localement</span>
+      </div>
+      @if (tontineState.offlineQueue().length > 0) {
+        <span class="bg-slate-900 text-amber-300 px-2 py-0.5 rounded-full text-[10px]">
+          {{ tontineState.offlineQueue().length }} en attente
+        </span>
+      }
+    </div>
+  }
+
+  <ion-tab-bar slot="bottom" class="border-t border-slate-800 bg-slate-950/95 backdrop-blur-md">
+    <ion-tab-button tab="dashboard" class="text-slate-400 hover:text-emerald-400">
+      <ion-icon name="home-outline"></ion-icon>
+      <ion-label>Accueil</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="cotisations" class="text-slate-400 hover:text-emerald-400">
+      <ion-icon name="wallet-outline"></ion-icon>
+      <ion-label>Cotisations</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="reunions" class="text-slate-400 hover:text-emerald-400">
+      <ion-icon name="calendar-outline"></ion-icon>
+      <ion-label>Séance Live</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="paiements" class="text-slate-400 hover:text-emerald-400">
+      <ion-icon name="card-outline"></ion-icon>
+      <ion-label>Caisse</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="profil" class="text-slate-400 hover:text-emerald-400">
+      <ion-icon name="person-outline"></ion-icon>
+      <ion-label>Profil</ion-label>
+      @if (tontineState.offlineQueue().length > 0) {
+        <ion-badge color="warning">{{ tontineState.offlineQueue().length }}</ion-badge>
+      }
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-tabs>

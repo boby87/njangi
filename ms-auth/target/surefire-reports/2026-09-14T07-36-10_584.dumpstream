@@ -1,0 +1,5 @@
+# Created at 2026-09-14T07:36:11.235
+Boot Manifest-JAR contains absolute paths in classpath 'D:\projet\njangi\ms-auth\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+'other' has different root
+

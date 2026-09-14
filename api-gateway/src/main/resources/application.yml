@@ -1,27 +1,33 @@
 server:
-  port: 8080
+  port: 9090
 
 spring:
   application:
     name: api-gateway
+  threads:
+    virtual:
+      enabled: true
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${JWT_ISSUER_URI:http://localhost:9000}
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
 
 njangi:
   services:
-    auth-url: ${MS_AUTH_URL:http://localhost:8081}
-    membres-url: ${MS_MEMBRES_URL:http://localhost:8082}
-    groupes-url: ${MS_GROUPES_URL:http://localhost:8083}
-    reunions-url: ${MS_REUNIONS_URL:http://localhost:8084}
-    cotisations-url: ${MS_COTISATIONS_URL:http://localhost:8085}
-    paiements-url: ${MS_PAIEMENTS_URL:http://localhost:8086}
-    penalites-url: ${MS_PENALITES_URL:http://localhost:8087}
-    notifications-url: ${MS_NOTIFICATIONS_URL:http://localhost:8088}
-    statistiques-url: ${MS_STATISTIQUES_URL:http://localhost:8089}
+    auth-url: ${MS_AUTH_URL:http://localhost:8001}
+    membres-url: ${MS_MEMBRES_URL:http://localhost:8002}
+    groupes-url: ${MS_GROUPES_URL:http://localhost:8003}
+    reunions-url: ${MS_REUNIONS_URL:http://localhost:8004}
+    cotisations-url: ${MS_COTISATIONS_URL:http://localhost:8005}
+    paiements-url: ${MS_PAIEMENTS_URL:http://localhost:8006}
+    penalites-url: ${MS_PENALITES_URL:http://localhost:8007}
+    notifications-url: ${MS_NOTIFICATIONS_URL:http://localhost:8008}
+    statistiques-url: ${MS_STATISTIQUES_URL:http://localhost:8009}
   cors:
     allow-origins:
       - http://localhost:4200

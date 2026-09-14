@@ -1,0 +1,116 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-slate-950 text-white border-b border-slate-800">
+    <div class="px-4 py-2">
+      <div class="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">Caisse & Épargne Mutuelle</div>
+      <h1 class="text-base font-bold text-white">Multi-Cotisations Simultanées</h1>
+    </div>
+
+    <!-- Sélecteur de caisses -->
+    <div class="px-3 pb-2 flex gap-1.5 overflow-x-auto no-scrollbar">
+      <button
+        (click)="onTypeChange('TOUS')"
+        [class.bg-emerald-600]="selectedType() === 'TOUS'"
+        [class.text-white]="selectedType() === 'TOUS'"
+        [class.bg-slate-800]="selectedType() !== 'TOUS'"
+        [class.text-slate-300]="selectedType() !== 'TOUS'"
+        class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border border-slate-700">
+        Toutes les caisses
+      </button>
+      <button
+        (click)="onTypeChange('ROTATIVE_POT')"
+        [class.bg-emerald-600]="selectedType() === 'ROTATIVE_POT'"
+        [class.text-white]="selectedType() === 'ROTATIVE_POT'"
+        [class.bg-slate-800]="selectedType() !== 'ROTATIVE_POT'"
+        [class.text-slate-300]="selectedType() !== 'ROTATIVE_POT'"
+        class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border border-slate-700">
+        Pot Rotatif (50 000 XAF)
+      </button>
+      <button
+        (click)="onTypeChange('SECOURS_DECES')"
+        [class.bg-emerald-600]="selectedType() === 'SECOURS_DECES'"
+        [class.text-white]="selectedType() === 'SECOURS_DECES'"
+        [class.bg-slate-800]="selectedType() !== 'SECOURS_DECES'"
+        [class.text-slate-300]="selectedType() !== 'SECOURS_DECES'"
+        class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border border-slate-700">
+        Secours / Décès (5 000 XAF)
+      </button>
+      <button
+        (click)="onTypeChange('CAISSE_RESERVE')"
+        [class.bg-emerald-600]="selectedType() === 'CAISSE_RESERVE'"
+        [class.text-white]="selectedType() === 'CAISSE_RESERVE'"
+        [class.bg-slate-800]="selectedType() !== 'CAISSE_RESERVE'"
+        [class.text-slate-300]="selectedType() !== 'CAISSE_RESERVE'"
+        class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border border-slate-700">
+        Caisse Réserve (10 000 XAF)
+      </button>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-slate-950 text-slate-100">
+  <div class="p-4 space-y-4">
+
+    <!-- Calendrier d'ordre de passage du Pot Rotatif (600 000 XAF) -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <ion-icon name="wallet-outline" class="text-amber-400 text-lg"></ion-icon>
+          <h2 class="font-bold text-white text-sm">Calendrier du Pot Rotatif</h2>
+        </div>
+        <span class="text-xs text-amber-400 font-bold">
+          <app-amount-badge [amount]="600000"></app-amount-badge> / mois
+        </span>
+      </div>
+
+      <div class="space-y-2">
+        @for (tour of tontineState.toursPot(); track tour.id) {
+          <div
+            [class.border-emerald-500]="tour.statut === 'PRET_POUR_VERSEMENT'"
+            [class.bg-emerald-950/40]="tour.statut === 'PRET_POUR_VERSEMENT'"
+            class="bg-slate-800/60 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2.5">
+              <div
+                [class.bg-emerald-500]="tour.statut === 'VERSE'"
+                [class.bg-amber-500]="tour.statut === 'PRET_POUR_VERSEMENT'"
+                [class.bg-slate-700]="tour.statut === 'A_VENIR'"
+                class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-slate-950 text-[11px]">
+                {{ tour.numeroTour }}
+              </div>
+              <div>
+                <div class="font-bold text-white">
+                  {{ tour.beneficiaireNom }}
+                </div>
+                <div class="text-[10px] text-slate-400">Échéance : {{ tour.dateAttribution }}</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <app-status-badge [status]="tour.statut"></app-status-badge>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Détail des cotisations filtrées -->
+    <div class="space-y-2">
+      <h2 class="font-bold text-white text-sm">Mes Versements et Appels de Cotisation</h2>
+      @for (cot of filteredCotisations(); track cot.id) {
+        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+          <div>
+            <div class="font-semibold text-slate-200">
+              {{ cot.typeCotisation === 'ROTATIVE_POT' ? 'Pot Rotatif Mensuel' : cot.typeCotisation === 'SECOURS_DECES' ? 'Fonds de Secours & Décès' : 'Caisse d\'Épargne & Réserve' }}
+            </div>
+            <div class="text-[10px] text-slate-400">Date limite : {{ cot.dateEcheance }}</div>
+          </div>
+          <div class="text-right">
+            <div class="font-bold text-emerald-400">
+              <app-amount-badge [amount]="cot.montantAttenduXaf"></app-amount-badge>
+            </div>
+            <app-status-badge [status]="cot.statut"></app-status-badge>
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+</ion-content>

@@ -1,0 +1,184 @@
+<div class="space-y-6 animate-fade-in">
+
+  <!-- En-tête du groupe -->
+  <div class="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/20 text-emerald-300">Actif</span>
+          <span class="text-xs text-slate-400">Périodicité : {{ groupe().frequenceReunion }}</span>
+        </div>
+        <h2 class="text-2xl font-bold text-white font-heading">{{ groupe().nom }}</h2>
+        <p class="text-xs text-slate-300 mt-1 max-w-2xl">{{ groupe().description }}</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a routerLink="/dashboard" class="px-4 py-2 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors">
+          Tableau de bord →
+        </a>
+      </div>
+    </div>
+
+    <!-- Détails du siège -->
+    <div class="pt-3 border-t border-slate-850 flex flex-wrap items-center gap-4 text-xs text-slate-300">
+      <div class="flex items-center gap-1.5">
+        <span class="text-slate-400">Type de siège :</span>
+        @if (groupe().typeSiege === 'ROTATIF') {
+          <span class="font-bold text-emerald-400">🔄 Siège Rotatif chez les membres</span>
+        } @else {
+          <span class="font-bold text-amber-400">📍 Siège Fixe : {{ groupe().adresseSiegeFixe }}</span>
+        }
+      </div>
+      <div>•</div>
+      <div>Membres : <strong class="text-white">{{ groupe().nombreMembresActuels }} / {{ groupe().nombreMembresMax }}</strong></div>
+    </div>
+  </div>
+
+  <!-- Onglets : Distinction Clé Session vs Mandat (Cahier des charges) -->
+  <div class="flex border-b border-slate-800 gap-4 text-sm font-semibold">
+    <button 
+      type="button" 
+      (click)="setOnglet('MANDAT')"
+      [class.text-emerald-400]="ongletActif() === 'MANDAT'"
+      [class.border-emerald-500]="ongletActif() === 'MANDAT'"
+      class="pb-3 border-b-2 border-transparent transition-colors">
+      Mandat de Bureau (Gouvernance)
+    </button>
+
+    <button 
+      type="button" 
+      (click)="setOnglet('SESSION')"
+      [class.text-emerald-400]="ongletActif() === 'SESSION'"
+      [class.border-emerald-500]="ongletActif() === 'SESSION'"
+      class="pb-3 border-b-2 border-transparent transition-colors">
+      Session Active (Cycle Financier)
+    </button>
+
+    <button 
+      type="button" 
+      (click)="setOnglet('MEMBRES')"
+      [class.text-emerald-400]="ongletActif() === 'MEMBRES'"
+      [class.border-emerald-500]="ongletActif() === 'MEMBRES'"
+      class="pb-3 border-b-2 border-transparent transition-colors">
+      Membres & Rôles
+    </button>
+  </div>
+
+  <!-- Contenu des onglets -->
+  @if (ongletActif() === 'MANDAT') {
+    <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4 animate-fade-in">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-white font-heading">Mandat Actuel du Bureau</h3>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Période : Du <strong>{{ mandat()?.dateDebut }}</strong> au <strong>{{ mandat()?.dateFinPrevue }}</strong>
+          </p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-800/40">
+          Bureau en exercice
+        </span>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-850 text-xs text-slate-300 leading-relaxed">
+        <strong class="text-amber-400">Principe de distinction (GEMINI.md) :</strong> Le mandat de bureau correspond à la période de fonction du bureau élu (Président, Trésorier, Secrétaire). Un mandat peut couvrir une ou plusieurs sessions selon les règles du groupe. Le bureau peut être renouvelé sans clôturer la session, et vice-versa.
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+        <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700">
+          <span class="text-[10px] font-bold text-purple-400 uppercase">Président</span>
+          <p class="text-base font-bold text-white mt-1">{{ mandat()?.presidentNom }}</p>
+          <span class="text-xs text-slate-400">Direction & Ordre du jour</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700">
+          <span class="text-[10px] font-bold text-amber-400 uppercase">Trésorier</span>
+          <p class="text-base font-bold text-white mt-1">{{ mandat()?.tresorierNom }}</p>
+          <span class="text-xs text-slate-400">Caisses & validations</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700">
+          <span class="text-[10px] font-bold text-blue-400 uppercase">Secrétaire</span>
+          <p class="text-base font-bold text-white mt-1">{{ mandat()?.secretaireNom }}</p>
+          <span class="text-xs text-slate-400">PV, présences & convocations</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (ongletActif() === 'SESSION') {
+    <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4 animate-fade-in">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-white font-heading">{{ session()?.libelle }}</h3>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Cycle complet d'un tour de tontine où chaque membre reçoit la cagnotte
+          </p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-800/40">
+          Session #{{ session()?.numeroSession }}
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+        <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700">
+          <span class="text-xs text-slate-400">Pot par tour</span>
+          <p class="text-lg font-bold text-white mt-1">
+            {{ (session()?.montantPotParTourXaf || 100000).toLocaleString('fr-FR') }} XAF
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700">
+          <span class="text-xs text-slate-400">Total Collecté</span>
+          <p class="text-lg font-bold text-emerald-400 mt-1">
+            {{ (session()?.totalCollecteXaf || 0).toLocaleString('fr-FR') }} XAF
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700">
+          <span class="text-xs text-slate-400">Total Distribué en Pots</span>
+          <p class="text-lg font-bold text-amber-400 mt-1">
+            {{ (session()?.totalDistribueXaf || 0).toLocaleString('fr-FR') }} XAF
+          </p>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (ongletActif() === 'MEMBRES') {
+    <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4 animate-fade-in">
+      <div class="border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white font-heading">Liste des Membres Adhérents</h3>
+        <p class="text-xs text-slate-400 mt-0.5">{{ membres().length }} membres enregistrés</p>
+      </div>
+
+      <div class="divide-y divide-slate-850">
+        @for (m of membres(); track m.id) {
+          <div class="py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <img [src]="m.avatarUrl" alt="" class="w-9 h-9 rounded-xl object-cover border border-slate-700" />
+              <div>
+                <p class="text-sm font-semibold text-white">{{ m.prenom }} {{ m.nom }}</p>
+                <p class="text-xs text-slate-400">{{ m.telephone }} • {{ m.ville }}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              @if (m.id === 'usr-1') {
+                <app-role-badge role="PRESIDENT" size="sm"></app-role-badge>
+              } @else if (m.id === 'usr-2') {
+                <app-role-badge role="TRESORIER" size="sm"></app-role-badge>
+              } @else if (m.id === 'usr-3') {
+                <app-role-badge role="SECRETAIRE" size="sm"></app-role-badge>
+              } @else if (m.id === 'usr-4') {
+                <app-role-badge role="MEMBRE" size="sm"></app-role-badge>
+              } @else {
+                <app-role-badge role="MEMBRE" size="sm"></app-role-badge>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</div>

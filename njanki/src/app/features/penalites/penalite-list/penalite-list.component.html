@@ -1,0 +1,104 @@
+<div class="space-y-6 animate-fade-in">
+
+  <!-- En-tête -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-2xl font-bold text-white font-heading">Barème d'Amendes & Sanctions</h2>
+      <p class="text-xs text-slate-400 mt-1">
+        Discipline des réunions, respect des délais de paiement et registre des pénalités
+      </p>
+    </div>
+
+    <button 
+      type="button" 
+      (click)="ouvrirModal()"
+      class="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-950/50 transition-all flex items-center gap-2 self-start sm:self-auto">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+      </svg>
+      <span>Prononcer une Sanction</span>
+    </button>
+  </div>
+
+  <!-- Barème officiel de la tontine -->
+  <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+    <div class="border-b border-slate-800 pb-3">
+      <h3 class="text-base font-bold text-white font-heading">Barème Officiel des Infractions</h3>
+      <p class="text-xs text-slate-400 mt-0.5">Tarifs applicables adoptés en assemblée générale</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      @for (tar of tarifications(); track tar.id) {
+        <div class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-850 flex items-center justify-between">
+          <div class="space-y-0.5">
+            <span class="text-xs font-bold text-slate-200">{{ tar.libelle }}</span>
+            <span class="text-[10px] text-slate-500 block uppercase font-mono">{{ tar.typeInfraction }}</span>
+          </div>
+          <app-amount-badge [amount]="tar.montantForfaitaireXaf" variant="warning" size="sm"></app-amount-badge>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Historique des pénalités prononcées -->
+  <div class="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl">
+    <div class="px-6 py-4 border-b border-slate-800">
+      <h3 class="text-base font-bold text-white font-heading">Registre des Sanctions Infligées</h3>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm text-slate-300">
+        <thead class="bg-slate-950/80 text-xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+          <tr>
+            <th class="px-5 py-3.5">Membre</th>
+            <th class="px-5 py-3.5">Infraction / Motif</th>
+            <th class="px-5 py-3.5">Montant Amende</th>
+            <th class="px-5 py-3.5">Date</th>
+            <th class="px-5 py-3.5">Statut</th>
+            <th class="px-5 py-3.5 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-850 text-xs">
+          @for (pen of penalites(); track pen.id) {
+            <tr class="hover:bg-slate-800/40 transition-colors">
+              <td class="px-5 py-3.5 font-bold text-white">{{ pen.membreNom }}</td>
+              <td class="px-5 py-3.5">
+                <span class="font-semibold text-rose-300">{{ pen.typeInfraction }}</span>
+                <p class="text-slate-400 text-[11px] mt-0.5">{{ pen.motif }}</p>
+              </td>
+              <td class="px-5 py-3.5">
+                <app-amount-badge [amount]="pen.montantXaf" variant="danger" size="sm"></app-amount-badge>
+              </td>
+              <td class="px-5 py-3.5 text-slate-400 font-mono">{{ pen.dateApplication }}</td>
+              <td class="px-5 py-3.5">
+                <app-status-badge [status]="pen.statut === 'PAYEE' ? 'PAYE' : 'PENALISE'"></app-status-badge>
+              </td>
+              <td class="px-5 py-3.5 text-right">
+                @if (pen.statut === 'EN_ATTENTE') {
+                  <button 
+                    type="button" 
+                    (click)="reglerAmende(pen.id)"
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors">
+                    Encaisser
+                  </button>
+                } @else {
+                  <span class="text-emerald-400 text-xs font-semibold">Réglée le {{ pen.dateReglement }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modale -->
+  @if (showModal()) {
+    <app-penalty-modal 
+      [membres]="membres()" 
+      (close)="fermerModal()" 
+      (submitSanction)="appliquerSanction($event)">
+    </app-penalty-modal>
+  }
+
+</div>

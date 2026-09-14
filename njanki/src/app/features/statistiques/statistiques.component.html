@@ -1,0 +1,89 @@
+<div class="space-y-6 animate-fade-in">
+
+  <!-- En-tête -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-2xl font-bold text-white font-heading">Statistiques & Reporting Financier</h2>
+      <p class="text-xs text-slate-400 mt-1">
+        Bilans de session, ratios de collecte, présence aux réunions et santé des caisses
+      </p>
+    </div>
+
+    <button 
+      type="button" 
+      (click)="exporterRapport()"
+      class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 transition-colors flex items-center gap-2 self-start sm:self-auto">
+      <span>🖨️ Exporter le Bilan (PDF / Print)</span>
+    </button>
+  </div>
+
+  <!-- Cartes statistiques -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    
+    <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800">
+      <span class="text-xs text-slate-400 uppercase font-medium">Fonds Total Recouvré</span>
+      <p class="text-2xl font-bold text-emerald-400 mt-1 font-heading">
+        {{ stats().totalCollecte.toLocaleString('fr-FR') }} XAF
+      </p>
+      <div class="mt-2 w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+        <div class="bg-emerald-500 h-full rounded-full" [style.width.%]="stats().tauxCollecte"></div>
+      </div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800">
+      <span class="text-xs text-slate-400 uppercase font-medium">Taux de Recouvrement</span>
+      <p class="text-2xl font-bold text-white mt-1 font-heading">
+        {{ stats().tauxCollecte }}%
+      </p>
+      <span class="text-[11px] text-emerald-400 mt-2 block font-medium">Session en cours</span>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800">
+      <span class="text-xs text-slate-400 uppercase font-medium">Trésorerie Globale</span>
+      <p class="text-2xl font-bold text-amber-400 mt-1 font-heading">
+        {{ stats().soldeTotal.toLocaleString('fr-FR') }} XAF
+      </p>
+      <span class="text-[11px] text-slate-400 mt-2 block">
+        Cash : {{ stats().soldeCash.toLocaleString('fr-FR') }} | MoMo : {{ stats().soldeMobileMoney.toLocaleString('fr-FR') }}
+      </span>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800">
+      <span class="text-xs text-slate-400 uppercase font-medium">Amendes Encaissées</span>
+      <p class="text-2xl font-bold text-purple-400 mt-1 font-heading">
+        {{ stats().totalPenalitesPayees.toLocaleString('fr-FR') }} XAF
+      </p>
+      <span class="text-[11px] text-slate-400 mt-2 block">Discipline communautaire</span>
+    </div>
+
+  </div>
+
+  <!-- Répartition des Caisses Njangi -->
+  <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+    <div class="border-b border-slate-800 pb-3">
+      <h3 class="text-base font-bold text-white font-heading">Répartition par Type de Cotisation</h3>
+      <p class="text-xs text-slate-400 mt-0.5">Ventilation des fonds de la session 2026-2027</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-850">
+        <span class="text-xs font-bold text-amber-400 uppercase">1. Pot Rotatif Mensuel</span>
+        <p class="text-lg font-bold text-white mt-1">1 200 000 XAF</p>
+        <p class="text-xs text-slate-400 mt-1">Attribué tour à tour aux membres chaque mois.</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-850">
+        <span class="text-xs font-bold text-blue-400 uppercase">2. Caisse de Secours & Deuil</span>
+        <p class="text-lg font-bold text-white mt-1">60 000 XAF</p>
+        <p class="text-xs text-slate-400 mt-1">Fonds de solidarité réservé aux événements de vie.</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-850">
+        <span class="text-xs font-bold text-emerald-400 uppercase">3. Caisse de Réserve</span>
+        <p class="text-lg font-bold text-white mt-1">24 000 XAF</p>
+        <p class="text-xs text-slate-400 mt-1">Épargne collective pérenne et prêts d'urgence.</p>
+      </div>
+    </div>
+  </div>
+
+</div>

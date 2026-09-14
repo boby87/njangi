@@ -1,0 +1,190 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-slate-950 text-white border-b border-slate-800">
+    <div class="px-4 py-2">
+      <div class="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">Trésorerie & Encaissements</div>
+      <h1 class="text-base font-bold text-white">Saisie de Paiement</h1>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-slate-950 text-slate-100">
+  <div class="p-4 space-y-4">
+
+    <!-- Notification toast de validation -->
+    @if (showSuccessToast()) {
+      <div class="bg-emerald-600 text-white p-3 rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg animate-fade-in">
+        <ion-icon name="checkmark-circle" class="text-lg"></ion-icon>
+        <span>Paiement enregistré avec succès et clé d'idempotence générée !</span>
+      </div>
+    }
+
+    <!-- Formulaire d'enregistrement piloté par Signals -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-3">
+      <h2 class="text-sm font-bold text-white">Enregistrer une Cotisation</h2>
+
+      <!-- Choix du membre -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">Membre cotisant</label>
+        <select
+          #mSelect
+          (change)="onMembreChange(mSelect.value)"
+          class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          @for (m of tontineState.membres(); track m.id) {
+            <option [value]="m.id" [selected]="m.id === membreId()">{{ m.nom }} {{ m.prenom }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Mode de paiement -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">Mode de règlement</label>
+        <div class="grid grid-cols-3 gap-1.5">
+          <button
+            type="button"
+            (click)="onModeSelect('CASH')"
+            [class.bg-emerald-600]="modePaiement() === 'CASH'"
+            [class.bg-slate-800]="modePaiement() !== 'CASH'"
+            class="py-2 px-1 rounded-xl text-xs font-bold text-white transition flex flex-col items-center gap-1 border border-slate-700">
+            <ion-icon name="cash-outline"></ion-icon>
+            <span>Cash</span>
+          </button>
+          <button
+            type="button"
+            (click)="onModeSelect('MTN_MOMO')"
+            [class.bg-amber-500]="modePaiement() === 'MTN_MOMO'"
+            [class.text-slate-950]="modePaiement() === 'MTN_MOMO'"
+            [class.bg-slate-800]="modePaiement() !== 'MTN_MOMO'"
+            [class.text-white]="modePaiement() !== 'MTN_MOMO'"
+            class="py-2 px-1 rounded-xl text-xs font-bold transition flex flex-col items-center gap-1 border border-slate-700">
+            <ion-icon name="phone-portrait-outline"></ion-icon>
+            <span>MTN MoMo</span>
+          </button>
+          <button
+            type="button"
+            (click)="onModeSelect('ORANGE_MONEY')"
+            [class.bg-orange-600]="modePaiement() === 'ORANGE_MONEY'"
+            [class.bg-slate-800]="modePaiement() !== 'ORANGE_MONEY'"
+            class="py-2 px-1 rounded-xl text-xs font-bold text-white transition flex flex-col items-center gap-1 border border-slate-700">
+            <ion-icon name="phone-portrait-outline"></ion-icon>
+            <span>Orange M.</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Montant en FCFA -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">Montant versé (XAF)</label>
+        <input
+          #amtInput
+          type="number"
+          [value]="montantXaf()"
+          (input)="onMontantChange(amtInput.value)"
+          class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+      </div>
+
+      <!-- Condition Cash : Reçu physique obligatoire -->
+      @if (modePaiement() === 'CASH') {
+        <div class="bg-amber-950/40 border border-amber-600/40 p-3 rounded-xl space-y-2">
+          <div class="flex items-center justify-between text-xs font-semibold text-amber-300">
+            <span>Preuve obligatoire : Reçu signé</span>
+            <span class="text-[10px] text-amber-400">Exigé par le Trésorier</span>
+          </div>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              (click)="onUploadSimulatedReceipt()"
+              class="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-1.5 px-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1 border border-slate-700">
+              <ion-icon name="cloud-upload-outline"></ion-icon>
+              <span>Photo du reçu</span>
+            </button>
+            @if (recuUrl()) {
+              <button
+                type="button"
+                (click)="onOpenProof()"
+                class="bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 px-3 rounded-lg text-xs font-medium flex items-center gap-1">
+                <ion-icon name="eye-outline"></ion-icon>
+                <span>Aperçu</span>
+              </button>
+            }
+          </div>
+          @if (recuUrl()) {
+            <div class="text-[10px] text-emerald-400 flex items-center gap-1">
+              <ion-icon name="checkmark-circle"></ion-icon>
+              <span>Reçu signé joint avec succès</span>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Condition Mobile Money -->
+      @if (modePaiement() === 'MTN_MOMO' || modePaiement() === 'ORANGE_MONEY') {
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Numéro Mobile Money (+237)</label>
+          <input
+            #phoneInput
+            type="tel"
+            [value]="telephoneMoMo()"
+            (input)="onPhoneChange(phoneInput.value)"
+            class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+        </div>
+      }
+
+      <!-- Bouton Enregistrer -->
+      <button
+        type="button"
+        (click)="onSubmit()"
+        [disabled]="!isValid()"
+        class="w-full py-2.5 rounded-xl font-bold text-xs text-white transition shadow"
+        [class.bg-emerald-600]="isValid()"
+        [class.hover:bg-emerald-500]="isValid()"
+        [class.bg-slate-700]="!isValid()"
+        [class.opacity-50]="!isValid()">
+        Valider et Enregistrer l'Encaissement
+      </button>
+    </div>
+
+    <!-- Historique des derniers paiements enregistrés -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold text-white">Derniers Versements</h3>
+        <span class="text-xs text-slate-400">{{ tontineState.paiements().length }} transaction(s)</span>
+      </div>
+
+      <div class="space-y-2">
+        @for (p of tontineState.paiements(); track p.id) {
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+            <div>
+              <div class="font-bold text-white">
+                {{ p.membreId === 'm-001' ? 'Jean-Paul FOKOU' : 'Membre' }}
+              </div>
+              <div class="text-[10px] text-slate-400 flex items-center gap-2">
+                <span>Mode : {{ p.modePaiement }}</span>
+                @if (p.preuveUrl) {
+                  <button (click)="onOpenProof(p.preuveUrl)" class="text-emerald-400 underline">
+                    Voir reçu
+                  </button>
+                }
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-emerald-400">
+                <app-amount-badge [amount]="p.montantXaf"></app-amount-badge>
+              </div>
+              <app-status-badge [status]="p.statut"></app-status-badge>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Aperçu modal du reçu physique signé -->
+  @if (previewingProofUrl()) {
+    <app-proof-preview
+      [imageUrl]="previewingProofUrl()!"
+      title="Reçu de Paiement Cash"
+      (close)="onCloseProof()">
+    </app-proof-preview>
+  }
+</ion-content>

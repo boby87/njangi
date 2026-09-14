@@ -1,0 +1,13 @@
+<span 
+  class="inline-flex items-center font-medium rounded-full border transition-colors"
+  [class]="styleClasses()"
+  [class.text-xs]="size() === 'sm'"
+  [class.px-2]="size() === 'sm'"
+  [class.py-0.5]="size() === 'sm'"
+  [class.text-sm]="size() === 'md'"
+  [class.px-3]="size() === 'md'"
+  [class.py-1]="size() === 'md'"
+>
+  <span class="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-80"></span>
+  {{ label() }}
+</span>

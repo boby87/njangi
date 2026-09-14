@@ -1,0 +1,87 @@
+<div class="space-y-6">
+
+  <!-- Barre de simulation interactive des rôles (Conformité Cahier des charges F-05, F-18 à F-21) -->
+  <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-md">
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-amber-400 font-bold">👑 Démonstration Rôles Njangi :</span>
+      <span class="text-slate-400 hidden sm:inline">Basculez instantanément pour prévisualiser l'écran selon le rôle :</span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-1.5">
+      <button 
+        type="button"
+        (click)="simulerRole('PRESIDENT')"
+        [class.ring-2]="roleAffiche() === 'PRESIDENT'"
+        [class.ring-purple-500]="roleAffiche() === 'PRESIDENT'"
+        class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-purple-950/60 text-purple-300 border border-purple-800/50 hover:bg-purple-900/50 transition-all">
+        Président
+      </button>
+
+      <button 
+        type="button"
+        (click)="simulerRole('TRESORIER')"
+        [class.ring-2]="roleAffiche() === 'TRESORIER'"
+        [class.ring-amber-500]="roleAffiche() === 'TRESORIER'"
+        class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-950/60 text-amber-300 border border-amber-800/50 hover:bg-amber-900/50 transition-all">
+        Trésorier
+      </button>
+
+      <button 
+        type="button"
+        (click)="simulerRole('SECRETAIRE')"
+        [class.ring-2]="roleAffiche() === 'SECRETAIRE'"
+        [class.ring-blue-500]="roleAffiche() === 'SECRETAIRE'"
+        class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-950/60 text-blue-300 border border-blue-800/50 hover:bg-blue-900/50 transition-all">
+        Secrétaire
+      </button>
+
+      <button 
+        type="button"
+        (click)="simulerRole('MEMBRE')"
+        [class.ring-2]="roleAffiche() === 'MEMBRE'"
+        [class.ring-slate-400]="roleAffiche() === 'MEMBRE'"
+        class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 transition-all">
+        Membre
+      </button>
+
+      <button 
+        type="button"
+        (click)="simulerRole('CREATEUR')"
+        [class.ring-2]="roleAffiche() === 'CREATEUR'"
+        [class.ring-emerald-500]="roleAffiche() === 'CREATEUR'"
+        class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-800/50 hover:bg-emerald-900/50 transition-all">
+        Créateur
+      </button>
+
+      @if (roleSimule()) {
+        <button 
+          type="button"
+          (click)="reinitialiserRole()"
+          title="Revenir au rôle naturel de votre compte"
+          class="px-2 py-1 text-[11px] text-slate-400 hover:text-slate-200 underline">
+          Réinitialiser
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Affichage conditionnel de la vue adaptée au rôle actif -->
+  @switch (roleAffiche()) {
+    @case ('PRESIDENT') {
+      <app-president-view></app-president-view>
+    }
+    @case ('TRESORIER') {
+      <app-tresorier-view></app-tresorier-view>
+    }
+    @case ('SECRETAIRE') {
+      <app-secretaire-view></app-secretaire-view>
+    }
+    @case ('CREATEUR') {
+      <app-createur-view></app-createur-view>
+    }
+    @default {
+      <app-membre-view></app-membre-view>
+    }
+  }
+
+</div>
