@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
 export class ProofPreviewComponent {
   readonly imageUrl = input<string | undefined>(undefined);
   readonly title = input<string>('Preuve de Paiement Cash (Reçu Signé)');
-  readonly close = output<void>();
+  readonly closeModal = output<void>();
 
   readonly isFullscreen = signal<boolean>(false);
 
@@ -21,6 +21,6 @@ export class ProofPreviewComponent {
   }
 
   onClose(): void {
-    this.close.emit();
+    this.closeModal.emit();
   }
 }

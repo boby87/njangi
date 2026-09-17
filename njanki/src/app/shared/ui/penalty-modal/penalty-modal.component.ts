@@ -20,7 +20,7 @@ export interface SanctionFormValue {
 })
 export class PenaltyModalComponent {
   readonly membres = input.required<Membre[]>();
-  readonly close = output<void>();
+  readonly closeModal = output<void>();
   readonly submitSanction = output<SanctionFormValue>();
 
   // État du formulaire géré par Signals (Signal Forms pur, aucun FormGroup/ngModel)
@@ -86,6 +86,6 @@ export class PenaltyModalComponent {
   }
 
   onClose(): void {
-    this.close.emit();
+    this.closeModal.emit();
   }
 }

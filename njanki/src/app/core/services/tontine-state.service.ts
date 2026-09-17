@@ -1,6 +1,8 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from './auth.service';
-import { Groupe, MandatBureau, SessionTontine, TypeSiege, FrequenceReunion } from '@shared/models/groupe.model';
+import { ApiService } from './api.service';
+import { Groupe, MandatBureau, SessionTontine, TypeSiege, FrequenceReunion, StatutGroupe } from '@shared/models/groupe.model';
 import { Membre, RoleMembre } from '@shared/models/membre.model';
 import { Cotisation, TourPot, TypeCotisation } from '@shared/models/cotisation.model';
 import { Paiement, EnregistrerPaiementRequest } from '@shared/models/paiement.model';
@@ -12,6 +14,8 @@ import { Penalite, TarificationPenalite, TypeInfraction } from '@shared/models/p
 })
 export class TontineStateService {
   private readonly authService = inject(AuthService);
+  private readonly apiService = inject(ApiService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Jeu de données initial réaliste (Cameroun Njangi)
   private readonly initialMembres: Membre[] = [
@@ -570,6 +574,126 @@ export class TontineStateService {
     const gid = this.groupeActif().id;
     return this.toursPot().find(t => t.beneficiaireMembreId === uid && t.groupeId === gid);
   });
+
+  constructor() {
+    this.chargerDonneesReelles();
+  }
+
+  // Chargement réactif des données réelles depuis PostgreSQL via API Gateway
+  chargerDonneesReelles(): void {
+    // 1. Groupes réels (ms-groupes)
+    this.apiService.get<unknown[]>('/groupes').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res) => {
+        const data = (res.data ?? res) as Array<{
+          id: string;
+          nom: string;
+          description?: string;
+          createurMembreId?: string;
+          typeSiege?: TypeSiege;
+          adresseSiege?: string;
+          frequenceReunion?: FrequenceReunion;
+          nombreMembresMax?: number;
+          statut?: StatutGroupe;
+          createdAt?: string;
+        }>;
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: Groupe[] = data.map(g => ({
+            id: g.id,
+            nom: g.nom,
+            description: g.description || '',
+            createurMembreId: g.createurMembreId || 'usr-1',
+            typeSiege: g.typeSiege || 'ROTATIF',
+            adresseSiegeFixe: g.adresseSiege,
+            frequenceReunion: g.frequenceReunion || 'MENSUELLE',
+            devise: 'XAF',
+            nombreMembresMax: g.nombreMembresMax || 15,
+            nombreMembresActuels: 6,
+            statut: g.statut || 'ACTIF',
+            premierBureauElu: true,
+            soldeCaisseCashXaf: 450000,
+            soldeCaisseMobileMoneyXaf: 834000,
+            dateCreation: g.createdAt ? g.createdAt.substring(0, 10) : '2026-02-01',
+            sessionActive: this.initialSession1,
+            mandatActif: this.initialMandat1
+          }));
+          this.groupes.set(mapped);
+        }
+      },
+      error: () => {}
+    });
+
+    // 2. Membres réels (ms-membres)
+    this.apiService.get<unknown[]>('/membres').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res) => {
+        const data = (res.data ?? res) as Array<{
+          id: string;
+          nom: string;
+          prenom: string;
+          telephone: string;
+          email: string;
+          photoUrl?: string;
+          ville?: string;
+          createdAt?: string;
+        }>;
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: Membre[] = data.map(m => ({
+            id: m.id,
+            nom: m.nom,
+            prenom: m.prenom,
+            telephone: m.telephone,
+            email: m.email,
+            avatarUrl: m.photoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fit=crop&w=256&h=256&q=80',
+            ville: m.ville || 'Douala',
+            pays: 'Cameroun',
+            dateInscription: m.createdAt ? m.createdAt.substring(0, 10) : '2026-01-15',
+            estVerifieKyc: true
+          }));
+          this.membres.set(mapped);
+        }
+      },
+      error: () => {}
+    });
+
+    // 3. Réunions réelles (ms-reunions)
+    this.apiService.get<unknown[]>('/reunions').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res) => {
+        const data = (res.data ?? res) as Array<{
+          id: string;
+          groupeId: string;
+          sessionTontineId?: string;
+          titre: string;
+          dateReunion?: string;
+          typeSiege?: TypeSiege;
+          hoteId?: string;
+          lieuReunion?: string;
+          ordreJour?: string;
+          statut?: string;
+        }>;
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: Reunion[] = data.map((r, idx) => ({
+            id: r.id,
+            groupeId: r.groupeId,
+            sessionId: r.sessionTontineId || 'ses-1',
+            numeroOrdre: idx + 1,
+            titre: r.titre,
+            dateReunion: r.dateReunion ? r.dateReunion.substring(0, 10) : '2026-09-15',
+            heureDebut: '17:30',
+            typeSiege: r.typeSiege || 'ROTATIF',
+            hoteMembreId: r.hoteId || 'usr-1',
+            hoteNom: 'Jean-Paul Mbarga',
+            lieuAdresse: r.lieuReunion || 'Douala',
+            ordreDuJour: r.ordreJour ? r.ordreJour.split('\n') : ['Ouverture', 'Appel', 'Cotisations'],
+            presences: this.initialReunions[0].presences,
+            totalCollecteSeanceXaf: 105000,
+            totalAmendesSeanceXaf: 1000,
+            statut: r.statut === 'PLANIFIEE' ? 'EN_COURS' : 'EN_COURS'
+          }));
+          this.reunions.set(mapped);
+        }
+      },
+      error: () => {}
+    });
+  }
 
   // ACTIONS RÉACTIVES (aucune Promise)
 

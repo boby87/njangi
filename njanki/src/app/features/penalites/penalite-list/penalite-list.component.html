@@ -96,7 +96,7 @@
   @if (showModal()) {
     <app-penalty-modal 
       [membres]="membres()" 
-      (close)="fermerModal()" 
+      (closeModal)="fermerModal()" 
       (submitSanction)="appliquerSanction($event)">
     </app-penalty-modal>
   }

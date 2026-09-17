@@ -1,85 +1,202 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar class="bg-slate-950 text-white border-b border-slate-800">
-    <div class="px-4 py-2 flex items-center justify-between">
-      <div>
-        <div class="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">Tontine Camerounaise</div>
-        <h1 class="text-base font-bold text-white truncate max-w-[240px]">
-          {{ tontineState.activeGroupe().nom }}
-        </h1>
+  <ion-toolbar class="border-b border-white/5" style="--background: #080c16; --color: #ffffff;">
+    <div class="px-4 pt-3 pb-2 flex items-center justify-between">
+      <!-- Info Utilisateur & Tontine -->
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1.5px] shadow-lg shadow-emerald-950/50">
+            <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-extrabold text-white text-xs tracking-wider">
+              JP
+            </div>
+          </div>
+          <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-950 rounded-full"></span>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-bold tracking-wider text-emerald-400 uppercase">🇨🇲 Tontine des Élites</span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded-md bg-white/5 text-slate-400 font-mono">Bafoussam</span>
+          </div>
+          <h1 class="text-base font-extrabold text-white tracking-tight">
+            Jean-Paul Fokou
+          </h1>
+        </div>
       </div>
-      <app-role-badge [role]="authService.activeRole()"></app-role-badge>
+
+      <!-- Badge de Rôle Actif -->
+      <div class="flex items-center gap-2">
+        <app-role-badge [role]="authService.activeRole()"></app-role-badge>
+      </div>
     </div>
 
-    <!-- Sélecteur de rôle interactif (Démonstration dynamique) -->
-    <div class="px-3 pb-2 flex gap-1.5 overflow-x-auto no-scrollbar">
-      @for (role of availableRoles; track role) {
-        <button
-          (click)="onRoleSelect(role)"
-          [class.bg-emerald-600]="authService.activeRole() === role"
-          [class.text-white]="authService.activeRole() === role"
-          [class.bg-slate-800]="authService.activeRole() !== role"
-          [class.text-slate-300]="authService.activeRole() !== role"
-          class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border border-slate-700">
-          Vue {{ role }}
-        </button>
-      }
+    <!-- Sélecteur de Rôle Dynamique (Soft Frosted Glass Segmented Control) -->
+    <div class="px-4 pb-2.5 pt-1">
+      <div class="p-1 rounded-2xl bg-slate-900/60 border border-white/8 backdrop-blur-2xl flex items-center gap-1">
+        @for (role of availableRoles; track role) {
+          <button
+            type="button"
+            (click)="onRoleSelect(role)"
+            [class.bg-emerald-500/15]="authService.activeRole() === role"
+            [class.border-emerald-400/30]="authService.activeRole() === role"
+            [class.text-emerald-300]="authService.activeRole() === role"
+            [class.font-bold]="authService.activeRole() === role"
+            [class.shadow-sm]="authService.activeRole() === role"
+            [class.shadow-emerald-500/15]="authService.activeRole() === role"
+            [class.border-transparent]="authService.activeRole() !== role"
+            [class.text-slate-400]="authService.activeRole() !== role"
+            [class.hover:text-slate-200]="authService.activeRole() !== role"
+            class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-[11px] font-medium border transition-all duration-200 active:scale-95">
+            <ion-icon [name]="getRoleIcon(role)" class="text-xs shrink-0"></ion-icon>
+            <span>{{ getRoleLabel(role) }}</span>
+          </button>
+        }
+      </div>
     </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="bg-slate-950 text-slate-100">
-  <div class="p-4 space-y-4">
+<ion-content style="--background: #060911; --color: #f8fafc;">
+  <div class="px-4 pt-3 pb-24 space-y-4">
 
     <!-- ============================================================== -->
     <!-- 1. VUE MEMBRE                                                  -->
     <!-- ============================================================== -->
     @if (authService.activeRole() === 'MEMBRE') {
-      <!-- Carte Ma Cotisation du Mois -->
-      <div class="rounded-2xl bg-gradient-to-br from-emerald-900/60 to-slate-900 border border-emerald-700/40 p-4 shadow-lg">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider text-emerald-300">Ma Cotisation Mensuelle</span>
-          <app-status-badge status="PAYE"></app-status-badge>
-        </div>
-        <div class="text-2xl font-black text-white tracking-tight mb-1">
-          <app-amount-badge [amount]="65000"></app-amount-badge>
-        </div>
-        <p class="text-xs text-slate-300 mb-3">
-          Pot rotatif (50 000 XAF) + Secours décès (5 000 XAF) + Réserve (10 000 XAF)
-        </p>
-        <div class="bg-emerald-950/80 rounded-xl p-2.5 flex items-center justify-between border border-emerald-800/40">
-          <div class="flex items-center gap-2">
-            <ion-icon name="checkmark-circle" class="text-emerald-400 text-lg"></ion-icon>
-            <span class="text-xs font-medium text-emerald-200">Reçu cash validé par la trésorière</span>
+      <!-- Hero Card: Ma Cotisation Mensuelle (Obsidian / Emerald Vault Card) -->
+      <div class="relative overflow-hidden rounded-3xl p-5 njangi-hero-emerald">
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-300">Cotisation • Mars 2026</span>
+            </div>
+            <app-status-badge status="PAYE"></app-status-badge>
           </div>
-          <span class="text-[10px] text-slate-400">07 Mars 2026</span>
+
+          <div class="my-3">
+            <div class="text-3xl font-black text-white tracking-tight font-display">
+              <app-amount-badge [amount]="65000" variant="plain" size="hero"></app-amount-badge>
+            </div>
+            <p class="text-xs text-emerald-200/70 mt-1 font-medium">
+              Statut certifié pour la séance de Mars 2026
+            </p>
+          </div>
+
+          <!-- Ventilation en 3 mini capsules semi-transparentes -->
+          <div class="grid grid-cols-3 gap-2 my-3 text-center">
+            <div class="bg-black/35 backdrop-blur-md rounded-2xl p-2.5 border border-white/5">
+              <span class="block text-[10px] text-emerald-200/70 uppercase font-semibold">Pot Rotatif</span>
+              <span class="text-xs font-bold text-white mt-0.5 block">50 000 F</span>
+            </div>
+            <div class="bg-black/35 backdrop-blur-md rounded-2xl p-2.5 border border-white/5">
+              <span class="block text-[10px] text-teal-200/70 uppercase font-semibold">Secours</span>
+              <span class="text-xs font-bold text-white mt-0.5 block">5 000 F</span>
+            </div>
+            <div class="bg-black/35 backdrop-blur-md rounded-2xl p-2.5 border border-white/5">
+              <span class="block text-[10px] text-sky-200/70 uppercase font-semibold">Réserve</span>
+              <span class="text-xs font-bold text-white mt-0.5 block">10 000 F</span>
+            </div>
+          </div>
+
+          <!-- Reçu validé -->
+          <div class="bg-black/40 backdrop-blur-md rounded-2xl px-3.5 py-2.5 flex items-center justify-between border border-emerald-500/20">
+            <div class="flex items-center gap-2.5">
+              <div class="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm">
+                <ion-icon name="checkmark-circle"></ion-icon>
+              </div>
+              <div>
+                <div class="text-xs font-semibold text-emerald-100">Reçu cash signé par la trésorière</div>
+                <div class="text-[10px] text-emerald-400/80">Validé le 07 Mars 2026</div>
+              </div>
+            </div>
+            <span class="text-[11px] font-extrabold text-emerald-300 px-2 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30">
+              Certifié ✓
+            </span>
+          </div>
         </div>
       </div>
 
-      <!-- Mon Tour dans le Pot Rotatif -->
-      <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <ion-icon name="ribbon-outline" class="text-amber-400 text-xl"></ion-icon>
-            <h3 class="font-bold text-white text-sm">Mon Tour de Pot</h3>
+      <!-- Quick Action Hub (Fintech Shortcuts) -->
+      <div class="grid grid-cols-4 gap-2 pt-0.5">
+        <a routerLink="/tabs/cotisations" class="flex flex-col items-center gap-1.5 p-2.5 rounded-2xl bg-slate-900/80 border border-white/5 active:scale-95 transition-all text-center">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <ion-icon name="wallet-outline" class="text-lg"></ion-icon>
           </div>
-          <span class="bg-amber-500/20 text-amber-300 text-xs font-bold px-2 py-0.5 rounded-full">
-            Tour #2 (Encaissé)
-          </span>
-        </div>
-        <div class="bg-slate-800/60 rounded-xl p-3 flex justify-between items-center mb-2">
+          <span class="text-[11px] font-bold text-slate-200">Cotiser</span>
+        </a>
+        <a routerLink="/tabs/paiements" class="flex flex-col items-center gap-1.5 p-2.5 rounded-2xl bg-slate-900/80 border border-white/5 active:scale-95 transition-all text-center">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-yellow-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+            <ion-icon name="receipt-outline" class="text-lg"></ion-icon>
+          </div>
+          <span class="text-[11px] font-bold text-slate-200">Reçus</span>
+        </a>
+        <a routerLink="/tabs/reunions" class="flex flex-col items-center gap-1.5 p-2.5 rounded-2xl bg-slate-900/80 border border-white/5 active:scale-95 transition-all text-center">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500/20 to-blue-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400">
+            <ion-icon name="calendar-outline" class="text-lg"></ion-icon>
+          </div>
+          <span class="text-[11px] font-bold text-slate-200">Séance</span>
+        </a>
+        <a routerLink="/tabs/cotisations" class="flex flex-col items-center gap-1.5 p-2.5 rounded-2xl bg-slate-900/80 border border-white/5 active:scale-95 transition-all text-center">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-500/20 to-indigo-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+            <ion-icon name="ribbon-outline" class="text-lg"></ion-icon>
+          </div>
+          <span class="text-[11px] font-bold text-slate-200">Pot (600k)</span>
+        </a>
+      </div>
+
+      <!-- Grille Duale : Cagnotte & Discipline -->
+      <div class="grid grid-cols-2 gap-3">
+        <!-- Carte Mon Tour de Cagnotte -->
+        <div class="rounded-3xl p-4 njangi-hero-gold flex flex-col justify-between">
           <div>
-            <div class="text-[11px] text-slate-400">Pot perçu en Février 2026</div>
-            <div class="text-lg font-bold text-amber-400">
-              <app-amount-badge [amount]="600000"></app-amount-badge>
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-1.5">
+                <ion-icon name="ribbon-outline" class="text-amber-400 text-base"></ion-icon>
+                <span class="text-[11px] font-extrabold text-white">Mon Tour</span>
+              </div>
+              <span class="text-[10px] font-extrabold bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-400/30">
+                Tour #2
+              </span>
+            </div>
+            <div class="text-lg font-black text-amber-300 font-display">
+              <app-amount-badge [amount]="600000" variant="plain" size="md"></app-amount-badge>
+            </div>
+            <p class="text-[10px] text-amber-200/70 mt-0.5">Encaissé & déchargé</p>
+          </div>
+
+          <div class="mt-3 pt-2.5 border-t border-white/10">
+            <div class="flex justify-between text-[10px] text-slate-300 mb-1">
+              <span>Cycle</span>
+              <span class="font-bold text-amber-300">2 / 12</span>
+            </div>
+            <div class="w-full bg-black/40 rounded-full h-1.5 overflow-hidden">
+              <div class="bg-gradient-to-r from-amber-400 to-yellow-300 h-full rounded-full" style="width: 17%"></div>
             </div>
           </div>
-          <span class="text-xs bg-emerald-500/20 text-emerald-300 font-semibold px-2 py-1 rounded">
-            Validé
-          </span>
         </div>
-        <p class="text-[11px] text-slate-400">
-          Prochain bénéficiaire du jour : <strong class="text-slate-200">Mme Clarisse Nguemo</strong> (Tour #3).
-        </p>
+
+        <!-- Carte Discipline & Amende -->
+        <div class="rounded-3xl p-4 njangi-glass-card flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-1.5">
+                <ion-icon name="shield-checkmark-outline" class="text-emerald-400 text-base"></ion-icon>
+                <span class="text-[11px] font-extrabold text-white">Discipline</span>
+              </div>
+              <span class="text-[10px] font-bold bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                En règle ✓
+              </span>
+            </div>
+            <div class="text-lg font-black text-white font-display">
+              0 XAF
+            </div>
+            <p class="text-[10px] text-slate-400 mt-0.5">Aucune amende en attente</p>
+          </div>
+
+          <div class="mt-3 pt-2.5 border-t border-white/10 text-[10px] text-slate-400 flex items-center justify-between">
+            <span>Dernière : 1 000 XAF</span>
+            <span class="text-emerald-400 font-semibold">Payée</span>
+          </div>
+        </div>
       </div>
     }
 
@@ -87,37 +204,53 @@
     <!-- 2. VUE TRÉSORIER                                               -->
     <!-- ============================================================== -->
     @if (authService.activeRole() === 'TRESORIER') {
-      <div class="rounded-2xl bg-gradient-to-br from-amber-950/60 to-slate-900 border border-amber-600/40 p-4 shadow-lg">
+      <div class="relative overflow-hidden rounded-3xl p-5 njangi-hero-gold">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider text-amber-400">Trésorerie Séance en Direct</span>
-          <span class="bg-amber-500/20 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">Coffre & Comptes</span>
-        </div>
-        <div class="text-2xl font-black text-white tracking-tight mb-3">
-          <app-amount-badge [amount]="tontineState.totalTresorerieGlobale()"></app-amount-badge>
+          <div class="flex items-center gap-2">
+            <ion-icon name="cash-outline" class="text-amber-400 text-lg"></ion-icon>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-amber-300">Caisse Séance en Direct</span>
+          </div>
+          <span class="bg-amber-400/20 border border-amber-400/30 text-amber-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+            Coffre & Banques
+          </span>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
-            <div class="text-slate-400 text-[10px]">Caisse Cash Coffre</div>
-            <div class="font-bold text-emerald-400 text-sm">
-              <app-amount-badge [amount]="tontineState.totalCaissePhysiqueCash()"></app-amount-badge>
-            </div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Reçu signé obligatoire</div>
+        <div class="my-3">
+          <div class="text-3xl font-black text-white tracking-tight font-display">
+            <app-amount-badge [amount]="tontineState.totalTresorerieGlobale()" variant="plain" size="hero"></app-amount-badge>
           </div>
-          <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
-            <div class="text-slate-400 text-[10px]">Mobile Money (MTN/OM)</div>
-            <div class="font-bold text-amber-400 text-sm">
-              <app-amount-badge [amount]="tontineState.totalMobileMoney()"></app-amount-badge>
+          <span class="text-xs text-amber-200/70 font-medium">Solde consolidé disponible en caisse</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 my-3 text-xs">
+          <div class="bg-black/35 backdrop-blur-md p-3 rounded-2xl border border-white/5">
+            <div class="text-slate-400 text-[11px] font-semibold">Espèces (Coffre)</div>
+            <div class="font-extrabold text-emerald-400 text-base mt-0.5">
+              <app-amount-badge [amount]="tontineState.totalCaissePhysiqueCash()" variant="plain" size="sm"></app-amount-badge>
             </div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Webhooks idempotents</div>
+            <div class="text-[10px] text-emerald-300/80 mt-1 flex items-center gap-1">
+              <ion-icon name="receipt-outline"></ion-icon>
+              <span>Reçu signé obligatoire</span>
+            </div>
+          </div>
+
+          <div class="bg-black/35 backdrop-blur-md p-3 rounded-2xl border border-white/5">
+            <div class="text-slate-400 text-[11px] font-semibold">Mobile Money</div>
+            <div class="font-extrabold text-amber-400 text-base mt-0.5">
+              <app-amount-badge [amount]="tontineState.totalMobileMoney()" variant="plain" size="sm"></app-amount-badge>
+            </div>
+            <div class="text-[10px] text-amber-300/80 mt-1 flex items-center gap-1">
+              <ion-icon name="finger-print-outline"></ion-icon>
+              <span>Idempotence active</span>
+            </div>
           </div>
         </div>
 
-        <div class="mt-3">
-          <a routerLink="/tabs/paiements" class="block w-full py-2 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-center rounded-xl text-xs transition">
-            + Enregistrer Encaissement Cash avec Reçu
-          </a>
-        </div>
+        <a routerLink="/tabs/paiements" 
+           class="flex items-center justify-center gap-2 w-full py-3 bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/30 font-bold text-center rounded-2xl text-xs shadow-sm shadow-amber-500/10 active:scale-[0.98] transition-all">
+          <ion-icon name="receipt-outline" class="text-base"></ion-icon>
+          <span>Enregistrer un Encaissement Cash avec Reçu</span>
+        </a>
       </div>
     }
 
@@ -125,30 +258,38 @@
     <!-- 3. VUE PRÉSIDENT                                               -->
     <!-- ============================================================== -->
     @if (authService.activeRole() === 'PRESIDENT') {
-      <div class="rounded-2xl bg-gradient-to-br from-purple-950/60 to-slate-900 border border-purple-700/40 p-4 shadow-lg">
+      <div class="relative overflow-hidden rounded-3xl p-5 njangi-hero-indigo">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider text-purple-300">Gouvernance de Séance</span>
-          <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full">Quorum Atteint (4/5)</span>
-        </div>
-        <h3 class="text-base font-bold text-white mb-1">Séance Ordinaire #03</h3>
-        <p class="text-xs text-slate-300 mb-3">Conduite de l'ordre du jour et discipline de séance.</p>
-
-        <div class="space-y-2 text-xs">
-          <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center">
-            <span>Bénéficiaire Pot du Jour</span>
-            <span class="font-bold text-amber-400">Mme Clarisse Nguemo</span>
+          <div class="flex items-center gap-2">
+            <ion-icon name="shield-checkmark-outline" class="text-indigo-400 text-lg"></ion-icon>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-300">Gouvernance de Séance</span>
           </div>
-          <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center">
-            <span>Montant Pot à décaisser</span>
-            <span class="font-bold text-white"><app-amount-badge [amount]="600000"></app-amount-badge></span>
-          </div>
+          <span class="bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+            Quorum Atteint (4/5)
+          </span>
         </div>
 
-        <div class="mt-3">
-          <a routerLink="/tabs/reunions" class="block w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-center rounded-xl text-xs transition">
-            Ouvrir la Conduite de Séance Live & Sanctions
-          </a>
+        <h3 class="text-lg font-black text-white tracking-tight font-display mb-1">Séance Ordinaire #03</h3>
+        <p class="text-xs text-indigo-200/80 mb-3">Conduite de l'ordre du jour et discipline de séance.</p>
+
+        <div class="space-y-2 text-xs mb-4">
+          <div class="bg-black/35 backdrop-blur-md p-3 rounded-2xl border border-white/5 flex justify-between items-center">
+            <span class="text-slate-300 font-medium">Bénéficiaire Pot du Jour</span>
+            <span class="font-extrabold text-amber-300">Mme Clarisse Nguemo</span>
+          </div>
+          <div class="bg-black/35 backdrop-blur-md p-3 rounded-2xl border border-white/5 flex justify-between items-center">
+            <span class="text-slate-300 font-medium">Montant Pot à décaisser</span>
+            <div class="font-extrabold text-white">
+              <app-amount-badge [amount]="600000" variant="plain" size="md"></app-amount-badge>
+            </div>
+          </div>
         </div>
+
+        <a routerLink="/tabs/reunions" 
+           class="flex items-center justify-center gap-2 w-full py-3 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 font-bold text-center rounded-2xl text-xs shadow-sm shadow-indigo-500/10 active:scale-[0.98] transition-all">
+          <ion-icon name="time-outline" class="text-base"></ion-icon>
+          <span>Conduire la Séance Live & Sanctions</span>
+        </a>
       </div>
     }
 
@@ -156,71 +297,108 @@
     <!-- 4. VUE SECRÉTAIRE                                              -->
     <!-- ============================================================== -->
     @if (authService.activeRole() === 'SECRETAIRE') {
-      <div class="rounded-2xl bg-gradient-to-br from-blue-950/60 to-slate-900 border border-blue-700/40 p-4 shadow-lg">
+      <div class="relative overflow-hidden rounded-3xl p-5 njangi-glass-card">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider text-blue-300">Secrétariat & Feuille d'émargement</span>
-          <span class="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full">PV en cours</span>
+          <div class="flex items-center gap-2">
+            <ion-icon name="document-text-outline" class="text-sky-400 text-lg"></ion-icon>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-sky-300">Secrétariat & Émargement</span>
+          </div>
+          <span class="bg-sky-500/20 border border-sky-500/30 text-sky-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+            PV en cours
+          </span>
         </div>
-        <h3 class="text-base font-bold text-white mb-1">Appel nominatif et Présences</h3>
-        <p class="text-xs text-slate-300 mb-3">Enregistrez les arrivées et retards en temps réel.</p>
 
-        <div class="space-y-1.5 text-xs mb-3">
+        <h3 class="text-base font-black text-white tracking-tight font-display mb-1">Appel nominatif et Présences</h3>
+        <p class="text-xs text-slate-400 mb-3">Enregistrez les arrivées et retards en temps réel.</p>
+
+        <div class="space-y-2 text-xs mb-4">
           @for (p of tontineState.presences(); track p.id) {
-            <div class="bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800 flex justify-between items-center">
-              <span class="font-medium text-slate-200">{{ p.membreId === 'm-001' ? 'Jean-Paul FOKOU' : p.membreId === 'm-002' ? 'Maurice KAMDEM' : p.membreId === 'm-003' ? 'Clarisse NGUEMO' : p.membreId === 'm-004' ? 'Alain TCHOUA' : 'Béatrice KENMOE' }}</span>
+            <div class="bg-slate-900/90 px-3.5 py-2.5 rounded-2xl border border-white/5 flex justify-between items-center">
+              <span class="font-bold text-slate-200">
+                {{ p.membreId === 'm-001' ? 'Jean-Paul FOKOU' : p.membreId === 'm-002' ? 'Maurice KAMDEM' : p.membreId === 'm-003' ? 'Clarisse NGUEMO' : p.membreId === 'm-004' ? 'Alain TCHOUA' : 'Béatrice KENMOE' }}
+              </span>
               <app-status-badge [status]="p.statut"></app-status-badge>
             </div>
           }
         </div>
 
-        <a routerLink="/tabs/reunions" class="block w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-center rounded-xl text-xs transition">
-          Gérer les présences & PV de séance
+        <a routerLink="/tabs/reunions" 
+           class="flex items-center justify-center gap-2 w-full py-3 bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 font-bold text-center rounded-2xl text-xs shadow-sm shadow-sky-500/10 active:scale-[0.98] transition-all">
+          <ion-icon name="document-text-outline" class="text-base"></ion-icon>
+          <span>Gérer les Présences & PV de séance</span>
         </a>
       </div>
     }
 
-    <!-- Carte Séance en cours (Visible par tous les rôles) -->
-    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4">
+    <!-- ============================================================== -->
+    <!-- CARTE COMMUNE : SÉANCE EN DIRECT                               -->
+    <!-- ============================================================== -->
+    <div class="rounded-3xl p-5 njangi-glass-card">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Séance en direct</span>
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span class="text-xs font-extrabold text-emerald-400 uppercase tracking-wider">Séance en direct</span>
         </div>
-        <span class="text-xs text-slate-400">14:00 - Maison du Peuple</span>
+        <span class="text-[11px] text-slate-400 flex items-center gap-1 font-medium">
+          <ion-icon name="location-outline" class="text-slate-400 text-xs"></ion-icon>
+          <span>14:00 • Maison du Peuple</span>
+        </span>
       </div>
-      <h3 class="text-base font-bold text-white mb-2">Séance Mensuelle Ordinaire #03</h3>
-      <div class="space-y-1 mb-3">
-        @for (item of tontineState.activeReunion().ordreDuJour.slice(0, 3); track item) {
-          <div class="text-xs text-slate-400 flex items-start gap-1.5">
-            <span class="text-emerald-400">•</span>
-            <span>{{ item }}</span>
+
+      <h3 class="text-base font-extrabold text-white mb-2 tracking-tight font-display">Séance Mensuelle Ordinaire #03</h3>
+
+      <!-- Points de l'ordre du jour sans duplication de numérotation -->
+      <div class="space-y-2 mb-3">
+        @for (item of tontineState.activeReunion().ordreDuJour.slice(0, 3); track item; let idx = $index) {
+          <div class="text-xs text-slate-300 flex items-start gap-2.5 bg-slate-900/80 p-2.5 rounded-2xl border border-white/5">
+            <span class="w-5 h-5 rounded-lg bg-emerald-500/15 text-emerald-400 font-extrabold flex items-center justify-center text-[10px] shrink-0">
+              {{ idx + 1 }}
+            </span>
+            <span class="font-medium text-slate-200 mt-0.5 leading-snug">{{ cleanAgendaItem(item) }}</span>
           </div>
         }
       </div>
-      <a routerLink="/tabs/reunions" class="text-xs font-semibold text-emerald-400 flex items-center gap-1 hover:underline">
+
+      <a routerLink="/tabs/reunions" 
+         class="inline-flex items-center justify-between w-full p-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-emerald-400 transition-colors border border-white/5">
         <span>Voir tout l'ordre du jour ({{ tontineState.activeReunion().ordreDuJour.length }} points)</span>
-        <ion-icon name="chevron-forward-outline"></ion-icon>
+        <ion-icon name="chevron-forward-outline" class="text-sm"></ion-icon>
       </a>
     </div>
 
-    <!-- Sanctions de séance en direct -->
-    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4">
+    <!-- ============================================================== -->
+    <!-- CARTE COMMUNE : DISCIPLINE & SANCTIONS                         -->
+    <!-- ============================================================== -->
+    <div class="rounded-3xl p-5 njangi-glass-card">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
-          <ion-icon name="alert-circle" class="text-rose-400 text-lg"></ion-icon>
-          <h3 class="font-bold text-white text-sm">Sanctions & Amendes</h3>
+          <div class="w-7 h-7 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 text-sm">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+          </div>
+          <h3 class="font-bold text-white text-sm tracking-tight">Discipline & Sanctions</h3>
         </div>
-        <span class="text-xs text-slate-400">{{ tontineState.sanctions().length }} infligée(s)</span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-300 border border-rose-500/20 shadow-sm shadow-rose-500/5">
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+          <span>{{ tontineState.sanctions().length }} active(s)</span>
+        </span>
       </div>
+
       @for (s of tontineState.sanctions(); track s.id) {
-        <div class="bg-slate-800/60 rounded-xl p-3 flex justify-between items-center text-xs">
+        <div class="bg-slate-900/80 rounded-2xl p-3.5 flex justify-between items-center text-xs border border-white/5">
           <div>
-            <div class="font-semibold text-rose-300">{{ s.motif }}</div>
-            <div class="text-slate-400 text-[10px]">Membre sanctionné : Alain TCHOUA</div>
+            <div class="font-bold text-rose-300 text-sm">{{ s.motif }}</div>
+            <div class="text-slate-400 text-[11px] mt-0.5">Membre : Alain TCHOUA</div>
           </div>
           <div class="text-right">
-            <div class="font-bold text-white"><app-amount-badge [amount]="s.montantXaf"></app-amount-badge></div>
-            <app-status-badge [status]="s.statut"></app-status-badge>
+            <div class="font-extrabold text-white text-sm">
+              <app-amount-badge [amount]="s.montantXaf" variant="plain" size="sm"></app-amount-badge>
+            </div>
+            <div class="mt-1">
+              <app-status-badge [status]="s.statut"></app-status-badge>
+            </div>
           </div>
         </div>
       }

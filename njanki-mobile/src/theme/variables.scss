@@ -1,22 +1,51 @@
 :root {
-  --ion-color-primary: #059669;
-  --ion-color-primary-rgb: 5, 150, 105;
+  /* Ionic Base Brand Colors - Njangi Palette (Cameroun Emerald & Gold) */
+  --ion-color-primary: #10b981;
+  --ion-color-primary-rgb: 16, 185, 129;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #047857;
-  --ion-color-primary-tint: #10b981;
+  --ion-color-primary-shade: #059669;
+  --ion-color-primary-tint: #34d399;
 
-  --ion-color-secondary: #d97706;
-  --ion-color-secondary-rgb: 217, 119, 6;
-  --ion-color-secondary-contrast: #ffffff;
-  --ion-color-secondary-contrast-rgb: 255, 255, 255;
-  --ion-color-secondary-shade: #b45309;
-  --ion-color-secondary-tint: #f59e0b;
+  --ion-color-secondary: #f59e0b;
+  --ion-color-secondary-rgb: 245, 158, 11;
+  --ion-color-secondary-contrast: #0f172a;
+  --ion-color-secondary-contrast-rgb: 15, 23, 42;
+  --ion-color-secondary-shade: #d97706;
+  --ion-color-secondary-tint: #fbbf24;
 
-  --ion-color-tertiary: #064e3b;
-  --ion-color-tertiary-rgb: 6, 78, 59;
+  --ion-color-tertiary: #6366f1;
+  --ion-color-tertiary-rgb: 99, 102, 241;
   --ion-color-tertiary-contrast: #ffffff;
   --ion-color-tertiary-contrast-rgb: 255, 255, 255;
 
+  --ion-color-success: #10b981;
+  --ion-color-warning: #f59e0b;
+  --ion-color-danger: #f43f5e;
+  --ion-color-dark: #0f172a;
+  --ion-color-medium: #64748b;
+  --ion-color-light: #f8fafc;
+
+  /* Typography */
   --ion-font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+  /* Global Surface Colors (Fintech Midnight Glass) */
+  --ion-background-color: #060911;
+  --ion-background-color-rgb: 6, 9, 17;
+  --ion-text-color: #f8fafc;
+  --ion-text-color-rgb: 248, 250, 252;
+
+  --ion-toolbar-background: #0b1120;
+  --ion-toolbar-color: #f8fafc;
+  --ion-toolbar-border-color: rgba(255, 255, 255, 0.08);
+
+  --ion-item-background: #0f172a;
+  --ion-item-color: #f8fafc;
+
+  --ion-card-background: #0f172a;
+
+  --ion-tab-bar-background: rgba(11, 17, 32, 0.96);
+  --ion-tab-bar-color: #64748b;
+  --ion-tab-bar-color-selected: #10b981;
+  --ion-tab-bar-border-color: rgba(255, 255, 255, 0.06);
 }

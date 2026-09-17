@@ -11,6 +11,10 @@ Ce fichier référence l'ensemble de la documentation technique et fonctionnelle
 - **[cahier_des_charges_tontine.md](file:///d:/projet/njangi/cahier_des_charges_tontine.md)** : Spécification métier officielle (règles de tontine camerounaise, multi-cotisations, barème de sanctions, ordre de passage du pot).
 - **[init-schemas.sql](file:///d:/projet/njangi/init-schemas.sql)** : Script d'initialisation des 9 schémas PostgreSQL isolés (`auth`, `membres`, `groupes`, `reunions`, `cotisations`, `paiements`, `penalites`, `notifications`, `statistiques`).
 - **[docker-compose.yml](file:///d:/projet/njangi/docker-compose.yml)** : Définition des conteneurs (PostgreSQL, Kafka en mode KRaft natif sans ZooKeeper, Eureka Server, API Gateway, microservices métier).
+- **[TESTING_E2E.md](file:///d:/projet/njangi/TESTING_E2E.md)** : Guide complet d'exécution des tests d'intégration bout-en-bout (E2E) du scénario Njangi de A à Z.
+- **[scripts/test-e2e-scenario.ps1](file:///d:/projet/njangi/scripts/test-e2e-scenario.ps1)** : Script interactif d'orchestration E2E à travers la passerelle API Gateway (`:9090`).
+- **[scripts/start-docker-infra.ps1](file:///d:/projet/njangi/scripts/start-docker-infra.ps1)** : Script d'assistance au démarrage de Docker Desktop et de l'infrastructure de conteneurs.
+- **[postman/njangi-e2e.postman_collection.json](file:///d:/projet/njangi/postman/njangi-e2e.postman_collection.json)** : Collection Postman versionnée pour exécution CI/CD (Newman).
 
 ---
 

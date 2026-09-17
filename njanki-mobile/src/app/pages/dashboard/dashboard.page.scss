@@ -1,7 +1,21 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+ion-toolbar {
+  --border-width: 0;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+// Micro-animations sur les cartes interactives
+.active\:scale-95:active {
+  transform: scale(0.96);
 }

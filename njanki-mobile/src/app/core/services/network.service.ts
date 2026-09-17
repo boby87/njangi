@@ -8,11 +8,11 @@ export type NetworkQuality = 'ONLINE' | 'DEGRADED_3G' | 'OFFLINE';
   providedIn: 'root',
 })
 export class NetworkService {
-  readonly isOnline = signal<boolean>(true);
-  readonly connectionType = signal<string>('cellular');
+  readonly isOnline = signal<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  readonly connectionType = signal<string>('wifi');
 
   readonly is3GOrDegraded = computed(() => {
-    return this.isOnline() && (this.connectionType() === 'cellular' || this.connectionType() === 'unknown');
+    return this.isOnline() && this.connectionType() === 'cellular';
   });
 
   readonly networkQuality = computed<NetworkQuality>(() => {

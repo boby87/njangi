@@ -11,8 +11,8 @@ export class ApiService {
   private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
 
-  // URL de l'API Gateway Spring MVC
-  private readonly baseUrl = 'http://localhost:8080/api/v1';
+  // URL de l'API Gateway Spring MVC (Port 9090 per GEMINI.md)
+  private readonly baseUrl = 'http://localhost:9090/api/v1';
 
   private getHeaders(): HttpHeaders {
     const token = this.authService.session().token;

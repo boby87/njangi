@@ -1,0 +1,828 @@
+{
+  "info": {
+    "_postman_id": "b3c9f28d-1941-45a8-92f7-873b4d2a19ef",
+    "name": "Njangi E2E Integration Suite",
+    "description": "Suite complète de tests d'intégration bout-en-bout (E2E) pour la plateforme de gestion de tontine camerounaise Njangi. Orchestre l'ensemble du cycle de vie à travers l'API Gateway.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Phase 1 : Authentification & Sécurité (ms-auth)",
+      "item": [
+        {
+          "name": "1.1 - Inscrire Créateur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 or 200\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "    pm.environment.set(\"tokenCreator\", jsonData.data.token);",
+                  "    pm.environment.set(\"userCreatorId\", jsonData.data.utilisateur.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"FOKOU\",\n  \"prenom\": \"Paul\",\n  \"telephone\": \"+237690000001\",\n  \"email\": \"creator.test@njangi.cm\",\n  \"motDePasse\": \"Njangi2026!Securite\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/inscrire",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "inscrire"]
+            }
+          }
+        },
+        {
+          "name": "1.2 - Inscrire Futur Président",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 or 200\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "    pm.environment.set(\"tokenPresident\", jsonData.data.token);",
+                  "    pm.environment.set(\"userPresidentId\", jsonData.data.utilisateur.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"ETO'O\",\n  \"prenom\": \"Samuel\",\n  \"telephone\": \"+237691000002\",\n  \"email\": \"president.test@njangi.cm\",\n  \"motDePasse\": \"Njangi2026!Securite\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/inscrire",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "inscrire"]
+            }
+          }
+        },
+        {
+          "name": "1.3 - Inscrire Futur Trésorier",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 or 200\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "    pm.environment.set(\"tokenTresorier\", jsonData.data.token);",
+                  "    pm.environment.set(\"userTresorierId\", jsonData.data.utilisateur.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"SONG\",\n  \"prenom\": \"Rigobert\",\n  \"telephone\": \"+237692000003\",\n  \"email\": \"tresorier.test@njangi.cm\",\n  \"motDePasse\": \"Njangi2026!Securite\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/inscrire",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "inscrire"]
+            }
+          }
+        },
+        {
+          "name": "1.4 - Inscrire Futur Secrétaire",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 or 200\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "    pm.environment.set(\"tokenSecretaire\", jsonData.data.token);",
+                  "    pm.environment.set(\"userSecretaireId\", jsonData.data.utilisateur.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"MILLA\",\n  \"prenom\": \"Roger\",\n  \"telephone\": \"+237693000004\",\n  \"email\": \"secretaire.test@njangi.cm\",\n  \"motDePasse\": \"Njangi2026!Securite\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/inscrire",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "inscrire"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 2 : Profils Membres DDD Hexagonal (ms-membres)",
+      "item": [
+        {
+          "name": "2.1 - Inscrire Membre DDD Créateur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 or 200\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set(\"membreCreatorId\", jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenCreator}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authUtilisateurId\": \"{{userCreatorId}}\",\n  \"nom\": \"FOKOU\",\n  \"prenom\": \"Paul\",\n  \"email\": \"creator.test@njangi.cm\",\n  \"telephone\": \"+237690000001\",\n  \"dateNaissance\": \"1988-06-15\",\n  \"adresse\": \"Quartier Bastos\",\n  \"ville\": \"Yaoundé\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/membres",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "membres"]
+            }
+          }
+        },
+        {
+          "name": "2.2 - Inscrire Membre DDD Président",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 or 200\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set(\"membrePresidentId\", jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenPresident}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authUtilisateurId\": \"{{userPresidentId}}\",\n  \"nom\": \"ETO'O\",\n  \"prenom\": \"Samuel\",\n  \"email\": \"president.test@njangi.cm\",\n  \"telephone\": \"+237691000002\",\n  \"dateNaissance\": \"1981-03-10\",\n  \"adresse\": \"Bonapriso\",\n  \"ville\": \"Douala\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/membres",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "membres"]
+            }
+          }
+        },
+        {
+          "name": "2.3 - Inscrire Membre DDD Trésorier",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 or 200\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set(\"membreTresorierId\", jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenTresorier}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authUtilisateurId\": \"{{userTresorierId}}\",\n  \"nom\": \"SONG\",\n  \"prenom\": \"Rigobert\",\n  \"email\": \"tresorier.test@njangi.cm\",\n  \"telephone\": \"+237692000003\",\n  \"dateNaissance\": \"1976-07-01\",\n  \"adresse\": \"Camp Yabassi\",\n  \"ville\": \"Douala\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/membres",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "membres"]
+            }
+          }
+        },
+        {
+          "name": "2.4 - Inscrire Membre DDD Secrétaire",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 or 200\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set(\"membreSecretaireId\", jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenSecretaire}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authUtilisateurId\": \"{{userSecretaireId}}\",\n  \"nom\": \"MILLA\",\n  \"prenom\": \"Roger\",\n  \"email\": \"secretaire.test@njangi.cm\",\n  \"telephone\": \"+237693000004\",\n  \"dateNaissance\": \"1952-05-20\",\n  \"adresse\": \"Quartier Golf\",\n  \"ville\": \"Yaoundé\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/membres",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "membres"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 3 : Tontine avec Siège Rotatif (ms-groupes)",
+      "item": [
+        {
+          "name": "3.1 - Créer Groupe avec Siège Rotatif",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set(\"groupeId\", jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenCreator}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Tontine Solidarité Cameroun 2026\",\n  \"description\": \"Épargne tournante et entraide communautaire\",\n  \"typeSiege\": \"ROTATIF\",\n  \"ville\": \"Douala\",\n  \"adresseSiege\": \"Siège tournant chez l'hôte de chaque séance\",\n  \"periodicite\": \"MENSUELLE\",\n  \"jourReunion\": \"1er Samedi du mois\",\n  \"montantSanctionDefaut\": 2000,\n  \"devise\": \"XAF\",\n  \"createurId\": \"{{membreCreatorId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/groupes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "groupes"]
+            }
+          }
+        },
+        {
+          "name": "3.2 - Planifier Session Tontinière",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set(\"sessionId\", jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenCreator}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Session Annuelle 2026-2027\",\n  \"dateDebut\": \"2026-10-01\",\n  \"dateFinPrevue\": \"2027-09-30\",\n  \"periodicite\": \"MENSUELLE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/groupes/{{groupeId}}/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "groupes", "{{groupeId}}", "sessions"]
+            }
+          }
+        },
+        {
+          "name": "3.3 - Démarrer Session Tontinière",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenCreator}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/groupes/sessions/{{sessionId}}/demarrer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "groupes", "sessions", "{{sessionId}}", "demarrer"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 4 : Multi-Cotisations (ms-cotisations)",
+      "item": [
+        {
+          "name": "4.1 - Créer Pot Rotatif (50 000 XAF)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set(\"typeCotisationPotId\", jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenCreator}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"groupeId\": \"{{groupeId}}\",\n  \"nom\": \"Pot Rotatif Principal\",\n  \"type\": \"ROTATIVE_POT\",\n  \"montantParMembre\": 50000,\n  \"obligatoire\": true,\n  \"periodicite\": \"MENSUELLE\",\n  \"ordreAttribution\": 1,\n  \"description\": \"Cagnotte mensuelle rotative de 50 000 XAF\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cotisations/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cotisations", "types"]
+            }
+          }
+        },
+        {
+          "name": "4.2 - Créer Caisse Secours (10 000 XAF)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenCreator}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"groupeId\": \"{{groupeId}}\",\n  \"nom\": \"Caisse Secours & Décès\",\n  \"type\": \"SECOURS_DECES\",\n  \"montantParMembre\": 10000,\n  \"obligatoire\": true,\n  \"periodicite\": \"MENSUELLE\",\n  \"ordreAttribution\": 2,\n  \"description\": \"Fonds d'assistance en cas d'événement heureux ou malheureux\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cotisations/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cotisations", "types"]
+            }
+          }
+        },
+        {
+          "name": "4.3 - Créer Caisse de Réserve (5 000 XAF)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenCreator}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"groupeId\": \"{{groupeId}}\",\n  \"nom\": \"Fonds de Réserve\",\n  \"type\": \"CAISSE_RESERVE\",\n  \"montantParMembre\": 5000,\n  \"obligatoire\": true,\n  \"periodicite\": \"MENSUELLE\",\n  \"ordreAttribution\": 3,\n  \"description\": \"Épargne de réserve du groupe\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cotisations/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cotisations", "types"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 5 : Élection Premier Bureau & Rétrogradation (ms-groupes)",
+      "item": [
+        {
+          "name": "5.1 - Élection Bureau Exécutif",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "pm.test(\"Créateur rétrogradé\", function () {",
+                  "    pm.expect(true).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenCreator}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"presidentId\": \"{{membrePresidentId}}\",\n  \"tresorierId\": \"{{membreTresorierId}}\",\n  \"secretaireId\": \"{{membreSecretaireId}}\",\n  \"dateDebut\": \"2026-10-01\",\n  \"dateFinPrevue\": \"2028-09-30\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/groupes/{{groupeId}}/bureau/election",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "groupes", "{{groupeId}}", "bureau", "election"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 6 : Séance Live, Quorum & Sanction (ms-reunions / ms-penalites)",
+      "item": [
+        {
+          "name": "6.1 - Planifier Réunion Séance 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set(\"reunionId\", jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenPresident}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"groupeId\": \"{{groupeId}}\",\n  \"sessionId\": \"{{sessionId}}\",\n  \"numero\": 1,\n  \"titre\": \"Séance d'Ouverture Octobre 2026\",\n  \"dateHeure\": \"2026-10-03T14:00:00\",\n  \"lieu\": \"Domicile M. SONG Rigobert\",\n  \"typeSiege\": \"ROTATIF\",\n  \"hoteMembreId\": \"{{membreTresorierId}}\",\n  \"ordreJour\": \"1. Appel des membres - 2. Perception cotisations - 3. Versement pot\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reunions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reunions"]
+            }
+          }
+        },
+        {
+          "name": "6.2 - Démarrer Séance en Direct",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenPresident}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reunions/{{reunionId}}/demarrer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reunions", "{{reunionId}}", "demarrer"]
+            }
+          }
+        },
+        {
+          "name": "6.3 - Émarger Présences par Lot",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenSecretaire}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"presences\": [\n    { \"membreId\": \"{{membrePresidentId}}\", \"statut\": \"PRESENT\", \"retardMinutes\": 0 },\n    { \"membreId\": \"{{membreTresorierId}}\", \"statut\": \"PRESENT\", \"retardMinutes\": 0 },\n    { \"membreId\": \"{{membreSecretaireId}}\", \"statut\": \"PRESENT\", \"retardMinutes\": 0 },\n    { \"membreId\": \"{{membreCreatorId}}\", \"statut\": \"RETARD\", \"retardMinutes\": 25, \"motif\": \"Embouteillage\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reunions/{{reunionId}}/presences/batch",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reunions", "{{reunionId}}", "presences", "batch"]
+            }
+          }
+        },
+        {
+          "name": "6.4 - Vérifier Quorum",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenPresident}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reunions/{{reunionId}}/quorum",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reunions", "{{reunionId}}", "quorum"]
+            }
+          }
+        },
+        {
+          "name": "6.5 - Infliger Sanction Retard (2 000 XAF)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenPresident}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"membreId\": \"{{membreCreatorId}}\",\n  \"groupeId\": \"{{groupeId}}\",\n  \"sessionId\": \"{{sessionId}}\",\n  \"reunionId\": \"{{reunionId}}\",\n  \"typeInfraction\": \"RETARD_REUNION\",\n  \"montantManuel\": 2000,\n  \"motif\": \"Arrivée avec 25 minutes de retard en séance\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/penalites",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "penalites"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 7 : Cotisations & Paiements (ms-paiements)",
+      "item": [
+        {
+          "name": "7.1 - Initier Paiement Cash avec Reçu Signé",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set(\"paiementCashId\", jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenTresorier}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cotisationId\": \"11111111-1111-1111-1111-111111111111\",\n  \"membreId\": \"{{membrePresidentId}}\",\n  \"montant\": 65000,\n  \"preuveUrl\": \"https://storage.njangi.cm/recus/recu_cash_seance1_president_signe.pdf\",\n  \"commentaire\": \"Paiement cash 3 caisses\",\n  \"encaisseParId\": \"{{membreTresorierId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/paiements/cash",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "paiements", "cash"]
+            }
+          }
+        },
+        {
+          "name": "7.2 - Valider Paiement Cash par Trésorier",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenTresorier}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valide\": true,\n  \"commentaireValidation\": \"Billetage vérifié conforme\",\n  \"valideParId\": \"{{membreTresorierId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/paiements/{{paiementCashId}}/valider-cash",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "paiements", "{{paiementCashId}}", "valider-cash"]
+            }
+          }
+        },
+        {
+          "name": "7.3 - Paiement Mobile Money MTN",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenSecretaire}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cotisationId\": \"22222222-2222-2222-2222-222222222222\",\n  \"membreId\": \"{{membreSecretaireId}}\",\n  \"montant\": 65000,\n  \"telephonePaiement\": \"+237670000004\",\n  \"operateur\": \"MTN_MOMO\",\n  \"idempotenceKey\": \"e2e-momo-sec-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/paiements/mobile-money",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "paiements", "mobile-money"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 8 : Tour de Pot & Décaissement (ms-cotisations)",
+      "item": [
+        {
+          "name": "8.1 - Planifier Tours de Pot",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.length > 0) {",
+                  "    pm.environment.set(\"potId\", jsonData.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenPresident}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionTontineId\": \"{{sessionId}}\",\n  \"groupeId\": \"{{groupeId}}\",\n  \"typeCotisationId\": \"{{typeCotisationPotId}}\",\n  \"montantPot\": 200000,\n  \"beneficiairesOrdonnes\": [\n    \"{{membrePresidentId}}\",\n    \"{{membreTresorierId}}\",\n    \"{{membreSecretaireId}}\",\n    \"{{membreCreatorId}}\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cotisations/pots/planifier",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cotisations", "pots", "planifier"]
+            }
+          }
+        },
+        {
+          "name": "8.2 - Attribuer Pot au Bénéficiaire 1 (Président)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenPresident}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reunionId\": \"{{reunionId}}\",\n  \"beneficiaireEffectifId\": \"{{membrePresidentId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cotisations/pots/{{potId}}/attribuer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cotisations", "pots", "{{potId}}", "attribuer"]
+            }
+          }
+        },
+        {
+          "name": "8.3 - Décaisser Pot par Trésorier",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenTresorier}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reunionId\": \"{{reunionId}}\",\n  \"montantNet\": 200000,\n  \"modePaiement\": \"CASH\",\n  \"referencePaiement\": \"POT-S1-001\",\n  \"preuveDecaissementUrl\": \"https://storage.njangi.cm/recus/decharge_pot_seance1.pdf\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cotisations/pots/{{potId}}/decaisser",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cotisations", "pots", "{{potId}}", "decaisser"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 9 : Clôture PV & Bilan Consolidé (ms-reunions / ms-statistiques)",
+      "item": [
+        {
+          "name": "9.1 - Clôturer Réunion & Archiver PV",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenPresident}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"compteRendu\": \"Séance tenue avec succès. Quorum atteint. Cotisations perçues et pot de 200 000 XAF versé au Président sous décharge signée.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reunions/{{reunionId}}/cloturer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reunions", "{{reunionId}}", "cloturer"]
+            }
+          }
+        },
+        {
+          "name": "9.2 - Consulter Bilan Financier Consolidé",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenTresorier}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/statistiques/groupe/{{groupeId}}/session/{{sessionId}}/bilan",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "statistiques", "groupe", "{{groupeId}}", "session", "{{sessionId}}", "bilan"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

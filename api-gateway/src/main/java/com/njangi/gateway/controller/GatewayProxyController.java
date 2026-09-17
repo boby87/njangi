@@ -42,7 +42,7 @@ public class GatewayProxyController {
         String fullUri = request.getRequestURI();
         String prefix = "/api/v1/" + service;
         String subPath = fullUri.length() > prefix.length() ? fullUri.substring(prefix.length()) : "";
-        if (!subPath.startsWith("/")) {
+        if (!subPath.isEmpty() && !subPath.startsWith("/")) {
             subPath = "/" + subPath;
         }
 
@@ -62,10 +62,31 @@ public class GatewayProxyController {
         HttpEntity<byte[]> entity = new HttpEntity<>(body, headers);
 
         try {
-            return restTemplate.exchange(URI.create(targetUrl), method, entity, byte[].class);
+            ResponseEntity<byte[]> response = restTemplate.exchange(URI.create(targetUrl), method, entity, byte[].class);
+            HttpHeaders respHeaders = new HttpHeaders();
+            response.getHeaders().forEach((k, v) -> {
+                if (!k.equalsIgnoreCase(HttpHeaders.TRANSFER_ENCODING) &&
+                    !k.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH) &&
+                    !k.equalsIgnoreCase(HttpHeaders.CONNECTION)) {
+                    respHeaders.addAll(k, v);
+                }
+            });
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(respHeaders)
+                    .body(response.getBody());
         } catch (HttpStatusCodeException ex) {
+            HttpHeaders errHeaders = new HttpHeaders();
+            if (ex.getResponseHeaders() != null) {
+                ex.getResponseHeaders().forEach((k, v) -> {
+                    if (!k.equalsIgnoreCase(HttpHeaders.TRANSFER_ENCODING) &&
+                        !k.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH) &&
+                        !k.equalsIgnoreCase(HttpHeaders.CONNECTION)) {
+                        errHeaders.addAll(k, v);
+                    }
+                });
+            }
             return ResponseEntity.status(ex.getStatusCode())
-                    .headers(ex.getResponseHeaders())
+                    .headers(errHeaders)
                     .body(ex.getResponseBodyAsByteArray());
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)

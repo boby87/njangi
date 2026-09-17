@@ -1,37 +1,45 @@
 @if (!networkService.isOnline() || networkService.is3GOrDegraded() || tontineState.offlineQueue().length > 0) {
-  <aside aria-label="État de connexion réseau" class="px-3 py-1.5 text-xs font-semibold flex items-center justify-between transition-all duration-300 shadow-sm"
-       [class.bg-amber-500]="networkService.isOnline() && networkService.is3GOrDegraded()"
-       [class.text-amber-950]="networkService.isOnline() && networkService.is3GOrDegraded()"
-       [class.bg-rose-600]="!networkService.isOnline()"
-       [class.text-white]="!networkService.isOnline()"
-       [class.bg-emerald-600]="networkService.isOnline() && !networkService.is3GOrDegraded() && tontineState.offlineQueue().length > 0"
-       [class.text-white]="networkService.isOnline() && !networkService.is3GOrDegraded() && tontineState.offlineQueue().length > 0">
+  <aside aria-label="État de connexion réseau" 
+         class="fixed top-3 left-4 right-4 z-50 px-3.5 py-2 rounded-full backdrop-blur-xl shadow-2xl border flex items-center justify-between transition-all duration-300"
+         [class.bg-amber-950/85]="networkService.isOnline() && networkService.is3GOrDegraded()"
+         [class.border-amber-500/40]="networkService.isOnline() && networkService.is3GOrDegraded()"
+         [class.text-amber-200]="networkService.isOnline() && networkService.is3GOrDegraded()"
+         [class.bg-rose-950/85]="!networkService.isOnline()"
+         [class.border-rose-500/40]="!networkService.isOnline()"
+         [class.text-rose-200]="!networkService.isOnline()"
+         [class.bg-emerald-950/85]="networkService.isOnline() && !networkService.is3GOrDegraded() && tontineState.offlineQueue().length > 0"
+         [class.border-emerald-500/40]="networkService.isOnline() && !networkService.is3GOrDegraded() && tontineState.offlineQueue().length > 0"
+         [class.text-emerald-200]="networkService.isOnline() && !networkService.is3GOrDegraded() && tontineState.offlineQueue().length > 0">
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 text-xs font-medium">
       @if (!networkService.isOnline()) {
-        <ion-icon name="cloud-offline-outline" class="text-base animate-pulse"></ion-icon>
-        <span>Mode Hors-Ligne (Stockage local actif)</span>
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+        </span>
+        <span class="font-semibold text-rose-100">Hors Ligne (Stockage local)</span>
       } @else if (networkService.is3GOrDegraded()) {
-        <ion-icon name="cellular-outline" class="text-base"></ion-icon>
-        <span>Réseau 3G dégradé</span>
+        <ion-icon name="cellular" class="text-amber-400 text-sm"></ion-icon>
+        <span class="font-semibold text-amber-100">Réseau 3G instable</span>
       } @else {
-        <ion-icon name="checkmark-circle-outline" class="text-base"></ion-icon>
-        <span>Connexion rétablie</span>
+        <span class="inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        <span class="font-semibold text-emerald-100">En ligne</span>
       }
 
       @if (tontineState.offlineQueue().length > 0) {
-        <span class="ml-1 px-1.5 py-0.5 rounded-full bg-black/20 text-[10px] font-bold">
-          {{ tontineState.offlineQueue().length }} action(s) en attente
+        <span class="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-bold tracking-wide">
+          {{ tontineState.offlineQueue().length }} en file
         </span>
       }
     </div>
 
     @if (networkService.isOnline() && tontineState.offlineQueue().length > 0) {
       <button
+        type="button"
         (click)="onSync()"
-        class="flex items-center gap-1 px-2 py-0.5 rounded bg-black/30 hover:bg-black/40 text-[11px] font-bold active:scale-95 transition-transform">
+        class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold shadow-md active:scale-95 transition-transform">
         <ion-icon name="sync-outline" class="text-xs"></ion-icon>
-        Synchroniser
+        Sync
       </button>
     }
   </aside>

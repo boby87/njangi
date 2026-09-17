@@ -1,84 +1,127 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar class="bg-slate-950 text-white border-b border-slate-800">
-    <div class="px-4 py-2 flex items-center justify-between">
+  <ion-toolbar class="border-b border-white/5" style="--background: #080c16; --color: #ffffff;">
+    <div class="px-4 pt-3 pb-2 flex items-center justify-between">
       <div>
-        <div class="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">Séance Live en direct</div>
-        <h1 class="text-base font-bold text-white">Appel & Conduite de Séance</h1>
+        <div class="text-[10px] uppercase tracking-widest text-emerald-400 font-bold">Séance en direct</div>
+        <h1 class="text-lg font-black text-white tracking-tight font-display">Appel & Conduite Live</h1>
       </div>
       <button
+        type="button"
         (click)="openSanctionModal()"
-        class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 shadow">
-        <ion-icon name="alert-circle-outline"></ion-icon>
+        class="bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm shadow-rose-500/10 active:scale-95 transition-all">
+        <ion-icon name="alert-circle-outline" class="text-sm"></ion-icon>
         <span>Sanctionner</span>
       </button>
     </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="bg-slate-950 text-slate-100">
-  <div class="p-4 space-y-4">
+<ion-content style="--background: #060911; --color: #f8fafc;">
+  <div class="p-4 space-y-4 pb-20">
 
     <!-- Bannière Séance & Quorum -->
-    <div class="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-4">
+    <div class="relative overflow-hidden rounded-3xl p-5 njangi-hero-indigo">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs text-slate-400">Lieu : Maison du Peuple, Yaoundé</span>
-        <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+        <span class="text-xs text-indigo-200/80 font-medium">Lieu : Maison du Peuple, Douala</span>
+        <span class="bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">
           Quorum 80% (4/5)
         </span>
       </div>
-      <h2 class="text-base font-bold text-white mb-1">Séance Mensuelle #03</h2>
-      <p class="text-xs text-slate-300">
-        Président de séance : <strong class="text-white">Maurice KAMDEM</strong> · Secrétaire : <strong class="text-white">Alain TCHOUA</strong>
+      <h2 class="text-lg font-black text-white mb-1 tracking-tight font-display">Séance Mensuelle Ordinaire #03</h2>
+      <p class="text-xs text-indigo-200/70">
+        Président : <strong class="text-white">Maurice KAMDEM</strong> · Secrétaire : <strong class="text-white">Alain TCHOUA</strong>
       </p>
     </div>
 
     <!-- Feuille d'émargement dynamique (Appel nominatif direct) -->
-    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4">
+    <div class="rounded-3xl p-5 njangi-glass-card">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-sm font-bold text-white">Feuille d'Émargement</h3>
-        <span class="text-[11px] text-slate-400">Tapez pour changer le statut</span>
+        <div>
+          <h3 class="text-base font-extrabold text-white tracking-tight font-display">Feuille d'Émargement</h3>
+          <p class="text-[11px] text-slate-400">Pointage des présences en temps réel</p>
+        </div>
+        <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+          En séance
+        </span>
       </div>
 
-      <div class="space-y-2.5">
+      <div class="space-y-3">
         @for (m of tontineState.membres(); track m.id) {
           @let presence = tontineState.presences().find(p => p.membreId === m.id);
-          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-800 text-xs">
-            <div class="flex items-center justify-between mb-2">
-              <div>
-                <div class="font-bold text-white">{{ m.nom }} {{ m.prenom }}</div>
-                <div class="text-[10px] text-slate-400">Arrivée : {{ presence?.heureArrivee || 'Non pointé' }}</div>
+          <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-white/5 text-xs shadow-sm">
+            <div class="flex items-center justify-between mb-2.5">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-slate-800 border border-white/10 flex items-center justify-center font-bold text-slate-300 text-xs">
+                  {{ m.prenom.charAt(0) }}{{ m.nom.charAt(0) }}
+                </div>
+                <div>
+                  <div class="font-extrabold text-white text-sm">{{ m.prenom }} {{ m.nom }}</div>
+                  <div class="text-[10px] text-slate-400">Arrivée : {{ presence?.heureArrivee || 'Non pointé' }}</div>
+                </div>
               </div>
               <app-status-badge [status]="presence?.statut || 'ABSENT'"></app-status-badge>
             </div>
 
-            <!-- Boutons de pointage rapide (Accessible au Secrétaire et Président) -->
-            <div class="grid grid-cols-4 gap-1.5">
+            <!-- Boutons de pointage rapide (Soft Frosted Glass Pills) -->
+            <div class="p-1 rounded-2xl bg-black/30 border border-white/5 grid grid-cols-4 gap-1">
               <button
+                type="button"
                 (click)="onMarkPresence(m.id, 'PRESENT')"
-                [class.bg-emerald-600]="presence?.statut === 'PRESENT'"
-                [class.bg-slate-800]="presence?.statut !== 'PRESENT'"
-                class="py-1 rounded text-[10px] font-bold transition text-slate-200">
+                [class.bg-emerald-500/20]="presence?.statut === 'PRESENT'"
+                [class.text-emerald-300]="presence?.statut === 'PRESENT'"
+                [class.border-emerald-400/35]="presence?.statut === 'PRESENT'"
+                [class.font-bold]="presence?.statut === 'PRESENT'"
+                [class.shadow-sm]="presence?.statut === 'PRESENT'"
+                [class.shadow-emerald-500/15]="presence?.statut === 'PRESENT'"
+                [class.border-transparent]="presence?.statut !== 'PRESENT'"
+                [class.text-slate-400]="presence?.statut !== 'PRESENT'"
+                [class.hover:text-slate-200]="presence?.statut !== 'PRESENT'"
+                class="py-1.5 rounded-xl text-[11px] font-medium border text-center transition-all duration-200 active:scale-95">
                 Présent
               </button>
               <button
+                type="button"
                 (click)="onMarkPresence(m.id, 'RETARD')"
-                [class.bg-amber-600]="presence?.statut === 'RETARD'"
-                [class.bg-slate-800]="presence?.statut !== 'RETARD'"
-                class="py-1 rounded text-[10px] font-bold transition text-slate-200">
+                [class.bg-amber-500/20]="presence?.statut === 'RETARD'"
+                [class.text-amber-300]="presence?.statut === 'RETARD'"
+                [class.border-amber-400/35]="presence?.statut === 'RETARD'"
+                [class.font-bold]="presence?.statut === 'RETARD'"
+                [class.shadow-sm]="presence?.statut === 'RETARD'"
+                [class.shadow-amber-500/15]="presence?.statut === 'RETARD'"
+                [class.border-transparent]="presence?.statut !== 'RETARD'"
+                [class.text-slate-400]="presence?.statut !== 'RETARD'"
+                [class.hover:text-slate-200]="presence?.statut !== 'RETARD'"
+                class="py-1.5 rounded-xl text-[11px] font-medium border text-center transition-all duration-200 active:scale-95">
                 Retard
               </button>
               <button
+                type="button"
                 (click)="onMarkPresence(m.id, 'EXCUSE')"
-                [class.bg-blue-600]="presence?.statut === 'EXCUSE'"
-                [class.bg-slate-800]="presence?.statut !== 'EXCUSE'"
-                class="py-1 rounded text-[10px] font-bold transition text-slate-200">
+                [class.bg-sky-500/20]="presence?.statut === 'EXCUSE'"
+                [class.text-sky-300]="presence?.statut === 'EXCUSE'"
+                [class.border-sky-400/35]="presence?.statut === 'EXCUSE'"
+                [class.font-bold]="presence?.statut === 'EXCUSE'"
+                [class.shadow-sm]="presence?.statut === 'EXCUSE'"
+                [class.shadow-sky-500/15]="presence?.statut === 'EXCUSE'"
+                [class.border-transparent]="presence?.statut !== 'EXCUSE'"
+                [class.text-slate-400]="presence?.statut !== 'EXCUSE'"
+                [class.hover:text-slate-200]="presence?.statut !== 'EXCUSE'"
+                class="py-1.5 rounded-xl text-[11px] font-medium border text-center transition-all duration-200 active:scale-95">
                 Excusé
               </button>
               <button
+                type="button"
                 (click)="onMarkPresence(m.id, 'ABSENT')"
-                [class.bg-rose-600]="presence?.statut === 'ABSENT'"
-                [class.bg-slate-800]="presence?.statut !== 'ABSENT'"
-                class="py-1 rounded text-[10px] font-bold transition text-slate-200">
+                [class.bg-rose-500/20]="presence?.statut === 'ABSENT'"
+                [class.text-rose-300]="presence?.statut === 'ABSENT'"
+                [class.border-rose-400/35]="presence?.statut === 'ABSENT'"
+                [class.font-bold]="presence?.statut === 'ABSENT'"
+                [class.shadow-sm]="presence?.statut === 'ABSENT'"
+                [class.shadow-rose-500/15]="presence?.statut === 'ABSENT'"
+                [class.border-transparent]="presence?.statut !== 'ABSENT'"
+                [class.text-slate-400]="presence?.statut !== 'ABSENT'"
+                [class.hover:text-slate-200]="presence?.statut !== 'ABSENT'"
+                class="py-1.5 rounded-xl text-[11px] font-medium border text-center transition-all duration-200 active:scale-95">
                 Absent
               </button>
             </div>
@@ -88,21 +131,25 @@
     </div>
 
     <!-- Sanctions prises durant la séance -->
-    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4">
+    <div class="rounded-3xl p-5 njangi-glass-card">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-sm font-bold text-white">Sanctions Prononcées</h3>
-        <span class="text-xs text-rose-400 font-semibold">{{ tontineState.sanctions().length }} sanction(s)</span>
+        <h3 class="text-sm font-extrabold text-white">Sanctions Prononcées</h3>
+        <span class="text-xs text-rose-400 font-bold bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full">
+          {{ tontineState.sanctions().length }} sanction(s)
+        </span>
       </div>
 
       <div class="space-y-2">
         @for (s of tontineState.sanctions(); track s.id) {
-          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+          <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-white/5 flex items-center justify-between text-xs">
             <div>
               <div class="font-bold text-rose-300">{{ s.motif }}</div>
-              <div class="text-[10px] text-slate-400">Infraction : {{ s.typeInfraction }}</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Infraction : {{ s.typeInfraction }}</div>
             </div>
             <div class="text-right">
-              <div class="font-bold text-white"><app-amount-badge [amount]="s.montantXaf"></app-amount-badge></div>
+              <div class="font-extrabold text-white mb-1">
+                <app-amount-badge [amount]="s.montantXaf" variant="plain" size="sm"></app-amount-badge>
+              </div>
               <app-status-badge [status]="s.statut"></app-status-badge>
             </div>
           </div>
@@ -116,7 +163,7 @@
   @if (isSanctionModalOpen()) {
     <app-penalty-modal
       [membres]="tontineState.membres()"
-      (close)="closeSanctionModal()"
+      (closeModal)="closeSanctionModal()"
       (submitSanction)="onSubmitSanction($event)">
     </app-penalty-modal>
   }

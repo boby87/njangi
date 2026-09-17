@@ -34,11 +34,11 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      KAFKA_LOG_DIRS: '/var/lib/kafka/data'
       CLUSTER_ID: '4L622nShTUiT8YgnL3BGwf'
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
     volumes:
-      - kafka_data:/tmp/kraft-combined-logs
+      - kafka_data:/var/lib/kafka/data
     networks:
       - njangi-network
 
@@ -60,6 +60,15 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      MS_AUTH_URL: http://ms-auth:8001
+      MS_MEMBRES_URL: http://ms-membres:8002
+      MS_GROUPES_URL: http://ms-groupes:8003
+      MS_REUNIONS_URL: http://ms-reunions:8004
+      MS_COTISATIONS_URL: http://ms-cotisations:8005
+      MS_PAIEMENTS_URL: http://ms-paiements:8006
+      MS_PENALITES_URL: http://ms-penalites:8007
+      MS_NOTIFICATIONS_URL: http://ms-notifications:8008
+      MS_STATISTIQUES_URL: http://ms-statistiques:8009
     depends_on:
       - eureka-server
       - ms-auth

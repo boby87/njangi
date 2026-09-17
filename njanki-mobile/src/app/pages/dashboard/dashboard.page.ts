@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import {
@@ -19,7 +19,20 @@ import {
   walletOutline,
   documentTextOutline,
   ribbonOutline,
-  swapHorizontalOutline
+  swapHorizontalOutline,
+  personOutline,
+  notificationsOutline,
+  sparklesOutline,
+  calendarOutline,
+  arrowForwardOutline,
+  receiptOutline,
+  layersOutline,
+  locationOutline,
+  trendingUpOutline,
+  fingerPrintOutline,
+  checkmarkOutline,
+  flashOutline,
+  cardOutline
 } from 'ionicons/icons';
 import { MobileTontineStateService } from '../../core/services/tontine-state.service';
 import { MobileAuthService } from '../../core/services/auth.service';
@@ -64,11 +77,46 @@ export class DashboardPage {
       walletOutline,
       documentTextOutline,
       ribbonOutline,
-      swapHorizontalOutline
+      swapHorizontalOutline,
+      personOutline,
+      notificationsOutline,
+      sparklesOutline,
+      calendarOutline,
+      arrowForwardOutline,
+      receiptOutline,
+      layersOutline,
+      locationOutline,
+      trendingUpOutline,
+      fingerPrintOutline,
+      checkmarkOutline,
+      flashOutline,
+      cardOutline
     });
   }
 
   onRoleSelect(role: RoleMembre): void {
     this.authService.setActiveRole(role);
+  }
+
+  cleanAgendaItem(item: string): string {
+    return (item || '').replace(/^\d+[\.\s]+/, '').trim();
+  }
+
+  getRoleIcon(role: RoleMembre): string {
+    switch (role) {
+      case 'PRESIDENT': return 'shield-checkmark-outline';
+      case 'TRESORIER': return 'cash-outline';
+      case 'SECRETAIRE': return 'document-text-outline';
+      default: return 'person-outline';
+    }
+  }
+
+  getRoleLabel(role: RoleMembre): string {
+    switch (role) {
+      case 'PRESIDENT': return 'Président';
+      case 'TRESORIER': return 'Trésorier';
+      case 'SECRETAIRE': return 'Secrétaire';
+      default: return 'Membre';
+    }
   }
 }

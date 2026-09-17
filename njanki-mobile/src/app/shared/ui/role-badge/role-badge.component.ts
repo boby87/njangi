@@ -27,18 +27,18 @@ export class RoleBadgeComponent {
   readonly styleClasses = computed(() => {
     switch (this.role()) {
       case 'PRESIDENT':
-        return 'bg-purple-950/60 text-purple-300 border-purple-700/50';
+        return 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30 shadow-sm shadow-indigo-500/10';
       case 'TRESORIER':
-        return 'bg-amber-950/60 text-amber-300 border-amber-700/50';
+        return 'bg-amber-500/15 text-amber-300 border-amber-500/30 shadow-sm shadow-amber-500/10';
       case 'SECRETAIRE':
-        return 'bg-blue-950/60 text-blue-300 border-blue-700/50';
+        return 'bg-sky-500/15 text-sky-300 border-sky-500/30 shadow-sm shadow-sky-500/10';
       case 'CREATEUR':
-        return 'bg-emerald-950/60 text-emerald-300 border-emerald-700/50';
+        return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-sm shadow-emerald-500/10';
       case 'AUDITEUR':
-        return 'bg-cyan-950/60 text-cyan-300 border-cyan-700/50';
+        return 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 shadow-sm shadow-cyan-500/10';
       case 'MEMBRE':
       default:
-        return 'bg-slate-800 text-slate-300 border-slate-700';
+        return 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25';
     }
   });
 }

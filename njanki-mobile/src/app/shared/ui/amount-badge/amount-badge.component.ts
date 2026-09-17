@@ -9,12 +9,15 @@ import { Component, input, computed, ChangeDetectionStrategy } from '@angular/co
 })
 export class AmountBadgeComponent {
   readonly amount = input.required<number>();
-  readonly variant = input<'primary' | 'success' | 'warning' | 'danger' | 'neutral'>('neutral');
-  readonly size = input<'sm' | 'md' | 'lg'>('md');
+  readonly variant = input<'primary' | 'success' | 'warning' | 'danger' | 'neutral' | 'plain'>('neutral');
+  readonly size = input<'sm' | 'md' | 'lg' | 'xl' | 'hero'>('md');
 
-  // Formatage monétaire strict XAF sans décimales (ex. 10 000 XAF)
-  readonly formattedAmount = computed(() => {
+  readonly formattedNumber = computed(() => {
     const val = Math.round(this.amount() || 0);
-    return `${val.toLocaleString('fr-FR')} XAF`;
+    return val.toLocaleString('fr-FR');
+  });
+
+  readonly formattedAmount = computed(() => {
+    return `${this.formattedNumber()} XAF`;
   });
 }

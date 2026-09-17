@@ -1,86 +1,115 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar class="bg-slate-950 text-white border-b border-slate-800">
-    <div class="px-4 py-2">
-      <div class="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">Caisse & Épargne Mutuelle</div>
-      <h1 class="text-base font-bold text-white">Multi-Cotisations Simultanées</h1>
+  <ion-toolbar class="border-b border-white/5" style="--background: #080c16; --color: #ffffff;">
+    <div class="px-4 pt-3 pb-2">
+      <div class="text-[10px] uppercase tracking-widest text-emerald-400 font-bold">Épargne & Solidarité</div>
+      <h1 class="text-lg font-black text-white tracking-tight font-display">Multi-Cotisations Simultanées</h1>
     </div>
 
-    <!-- Sélecteur de caisses -->
-    <div class="px-3 pb-2 flex gap-1.5 overflow-x-auto no-scrollbar">
-      <button
-        (click)="onTypeChange('TOUS')"
-        [class.bg-emerald-600]="selectedType() === 'TOUS'"
-        [class.text-white]="selectedType() === 'TOUS'"
-        [class.bg-slate-800]="selectedType() !== 'TOUS'"
-        [class.text-slate-300]="selectedType() !== 'TOUS'"
-        class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border border-slate-700">
-        Toutes les caisses
-      </button>
-      <button
-        (click)="onTypeChange('ROTATIVE_POT')"
-        [class.bg-emerald-600]="selectedType() === 'ROTATIVE_POT'"
-        [class.text-white]="selectedType() === 'ROTATIVE_POT'"
-        [class.bg-slate-800]="selectedType() !== 'ROTATIVE_POT'"
-        [class.text-slate-300]="selectedType() !== 'ROTATIVE_POT'"
-        class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border border-slate-700">
-        Pot Rotatif (50 000 XAF)
-      </button>
-      <button
-        (click)="onTypeChange('SECOURS_DECES')"
-        [class.bg-emerald-600]="selectedType() === 'SECOURS_DECES'"
-        [class.text-white]="selectedType() === 'SECOURS_DECES'"
-        [class.bg-slate-800]="selectedType() !== 'SECOURS_DECES'"
-        [class.text-slate-300]="selectedType() !== 'SECOURS_DECES'"
-        class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border border-slate-700">
-        Secours / Décès (5 000 XAF)
-      </button>
-      <button
-        (click)="onTypeChange('CAISSE_RESERVE')"
-        [class.bg-emerald-600]="selectedType() === 'CAISSE_RESERVE'"
-        [class.text-white]="selectedType() === 'CAISSE_RESERVE'"
-        [class.bg-slate-800]="selectedType() !== 'CAISSE_RESERVE'"
-        [class.text-slate-300]="selectedType() !== 'CAISSE_RESERVE'"
-        class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border border-slate-700">
-        Caisse Réserve (10 000 XAF)
-      </button>
+    <!-- Sélecteur de caisses (Soft Frosted Glass Pills) -->
+    <div class="px-4 pb-2.5 pt-1">
+      <div class="p-1 rounded-2xl bg-slate-900/60 border border-white/8 backdrop-blur-2xl flex items-center gap-1">
+        <button
+          type="button"
+          (click)="onTypeChange('TOUS')"
+          [class.bg-emerald-500/20]="selectedType() === 'TOUS'"
+          [class.text-emerald-300]="selectedType() === 'TOUS'"
+          [class.border-emerald-400/35]="selectedType() === 'TOUS'"
+          [class.font-bold]="selectedType() === 'TOUS'"
+          [class.shadow-sm]="selectedType() === 'TOUS'"
+          [class.shadow-emerald-500/15]="selectedType() === 'TOUS'"
+          [class.border-transparent]="selectedType() !== 'TOUS'"
+          [class.text-slate-400]="selectedType() !== 'TOUS'"
+          [class.hover:text-slate-200]="selectedType() !== 'TOUS'"
+          class="flex-1 py-1.5 rounded-xl text-[11px] font-medium border text-center transition-all duration-200 active:scale-95">
+          Toutes
+        </button>
+        <button
+          type="button"
+          (click)="onTypeChange('ROTATIVE_POT')"
+          [class.bg-amber-500/20]="selectedType() === 'ROTATIVE_POT'"
+          [class.text-amber-300]="selectedType() === 'ROTATIVE_POT'"
+          [class.border-amber-400/35]="selectedType() === 'ROTATIVE_POT'"
+          [class.font-bold]="selectedType() === 'ROTATIVE_POT'"
+          [class.shadow-sm]="selectedType() === 'ROTATIVE_POT'"
+          [class.shadow-amber-500/15]="selectedType() === 'ROTATIVE_POT'"
+          [class.border-transparent]="selectedType() !== 'ROTATIVE_POT'"
+          [class.text-slate-400]="selectedType() !== 'ROTATIVE_POT'"
+          [class.hover:text-slate-200]="selectedType() !== 'ROTATIVE_POT'"
+          class="flex-1 py-1.5 rounded-xl text-[11px] font-medium border text-center transition-all duration-200 active:scale-95">
+          Pot
+        </button>
+        <button
+          type="button"
+          (click)="onTypeChange('SECOURS_DECES')"
+          [class.bg-teal-500/20]="selectedType() === 'SECOURS_DECES'"
+          [class.text-teal-300]="selectedType() === 'SECOURS_DECES'"
+          [class.border-teal-400/35]="selectedType() === 'SECOURS_DECES'"
+          [class.font-bold]="selectedType() === 'SECOURS_DECES'"
+          [class.shadow-sm]="selectedType() === 'SECOURS_DECES'"
+          [class.shadow-teal-500/15]="selectedType() === 'SECOURS_DECES'"
+          [class.border-transparent]="selectedType() !== 'SECOURS_DECES'"
+          [class.text-slate-400]="selectedType() !== 'SECOURS_DECES'"
+          [class.hover:text-slate-200]="selectedType() !== 'SECOURS_DECES'"
+          class="flex-1 py-1.5 rounded-xl text-[11px] font-medium border text-center transition-all duration-200 active:scale-95">
+          Secours
+        </button>
+        <button
+          type="button"
+          (click)="onTypeChange('CAISSE_RESERVE')"
+          [class.bg-sky-500/20]="selectedType() === 'CAISSE_RESERVE'"
+          [class.text-sky-300]="selectedType() === 'CAISSE_RESERVE'"
+          [class.border-sky-400/35]="selectedType() === 'CAISSE_RESERVE'"
+          [class.font-bold]="selectedType() === 'CAISSE_RESERVE'"
+          [class.shadow-sm]="selectedType() === 'CAISSE_RESERVE'"
+          [class.shadow-sky-500/15]="selectedType() === 'CAISSE_RESERVE'"
+          [class.border-transparent]="selectedType() !== 'CAISSE_RESERVE'"
+          [class.text-slate-400]="selectedType() !== 'CAISSE_RESERVE'"
+          [class.hover:text-slate-200]="selectedType() !== 'CAISSE_RESERVE'"
+          class="flex-1 py-1.5 rounded-xl text-[11px] font-medium border text-center transition-all duration-200 active:scale-95">
+          Réserve
+        </button>
+      </div>
     </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="bg-slate-950 text-slate-100">
-  <div class="p-4 space-y-4">
+<ion-content style="--background: #060911; --color: #f8fafc;">
+  <div class="p-4 space-y-4 pb-20">
 
     <!-- Calendrier d'ordre de passage du Pot Rotatif (600 000 XAF) -->
-    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4">
+    <div class="relative overflow-hidden rounded-3xl p-5 njangi-hero-gold">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
           <ion-icon name="wallet-outline" class="text-amber-400 text-lg"></ion-icon>
-          <h2 class="font-bold text-white text-sm">Calendrier du Pot Rotatif</h2>
+          <h2 class="font-extrabold text-white text-sm tracking-tight font-display">Calendrier du Pot Rotatif</h2>
         </div>
-        <span class="text-xs text-amber-400 font-bold">
-          <app-amount-badge [amount]="600000"></app-amount-badge> / mois
-        </span>
+        <div class="text-xs font-bold text-amber-300 bg-amber-400/10 border border-amber-400/20 px-2.5 py-0.5 rounded-full">
+          600 000 XAF / mois
+        </div>
       </div>
 
       <div class="space-y-2">
         @for (tour of tontineState.toursPot(); track tour.id) {
           <div
-            [class.border-emerald-500]="tour.statut === 'PRET_POUR_VERSEMENT'"
-            [class.bg-emerald-950/40]="tour.statut === 'PRET_POUR_VERSEMENT'"
-            class="bg-slate-800/60 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2.5">
+            [class.border-amber-400/40]="tour.statut === 'PRET_POUR_VERSEMENT'"
+            [class.bg-amber-950/30]="tour.statut === 'PRET_POUR_VERSEMENT'"
+            class="bg-black/35 backdrop-blur-md p-3 rounded-2xl border border-white/5 flex items-center justify-between text-xs transition-all">
+            <div class="flex items-center gap-3">
               <div
                 [class.bg-emerald-500]="tour.statut === 'VERSE'"
-                [class.bg-amber-500]="tour.statut === 'PRET_POUR_VERSEMENT'"
-                [class.bg-slate-700]="tour.statut === 'A_VENIR'"
-                class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-slate-950 text-[11px]">
-                {{ tour.numeroTour }}
+                [class.text-white]="tour.statut === 'VERSE'"
+                [class.bg-amber-400]="tour.statut === 'PRET_POUR_VERSEMENT'"
+                [class.text-slate-950]="tour.statut === 'PRET_POUR_VERSEMENT'"
+                [class.bg-slate-800]="tour.statut === 'A_VENIR'"
+                [class.text-slate-300]="tour.statut === 'A_VENIR'"
+                class="w-7 h-7 rounded-xl flex items-center justify-center font-extrabold text-xs shadow-sm">
+                #{{ tour.numeroTour }}
               </div>
               <div>
-                <div class="font-bold text-white">
+                <div class="font-bold text-white text-sm">
                   {{ tour.beneficiaireNom }}
                 </div>
-                <div class="text-[10px] text-slate-400">Échéance : {{ tour.dateAttribution }}</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">Échéance : {{ tour.dateAttribution }}</div>
               </div>
             </div>
             <div class="text-right">
@@ -92,19 +121,26 @@
     </div>
 
     <!-- Détail des cotisations filtrées -->
-    <div class="space-y-2">
-      <h2 class="font-bold text-white text-sm">Mes Versements et Appels de Cotisation</h2>
+    <div class="space-y-2.5">
+      <div class="flex items-center justify-between px-1">
+        <h2 class="font-extrabold text-white text-sm tracking-tight font-display">Mes Versements & Appels</h2>
+        <span class="text-xs text-slate-400">{{ filteredCotisations().length }} cotisation(s)</span>
+      </div>
+
       @for (cot of filteredCotisations(); track cot.id) {
-        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+        <div class="bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl border border-white/5 flex justify-between items-center text-xs shadow-sm">
           <div>
-            <div class="font-semibold text-slate-200">
+            <div class="font-bold text-slate-100 text-sm">
               {{ cot.typeCotisation === 'ROTATIVE_POT' ? 'Pot Rotatif Mensuel' : cot.typeCotisation === 'SECOURS_DECES' ? 'Fonds de Secours & Décès' : 'Caisse d\'Épargne & Réserve' }}
             </div>
-            <div class="text-[10px] text-slate-400">Date limite : {{ cot.dateEcheance }}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
+              <ion-icon name="time-outline" class="text-slate-500"></ion-icon>
+              <span>Date limite : {{ cot.dateEcheance }}</span>
+            </div>
           </div>
           <div class="text-right">
-            <div class="font-bold text-emerald-400">
-              <app-amount-badge [amount]="cot.montantAttenduXaf"></app-amount-badge>
+            <div class="font-extrabold text-emerald-400 text-sm mb-1">
+              <app-amount-badge [amount]="cot.montantAttenduXaf" variant="plain" size="sm"></app-amount-badge>
             </div>
             <app-status-badge [status]="cot.statut"></app-status-badge>
           </div>

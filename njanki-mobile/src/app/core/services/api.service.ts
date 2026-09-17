@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, from, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
+import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../../shared/models/api-response.model';
@@ -13,7 +14,9 @@ const TOKEN_KEY = 'njangi_auth_token';
 })
 export class MobileApiService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = environment.apiUrl;
+  private readonly baseUrl = typeof window !== 'undefined' && !Capacitor.isNativePlatform()
+    ? (environment.gatewayWebUrl || 'http://localhost:9090')
+    : environment.apiUrl;
 
   /**
    * Effectue un appel GET via la Gateway avec injection transparente du token Bearer.

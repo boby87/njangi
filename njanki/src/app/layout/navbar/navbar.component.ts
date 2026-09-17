@@ -1,6 +1,6 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { TontineStateService } from '@core/services/tontine-state.service';
 import { RoleBadgeComponent } from '@shared/ui/role-badge/role-badge.component';
@@ -14,6 +14,7 @@ import { RoleBadgeComponent } from '@shared/ui/role-badge/role-badge.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NavbarComponent {
+  private readonly router = inject(Router);
   readonly authService = inject(AuthService);
   readonly tontineService = inject(TontineStateService);
 
@@ -28,5 +29,10 @@ export class NavbarComponent {
     if (select && select.value) {
       this.authService.setGroupeActif(select.value);
     }
+  }
+
+  onDeconnecter(): void {
+    this.authService.deconnecter();
+    this.router.navigate(['/login']);
   }
 }

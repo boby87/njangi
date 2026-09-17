@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.njangi.paiements.service.PaiementServiceTest
--------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.230 s -- in com.njangi.paiements.service.PaiementServiceTest

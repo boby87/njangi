@@ -1,13 +1,13 @@
 <span 
-  class="inline-flex items-center font-medium rounded-full border transition-colors"
+  class="inline-flex items-center font-semibold rounded-full border backdrop-blur-md transition-all duration-200 shadow-sm"
   [class]="styleClasses()"
-  [class.text-xs]="size() === 'sm'"
-  [class.px-2]="size() === 'sm'"
+  [class.text-[11px]]="size() === 'sm'"
+  [class.px-2.5]="size() === 'sm'"
   [class.py-0.5]="size() === 'sm'"
-  [class.text-sm]="size() === 'md'"
+  [class.text-xs]="size() === 'md'"
   [class.px-3]="size() === 'md'"
   [class.py-1]="size() === 'md'"
 >
-  <span class="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-80"></span>
+  <span class="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-90"></span>
   {{ label() }}
 </span>

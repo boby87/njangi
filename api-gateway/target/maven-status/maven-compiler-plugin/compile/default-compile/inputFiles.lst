@@ -1,7 +1,0 @@
-D:\projet\njangi\api-gateway\src\main\java\com\njangi\gateway\config\CorsConfig.java
-D:\projet\njangi\api-gateway\src\main\java\com\njangi\gateway\config\RoutingConfig.java
-D:\projet\njangi\api-gateway\src\main\java\com\njangi\gateway\config\SecurityConfig.java
-D:\projet\njangi\api-gateway\src\main\java\com\njangi\gateway\controller\GatewayProxyController.java
-D:\projet\njangi\api-gateway\src\main\java\com\njangi\gateway\filter\LoggingFilter.java
-D:\projet\njangi\api-gateway\src\main\java\com\njangi\gateway\filter\OtpValidationFilter.java
-D:\projet\njangi\api-gateway\src\main\java\com\njangi\gateway\GatewayApplication.java

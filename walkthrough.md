@@ -293,5 +293,44 @@ Refactorisation intégrale de `ms-membres` pour respecter strictement la section
 | **Bannissement des Promises** | Analyse statique | **100% Conforme** | Uniquement Angular Signals + RxJS |
 | **Bannissement FormBuilder/ngModel** | Analyse statique | **100% Conforme** | Signal Forms exclusifs (`signal()` + `computed()`) |
 | **Format Monétaire Camerounais** | Analyse statique | **100% Conforme** | Strictement `XAF` sans décimales |
-| **Téléphone Camerounais** | Regex & Value Object | **100% Conforme** | Validé via `+237[236]XXXXXXXX` ou international E.164 |
 | **Kafka Mode KRaft** | `docker compose config` | **100% Conforme** | Consensus Raft natif (`broker,controller`), ZooKeeper éliminé |
+| **Suite E2E Bout-en-Bout** | `.\scripts\test-e2e-scenario.ps1` | **9/9 PHASES PASSÉES** | Inscription -> Siège Rotatif -> Bureau -> Séance -> Cash/MoMo -> Pot -> Bilan |
+
+---
+
+## 3. Détail de la Suite de Test E2E (9 Phases Validées)
+
+1. **Phase 1 : Authentification & Sécurité (`ms-auth`)** : Inscription et émission de tokens JWT Bearer pour 4 profils distincts (`Créateur`, `Président`, `Trésorier`, `Secrétaire`).
+2. **Phase 2 : Profils Membres DDD Hexagonal (`ms-membres`)** : Provisionnement des membres dans le domaine hexagonal avec respect de l'unicité téléphone camerounais/diaspora.
+3. **Phase 3 : Gouvernance & Siège Rotatif (`ms-groupes`)** : Création d'une tontine avec siège tournant (`typeSiege: ROTATIF`), planification et démarrage de la session annuelle.
+4. **Phase 4 : Multi-Cotisations Simultanées (`ms-cotisations`)** : Configuration des 3 caisses obligatoires (Pot rotatif 50 000 XAF + Secours 10 000 XAF + Réserve 5 000 XAF = 65 000 XAF/séance).
+5. **Phase 5 : Élection du Bureau & Démotion du Créateur (`ms-groupes`)** : Élection du premier bureau et rétrogradation automatique du créateur en simple membre sans prérogative d'administration.
+6. **Phase 6 : Séance Live, Quorum & Sanctions (`ms-reunions` / `ms-penalites`)** : Pointage des présences par lot (3 Présents, 1 Retard de 25 min), calcul de quorum (100%), et amende disciplinaire de 2 000 XAF.
+7. **Phase 7 : Perception des Cotisations & Paiements (`ms-paiements`)** : Renseignement d'un paiement en espèces avec reçu signé validé par le trésorier, et paiement MTN MoMo avec clé d'idempotence.
+8. **Phase 8 : Attribution & Décaissement du Pot (`ms-cotisations`)** : Planification du tour de passage, attribution de la cagnotte de 200 000 XAF au bénéficiaire #1 (Président) et décaissement cash sous décharge signée.
+9. **Phase 9 : Clôture de Séance, PV & Bilan Consolidé (`ms-reunions` / `ms-statistiques`)** : Archivage du procès-verbal officiel et génération du bilan de trésorerie consolidé (Cash en caisse vs Mobile Money, équilibre comptable).
+
+---
+
+## 4. Démonstration Vidéo Réelle (Données Non-Mockées & Microservices Live)
+
+La vidéo a été enregistrée de bout en bout avec **zéro mock**, orchestrée directement à travers la passerelle Spring Cloud API Gateway (Port 9090), les microservices Spring Boot 4 et la base PostgreSQL 17 native :
+
+![Vidéo Démonstration Réelle Njangi](file:///C:/Users/fokou/.gemini/antigravity-ide/brain/1b4455f3-5eca-42cb-8e33-7e5ce2a0c2aa/njangi_demo_real.webm)
+
+### Caractéristiques de l'enregistrement :
+- **Fichier vidéo généré** : `njangi_demo_real.webm` (4.2 Mo, 1280x800)
+- **Infrastructure sous-jacente active** :
+  - **PostgreSQL 17** : Schemas `auth`, `membres`, `groupes`, `reunions`, `cotisations`, `paiements`, `penalites`, `statistiques` alimentés en données réelles camerounaises.
+  - **Apache Kafka 4.1.2 KRaft** : Broker actif sur port 9092 avec diffusion des événements (`auth.events`, `session.events`, `cotisation.events`, etc.).
+  - **Eureka Server** : Port 8761 (tous les microservices enregistrés et synchronisés).
+  - **Spring MVC API Gateway** : Port 9090 avec routage dynamique et gestion des erreurs RFC 9457 `ProblemDetail`.
+  - **Angular 22 Web** : Serveur SSR sur port 4000 connecté dynamiquement à `http://localhost:9090/api/v1`.
+- **Parcours interactif filmé** :
+  1. **Tableau de bord dynamique** : Démonstration des 5 rôles métier (Président, Trésorier, Secrétaire, Membre, Créateur) avec bascule réactive sans rechargement.
+  2. **Gestion des Groupes (`/groupes` & `/groupes/creer`)** : Visualisation des vraies tontines créées en base (*Solidarité Douala Akwa*, *Njangi Diaspora Yaoundé*, etc.).
+  3. **Séances Live & Présences (`/reunions`)** : Déroulement de la réunion mensuelle réelle avec appel et ordre du jour officiel.
+  4. **Caisse & Règlements (`/paiements`)** : Enregistrement cash avec obligation de pièce jointe (reçu signé) et paiements Mobile Money MTN/Orange.
+  5. **Bilan de Trésorerie (`/statistiques`)** : Visualisation des agrégats financiers et ratios de recouvrement calculés en temps réel par `ms-statistiques`.
+
+

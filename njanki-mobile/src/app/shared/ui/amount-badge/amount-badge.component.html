@@ -1,30 +1,41 @@
-<span 
-  class="inline-flex items-center font-semibold rounded-md transition-colors"
-  [class.text-xs]="size() === 'sm'"
-  [class.px-2]="size() === 'sm'"
-  [class.py-0.5]="size() === 'sm'"
-  [class.text-sm]="size() === 'md'"
-  [class.px-2.5]="size() === 'md'"
-  [class.py-1]="size() === 'md'"
-  [class.text-base]="size() === 'lg'"
-  [class.px-3]="size() === 'lg'"
-  [class.py-1.5]="size() === 'lg'"
-  [class.bg-emerald-950/60]="variant() === 'success'"
-  [class.text-emerald-300]="variant() === 'success'"
-  [class.border]="true"
-  [class.border-emerald-700/50]="variant() === 'success'"
-  [class.bg-amber-950/60]="variant() === 'warning'"
-  [class.text-amber-300]="variant() === 'warning'"
-  [class.border-amber-700/50]="variant() === 'warning'"
-  [class.bg-rose-950/60]="variant() === 'danger'"
-  [class.text-rose-300]="variant() === 'danger'"
-  [class.border-rose-700/50]="variant() === 'danger'"
-  [class.bg-emerald-800]="variant() === 'primary'"
-  [class.text-emerald-100]="variant() === 'primary'"
-  [class.border-emerald-600]="variant() === 'primary'"
-  [class.bg-slate-800/80]="variant() === 'neutral'"
-  [class.text-slate-200]="variant() === 'neutral'"
-  [class.border-slate-700]="variant() === 'neutral'"
->
-  {{ formattedAmount() }}
-</span>
+@if (variant() === 'plain') {
+  <span 
+    class="font-display font-extrabold tracking-tight inline-flex items-baseline"
+    [class.text-sm]="size() === 'sm'"
+    [class.text-base]="size() === 'md'"
+    [class.text-xl]="size() === 'lg'"
+    [class.text-2xl]="size() === 'xl'"
+    [class.text-3xl]="size() === 'hero'">
+    <span>{{ formattedNumber() }}</span>
+    <span class="text-[0.6em] font-bold uppercase tracking-wider ml-1 opacity-80">XAF</span>
+  </span>
+} @else {
+  <span 
+    class="inline-flex items-center font-semibold rounded-full border transition-all duration-200"
+    [class.text-[11px]]="size() === 'sm'"
+    [class.px-2.5]="size() === 'sm'"
+    [class.py-0.5]="size() === 'sm'"
+    [class.text-xs]="size() === 'md'"
+    [class.px-3]="size() === 'md'"
+    [class.py-1]="size() === 'md'"
+    [class.text-sm]="size() === 'lg' || size() === 'xl' || size() === 'hero'"
+    [class.px-3.5]="size() === 'lg' || size() === 'xl' || size() === 'hero'"
+    [class.py-1.5]="size() === 'lg' || size() === 'xl' || size() === 'hero'"
+    [class.bg-emerald-500/15]="variant() === 'success'"
+    [class.text-emerald-300]="variant() === 'success'"
+    [class.border-emerald-500/30]="variant() === 'success'"
+    [class.bg-amber-500/15]="variant() === 'warning'"
+    [class.text-amber-300]="variant() === 'warning'"
+    [class.border-amber-500/30]="variant() === 'warning'"
+    [class.bg-rose-500/15]="variant() === 'danger'"
+    [class.text-rose-300]="variant() === 'danger'"
+    [class.border-rose-500/30]="variant() === 'danger'"
+    [class.bg-emerald-600]="variant() === 'primary'"
+    [class.text-white]="variant() === 'primary'"
+    [class.border-emerald-400/40]="variant() === 'primary'"
+    [class.bg-slate-800/80]="variant() === 'neutral'"
+    [class.text-slate-200]="variant() === 'neutral'"
+    [class.border-slate-700/60]="variant() === 'neutral'">
+    {{ formattedAmount() }}
+  </span>
+}

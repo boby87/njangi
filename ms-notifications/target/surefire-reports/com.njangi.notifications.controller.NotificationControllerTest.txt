@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.njangi.notifications.controller.NotificationControllerTest
--------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.078 s -- in com.njangi.notifications.controller.NotificationControllerTest
