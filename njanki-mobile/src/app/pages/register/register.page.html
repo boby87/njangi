@@ -1,0 +1,424 @@
+<ion-content [fullscreen]="true" class="register-content">
+  <div class="min-h-screen bg-[#fbf9f5] text-[#1b1c1a] font-['Plus_Jakarta_Sans',sans-serif] flex flex-col antialiased">
+    
+    <!-- En-tête Mobile avec Status Bar & Navigation -->
+    <header class="sticky top-0 w-full z-40 bg-[#fbf9f5]/90 backdrop-blur-xl border-b border-[#e4e2de]/60 shadow-[0_1px_12px_rgba(0,53,39,0.04)]">
+      <div class="h-16 px-4 flex items-center justify-between">
+        
+        <!-- Retour + Logo & Titre -->
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Retour"
+            (click)="onRetour()"
+            class="w-10 h-10 -ml-1.5 rounded-full flex items-center justify-center text-[#1b1c1a] active:bg-[#eae8e4] transition-colors">
+            <span class="material-symbols-outlined text-[24px]">arrow_back</span>
+          </button>
+          
+          <div class="w-8 h-8 rounded-xl bg-[#064e3b] p-1 shadow-sm flex items-center justify-center">
+            <span class="material-symbols-outlined text-white text-[20px]">groups</span>
+          </div>
+
+          <div class="flex flex-col ml-1">
+            <h1 class="font-bold text-sm text-[#003527] tracking-tight leading-tight truncate max-w-[150px]">
+              Inscription Njangi
+            </h1>
+            <span class="text-[11px] font-semibold text-[#404944] leading-none">
+              Solidarité &amp; Tontine
+            </span>
+          </div>
+        </div>
+
+        <!-- Badges Réseau 3G, Langue & Profil -->
+        <div class="flex items-center gap-2">
+          <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#efeeea] text-[#404944] text-[11px] font-semibold">
+            <span class="w-2 h-2 rounded-full bg-[#003527] animate-pulse"></span>
+            3G
+          </div>
+          <button
+            type="button"
+            class="h-8 px-2.5 rounded-full bg-[#f5f3ef] text-[#404944] text-[11px] font-bold flex items-center gap-1 border border-[#e4e2de]">
+            <span class="material-symbols-outlined text-[15px] text-[#003527]">language</span>
+            <span>FR</span>
+          </button>
+          <div class="w-8 h-8 rounded-full bg-[#003527] flex items-center justify-center shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-white text-[18px]">person</span>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- Conteneur Principal -->
+    <main class="flex flex-col flex-grow px-4 py-4 max-w-md mx-auto w-full pb-10">
+
+      <!-- Micro-hero Warm Greeting -->
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#003527] text-white p-4 shadow-md mb-4">
+        <div class="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-[#fe932c]/15 blur-xl pointer-events-none"></div>
+        <div class="relative z-10 flex items-start gap-3.5">
+          <div class="w-13 h-13 shrink-0 rounded-xl bg-white p-2 shadow-sm flex items-center justify-center">
+            <span class="material-symbols-outlined text-[#003527] text-[30px]">diversity_3</span>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/15 text-[#b0f0d6] text-[10px] font-bold w-fit mb-1">
+              <span class="material-symbols-outlined text-[13px]">handshake</span>
+              <span>Cercle de Confiance</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-white leading-tight tracking-tight">Rejoindre le Njangi</h2>
+            <p class="text-xs text-[#80bea6] mt-0.5">Créez votre compte tontinier en moins de 2 minutes.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step Progress Indicator -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-[#e4e2de] mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-[#fe932c] text-white text-xs flex items-center justify-center font-bold">
+              {{ etape() === 'FORM' ? '1' : '2' }}
+            </span>
+            <span class="text-xs font-bold text-[#1b1c1a]">
+              {{ etape() === 'FORM' ? 'Étape 1 sur 2 : Identité & Contact' : 'Étape 2 sur 2 : Validation OTP SMS' }}
+            </span>
+          </div>
+          <span class="text-xs text-[#904d00] font-extrabold">
+            {{ etape() === 'FORM' ? '50%' : '100%' }}
+          </span>
+        </div>
+        
+        <div class="w-full h-2 rounded-full bg-[#eae8e4] overflow-hidden">
+          <div
+            class="h-full rounded-full bg-gradient-to-r from-[#fe932c] to-[#064e3b] transition-all duration-500"
+            [style.width.%]="etape() === 'FORM' ? 50 : 100"></div>
+        </div>
+
+        <div class="flex items-center justify-between text-[#404944] text-[11px] font-semibold mt-2 pt-1">
+          <span class="flex items-center gap-1" [class.text-[#003527]]="etape() === 'FORM'">
+            <span class="material-symbols-outlined text-[14px]">badge</span>
+            Coordonnées de base
+          </span>
+          <span class="flex items-center gap-1" [class.text-[#003527]]="etape() === 'OTP'">
+            <span class="material-symbols-outlined text-[14px]">sms</span>
+            Validation OTP SMS
+          </span>
+        </div>
+      </div>
+
+      <!-- Messages d'erreur globaux -->
+      @if (errorMessage()) {
+        <div class="w-full bg-[#ffdad6] border border-[#ba1a1a]/30 text-[#93000a] text-xs p-3 rounded-xl mb-4 flex items-center gap-2 shadow-sm animate-fade-in">
+          <span class="material-symbols-outlined text-[#ba1a1a] text-[18px] shrink-0">error</span>
+          <span class="font-medium">{{ errorMessage() }}</span>
+        </div>
+      }
+
+      @if (etape() === 'FORM') {
+
+        <!-- Registration Form Card -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-[#e4e2de] mb-4">
+          <form (ngSubmit)="onSubmitRegister()" class="flex flex-col gap-4">
+            
+            <!-- Nom complet & Prénoms -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-bold text-[#1b1c1a] flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[#003527] text-[18px]">person</span>
+                <span>Nom complet &amp; Prénoms</span>
+              </label>
+              <input
+                #nameInput
+                type="text"
+                required
+                [value]="fullName()"
+                (input)="onFullNameInput(nameInput.value)"
+                placeholder="Ex : Amina Fotso / Paul Mbiya"
+                class="w-full h-12 px-3.5 rounded-xl bg-[#f5f3ef] border border-[#bfc9c3]/50 text-sm font-semibold text-[#1b1c1a] placeholder:text-[#707974] focus:outline-none focus:bg-white focus:border-[#003527] focus:ring-2 focus:ring-[#003527]/10 transition-all" />
+              <p class="text-[11px] text-[#404944]">Nom officiel visible par les membres de vos tontines.</p>
+            </div>
+
+            <!-- Téléphone & Indicatif (Cameroun + Diaspora) -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-bold text-[#1b1c1a] flex items-center justify-between">
+                <span class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[#003527] text-[18px]">phone_android</span>
+                  <span>Numéro de téléphone portable</span>
+                </span>
+                <span class="text-[10px] font-bold text-[#904d00] bg-[#ffdcc3]/50 px-2 py-0.5 rounded-md">MoMo / OM</span>
+              </label>
+
+              <div class="flex gap-2">
+                <!-- Select Indicatif -->
+                <div class="relative shrink-0 w-28">
+                  <select
+                    #codeSelect
+                    [value]="countryCode()"
+                    (change)="onCountryCodeChange(codeSelect.value)"
+                    class="w-full h-12 pl-3 pr-7 rounded-xl bg-[#f5f3ef] border border-[#bfc9c3]/50 text-xs font-bold text-[#1b1c1a] appearance-none focus:outline-none focus:bg-white focus:border-[#003527] transition-all cursor-pointer">
+                    @for (c of countries; track c.code) {
+                      <option [value]="c.code">{{ c.flag }} {{ c.name }}</option>
+                    }
+                  </select>
+                  <span class="material-symbols-outlined absolute right-2 top-3 text-[18px] text-[#707974] pointer-events-none">arrow_drop_down</span>
+                </div>
+
+                <!-- Input Téléphone -->
+                <div class="relative flex-1">
+                  <input
+                    #phoneInput
+                    type="tel"
+                    inputmode="numeric"
+                    required
+                    [value]="phoneNumber()"
+                    (input)="onPhoneInput(phoneInput.value)"
+                    placeholder="690 12 34 56"
+                    class="w-full h-12 px-3.5 rounded-xl bg-[#f5f3ef] border border-[#bfc9c3]/50 font-mono text-sm font-bold text-[#1b1c1a] placeholder:text-[#707974] focus:outline-none focus:bg-white focus:border-[#003527] focus:ring-2 focus:ring-[#003527]/10 transition-all tracking-wider" />
+                </div>
+              </div>
+              <p class="text-[11px] text-[#404944]">Compatible MTN Mobile Money, Orange Money &amp; virements internationaux.</p>
+            </div>
+
+            <!-- Ville & Pays de résidence -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-bold text-[#1b1c1a] flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[#003527] text-[18px]">location_on</span>
+                <span>Ville &amp; Pays de résidence</span>
+              </label>
+              <div class="relative">
+                <input
+                  #cityInput
+                  type="text"
+                  list="citySuggestions"
+                  required
+                  [value]="cityResidence()"
+                  (input)="onCityInput(cityInput.value)"
+                  placeholder="Ex : Douala, Yaoundé, Paris, Bafoussam..."
+                  class="w-full h-12 px-3.5 pr-10 rounded-xl bg-[#f5f3ef] border border-[#bfc9c3]/50 text-sm font-semibold text-[#1b1c1a] placeholder:text-[#707974] focus:outline-none focus:bg-white focus:border-[#003527] focus:ring-2 focus:ring-[#003527]/10 transition-all" />
+                <datalist id="citySuggestions">
+                  <option value="Douala, Cameroun"></option>
+                  <option value="Yaoundé, Cameroun"></option>
+                  <option value="Bafoussam, Cameroun"></option>
+                  <option value="Garoua, Cameroun"></option>
+                  <option value="Bamenda, Cameroun"></option>
+                  <option value="Kribi, Cameroun"></option>
+                  <option value="Paris, France"></option>
+                  <option value="Bruxelles, Belgique"></option>
+                  <option value="Montréal, Canada"></option>
+                </datalist>
+                <span class="material-symbols-outlined absolute right-3 top-3 text-[20px] text-[#707974] pointer-events-none">explore</span>
+              </div>
+            </div>
+
+            <!-- Définition Code PIN secret à 4 chiffres -->
+            <div class="flex flex-col gap-2 pt-1">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-[#1b1c1a] flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[#003527] text-[18px]">lock</span>
+                  <span>Code PIN secret (4 chiffres)</span>
+                </label>
+                <button
+                  type="button"
+                  (click)="togglePinVisibility()"
+                  class="text-[11px] font-bold text-[#904d00] hover:underline flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[15px]">
+                    {{ showPin() ? 'visibility_off' : 'visibility' }}
+                  </span>
+                  <span>{{ showPin() ? 'Masquer' : 'Afficher' }}</span>
+                </button>
+              </div>
+              <p class="text-[11px] text-[#404944]">Sert à valider vos cotisations, ramassages et tirages au sort.</p>
+
+              <!-- PIN 4 Digits -->
+              <div class="flex justify-between gap-3 max-w-[280px] mx-auto w-full my-1">
+                @for (digit of pinDigits(); track $index) {
+                  <input
+                    #digitInput
+                    [type]="showPin() ? 'text' : 'password'"
+                    inputmode="numeric"
+                    maxlength="1"
+                    [value]="digit"
+                    (input)="onPinDigitInput($index, digitInput.value)"
+                    class="w-14 h-14 text-center rounded-xl bg-[#f5f3ef] border border-[#bfc9c3]/60 text-[#003527] font-mono text-2xl font-black focus:outline-none focus:bg-white focus:border-[#003527] focus:ring-2 focus:ring-[#003527]/10 transition-all shadow-sm" />
+                }
+              </div>
+
+              <div class="text-center text-[11px] text-[#404944] flex items-center justify-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#003527]"></span>
+                <span>Choisissez un code unique et confidentiel</span>
+              </div>
+            </div>
+
+            <!-- CGU & Règlement Communautaire -->
+            <div class="pt-2">
+              <label class="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  [checked]="cguConsent()"
+                  (change)="onCguToggle()"
+                  class="w-5 h-5 rounded bg-[#f5f3ef] text-[#003527] accent-[#003527] focus:ring-0 cursor-pointer mt-0.5" />
+                <span class="text-xs text-[#404944] leading-snug">
+                  J'accepte le <strong class="text-[#003527] underline">règlement communautaire</strong> et les CGU de Njangi (Conformité RGPD &amp; Protection des avoirs tontiniers).
+                </span>
+              </label>
+            </div>
+
+            <!-- CTA Principal : Continuer OTP -->
+            <div class="flex flex-col gap-1.5 pt-2">
+              <button
+                type="submit"
+                [disabled]="!isFormValid()"
+                class="w-full h-13 py-3.5 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99]"
+                [class.bg-[#003527]]="isFormValid()"
+                [class.hover:bg-[#022c22]]="isFormValid()"
+                [class.bg-[#707974]]="!isFormValid()"
+                [class.opacity-50]="!isFormValid()">
+                <span>Continuer et recevoir le code OTP</span>
+                <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+              </button>
+              
+              <div class="flex items-center justify-center gap-1.5 text-[#404944] text-[11px] font-semibold">
+                <span class="material-symbols-outlined text-[#003527] text-[15px]">verified</span>
+                <span>Envoi par SMS instantané &amp; gratuit</span>
+              </div>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Séparateur SSO Rapide -->
+        <div class="flex items-center gap-3 my-2 px-1">
+          <div class="flex-1 h-px bg-[#e4e2de]"></div>
+          <span class="text-[11px] font-bold text-[#707974] uppercase tracking-wider">Ou inscription en 1 clic</span>
+          <div class="flex-1 h-px bg-[#e4e2de]"></div>
+        </div>
+
+        <!-- SSO Buttons (Google & Apple) -->
+        <div class="grid grid-cols-2 gap-3 my-3">
+          <button
+            type="button"
+            (click)="onSocialLogin('Google')"
+            class="h-12 px-3 rounded-xl bg-white border border-[#bfc9c3] shadow-sm flex items-center justify-center gap-2 text-[#1b1c1a] text-xs font-bold active:scale-95 transition-all">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+              <path d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z" fill="#EA4335"></path>
+              <path d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5.1 3.7-8.9z" fill="#4285F4"></path>
+              <path d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3 0-.8.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z" fill="#FBBC05"></path>
+              <path d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 17C3.7 20.7 7.5 24 12 24z" fill="#34A853"></path>
+            </svg>
+            <span>Google</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="onSocialLogin('Apple')"
+            class="h-12 px-3 rounded-xl bg-white border border-[#bfc9c3] shadow-sm flex items-center justify-center gap-2 text-[#1b1c1a] text-xs font-bold active:scale-95 transition-all">
+            <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 170 170">
+              <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.67-7.81-11.96-14.34-8.08-12.3-14.33-26.65-18.77-43.05-4.44-16.4-6.66-31.57-6.66-45.5 0-16.19 3.96-29.83 11.89-40.94 7.93-11.11 17.84-16.82 29.74-17.13 4.8 0 10.15 1.34 16.05 4.02 5.9 2.68 9.77 4.08 11.61 4.22 1.63 0 5.66-1.48 12.1-4.44 6.43-2.96 12.06-4.25 16.9-3.87 13.06.63 23.49 5.34 31.3 14.13-11.53 6.96-17.18 16.59-16.94 28.87.24 9.68 4.03 17.8 11.37 24.37 7.34 6.57 16.03 10.3 26.06 11.19-2.39 7.42-5.49 15.34-9.3 23.77zM119.22 33.09c0-7.39 2.64-14.44 7.93-21.14 5.29-6.7 11.93-11.02 19.92-12.95.23 1.13.34 2.19.34 3.17 0 7.38-2.77 14.54-8.32 21.49-5.55 6.95-12.28 11.08-20.19 12.4-0.12-1.02-.18-2.02-.18-2.97z"></path>
+            </svg>
+            <span>Apple</span>
+          </button>
+        </div>
+
+        <!-- Reassurance & KYC Badge -->
+        <div class="rounded-2xl bg-[#f5f3ef] border border-[#e4e2de] p-4 shadow-sm mb-4">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-full bg-[#fe932c]/20 text-[#904d00] shrink-0 flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]">security</span>
+            </div>
+            <div class="flex flex-col">
+              <h3 class="text-xs font-bold text-[#1b1c1a]">Vérification KYC progressive</h3>
+              <p class="text-[11px] text-[#404944] mt-0.5 leading-relaxed">
+                La vérification d'identité par pièce officielle (CNI / Passeport) est <strong class="text-[#1b1c1a]">facultative à l'inscription</strong>. Vous pourrez rejoindre et créer des tontines d'essai immédiatement sans blocage.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Link: Already a member -->
+        <div class="flex items-center justify-center py-2 mb-6">
+          <p class="text-xs text-[#404944] text-center">
+            Déjà membre d'une tontine ? 
+            <button
+              type="button"
+              (click)="onAllerConnexion()"
+              class="text-[#003527] font-bold underline ml-1 hover:text-[#904d00] transition-colors">
+              Se connecter
+            </button>
+          </p>
+        </div>
+
+      } @else if (etape() === 'OTP') {
+
+        <!-- ÉTAPE 2 : VALIDATION OTP SMS -->
+        <div class="w-full flex flex-col items-center space-y-5 animate-fade-in">
+          
+          <button
+            type="button"
+            (click)="onRetour()"
+            class="self-start text-xs font-bold text-[#003527] flex items-center gap-1 py-1.5 px-3 rounded-lg bg-[#efeeea] hover:bg-[#eae8e4] transition-colors">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            <span>Modifier mes informations</span>
+          </button>
+
+          <div class="w-full rounded-2xl bg-white border border-[#e4e2de] p-6 shadow-sm text-center space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-[#003527]/10 text-[#003527] flex items-center justify-center mx-auto">
+              <span class="material-symbols-outlined text-[28px]">sms</span>
+            </div>
+
+            <div>
+              <h2 class="text-xl font-bold text-[#003527]">Vérification par SMS</h2>
+              <p class="text-xs text-[#404944] mt-1">
+                Un code secret à 6 chiffres a été envoyé au :
+              </p>
+              <div class="text-sm font-extrabold text-[#1b1c1a] mt-0.5">
+                {{ fullInternationalPhone() }}
+              </div>
+            </div>
+
+            <!-- Pill de simulation pour test rapide -->
+            <div class="bg-[#ffdcc3]/50 border border-[#fe932c]/40 p-2 rounded-xl text-center">
+              <span class="text-[11px] text-[#904d00] font-medium">Code simulé de test : </span>
+              <strong class="text-[#904d00] font-mono text-xs font-bold tracking-widest">{{ authService.simulatedOtp() }}</strong>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-[#404944] mb-1.5 text-left">Code de validation (6 chiffres)</label>
+              <input
+                #otpInput
+                type="text"
+                inputmode="numeric"
+                maxlength="6"
+                [value]="otpCode()"
+                (input)="onOtpInput(otpInput.value)"
+                class="w-full bg-[#fbf9f5] border border-[#bfc9c3] rounded-xl px-3 py-3 text-center tracking-[0.4em] font-mono text-xl font-extrabold text-[#003527] focus:ring-2 focus:ring-[#003527] focus:outline-none"
+                placeholder="••••••" />
+            </div>
+
+            <button
+              type="button"
+              (click)="onVerifyOtp()"
+              [disabled]="!isOtpValid()"
+              class="w-full h-12 rounded-xl font-bold text-xs text-white transition shadow-md flex items-center justify-center gap-2 active:scale-98"
+              [class.bg-[#003527]]="isOtpValid()"
+              [class.hover:bg-[#022c22]]="isOtpValid()"
+              [class.bg-[#707974]]="!isOtpValid()"
+              [class.opacity-50]="!isOtpValid()">
+              <span>Créer mon compte et Commencer</span>
+              <span class="material-symbols-outlined text-[18px]">check_circle</span>
+            </button>
+
+            <div class="pt-2 text-center">
+              <button
+                type="button"
+                (click)="onSubmitRegister()"
+                class="text-xs font-bold text-[#904d00] hover:underline">
+                Renvoyer le code par SMS
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      }
+
+    </main>
+
+  </div>
+</ion-content>

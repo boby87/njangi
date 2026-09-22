@@ -1,0 +1,510 @@
+<ion-content [fullscreen]="true" class="creer-groupe-content">
+  <div class="min-h-screen bg-[#fbf9f5] text-[#1b1c1a] font-['Plus_Jakarta_Sans',sans-serif] flex flex-col antialiased">
+    
+    <!-- En-tête Mobile -->
+    <header class="sticky top-0 w-full z-40 bg-[#fbf9f5]/90 backdrop-blur-xl border-b border-[#e4e2de]/60 shadow-[0_1px_12px_rgba(0,53,39,0.06)]">
+      <div class="h-16 px-4 flex items-center justify-between gap-2">
+        
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <button
+            type="button"
+            aria-label="Retour"
+            (click)="onRetour()"
+            class="w-10 h-10 -ml-1 rounded-full flex items-center justify-center text-[#1b1c1a] active:bg-[#eae8e4] transition-colors shrink-0">
+            <span class="material-symbols-outlined text-[24px]">arrow_back</span>
+          </button>
+          
+          <div class="flex flex-col min-w-0 pr-1">
+            <h1 class="font-bold text-sm text-[#003527] tracking-tight leading-tight truncate">
+              Créer Un Groupe Njangi
+            </h1>
+            <div class="flex items-center gap-1 mt-0.5">
+              <span class="text-[11px] font-semibold text-[#404944] leading-none truncate">Solidarité &amp; Tontine</span>
+              <span class="text-[10px] text-[#707974]">•</span>
+              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#efeeea] text-[#404944] text-[10px] leading-none font-semibold">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#003527] animate-pulse"></span>
+                3G
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            (click)="onSauvegarderBrouillon()"
+            class="h-8 px-3 rounded-full bg-[#f5f3ef] border border-[#e4e2de] text-[#003527] text-xs font-bold flex items-center gap-1 active:bg-[#efeeea] transition-colors shadow-sm">
+            <span class="material-symbols-outlined text-[16px] text-[#003527]">bookmark</span>
+            <span>Brouillon</span>
+          </button>
+          <button
+            type="button"
+            (click)="onRetour()"
+            class="w-8 h-8 rounded-full bg-[#f5f3ef] border border-[#e4e2de] text-[#404944] flex items-center justify-center active:bg-[#eae8e4] transition-colors">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- Conteneur Principal -->
+    <main class="flex flex-col flex-grow px-4 py-4 max-w-md mx-auto w-full pb-10 space-y-4">
+
+      <!-- Progress Header Context -->
+      <section class="flex flex-col gap-2 pt-1">
+        <div class="flex items-center justify-between">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ffdcc3] text-[#2f1500] text-xs font-bold shadow-sm">
+            <span class="material-symbols-outlined text-[15px] text-[#904d00]">diversity_3</span>
+            Nouvelle Tontine
+          </span>
+          <span class="text-xs text-[#404944] font-bold">
+            Étape <span class="text-sm font-extrabold text-[#003527]">1</span> sur 2
+          </span>
+        </div>
+        
+        <div class="w-full bg-[#eae8e4] h-2 rounded-full overflow-hidden">
+          <div class="bg-[#064e3b] h-full w-1/2 rounded-full transition-all duration-300"></div>
+        </div>
+
+        <div class="flex flex-col mt-0.5">
+          <h2 class="text-xl font-extrabold text-[#003527] tracking-tight">Créer un groupe Njangi</h2>
+          <p class="text-xs text-[#404944] mt-0.5 leading-relaxed">
+            Configurez la caisse solidaire, le mode de réunion et les règles coutumières.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 1 : Identité du Groupe -->
+      <section class="bg-white rounded-2xl p-4 shadow-sm border border-[#e4e2de] space-y-4">
+        <div class="flex items-center gap-2.5 pb-1 border-b border-[#e4e2de]/60">
+          <div class="w-8 h-8 rounded-xl bg-[#b0f0d6] flex items-center justify-center text-[#003527] shrink-0 font-bold">
+            <span class="material-symbols-outlined text-[20px]">badge</span>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-[#1b1c1a] leading-tight">Identité &amp; Symbole</h3>
+            <p class="text-[11px] text-[#404944]">Nom et vocation de votre communauté</p>
+          </div>
+        </div>
+
+        <!-- Emblème / Photo du groupe -->
+        <div class="flex items-center gap-3.5 p-3 rounded-xl bg-[#f5f3ef] border border-[#e4e2de]">
+          <div class="relative w-14 h-14 rounded-xl bg-[#064e3b] flex items-center justify-center shrink-0 overflow-hidden shadow-inner">
+            <span class="material-symbols-outlined text-white text-[28px]">groups</span>
+            <button
+              type="button"
+              class="absolute inset-0 bg-[#003527]/40 flex items-center justify-center text-white active:bg-[#003527]/60 transition-colors">
+              <span class="material-symbols-outlined text-[18px]">photo_camera</span>
+            </button>
+          </div>
+
+          <div class="flex flex-col gap-0.5 min-w-0 flex-1">
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-[#1b1c1a] truncate">Emblème de la tontine</span>
+              <span class="px-1.5 py-0.5 rounded bg-[#ffdcc3] text-[#2f1500] text-[10px] font-bold">Recommandé</span>
+            </div>
+            <p class="text-[11px] text-[#404944] truncate">Visible sur les quittances MoMo &amp; WhatsApp</p>
+            <button
+              type="button"
+              class="self-start text-[11px] text-[#003527] font-bold flex items-center gap-1 mt-0.5 hover:underline">
+              <span class="material-symbols-outlined text-[15px]">upload_file</span>
+              <span>Parcourir la galerie</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Nom du groupe -->
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-[#404944] flex items-center justify-between">
+            <span>Nom du groupe Njangi <strong class="text-[#ba1a1a]">*</strong></span>
+            <span class="text-[10px] text-[#707974]">Max. 40 car.</span>
+          </label>
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined absolute left-3 text-[#707974] text-[20px]">groups</span>
+            <input
+              #nomInput
+              type="text"
+              maxlength="40"
+              required
+              [value]="nomGroupe()"
+              (input)="onNomInput(nomInput.value)"
+              placeholder="Ex: Cercle des Entrepreneurs 2026"
+              class="w-full h-12 pl-10 pr-4 rounded-xl bg-[#f5f3ef] border border-[#bfc9c3]/50 text-sm font-semibold text-[#1b1c1a] focus:outline-none focus:bg-white focus:border-[#003527] focus:ring-2 focus:ring-[#003527]/10 shadow-sm transition-all" />
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-[#404944]">Objet &amp; Description d'entraide</label>
+          <textarea
+            #descInput
+            rows="2"
+            [value]="description()"
+            (input)="onDescInput(descInput.value)"
+            placeholder="Ex: Épargne rotative, fonds d'entraide familiale..."
+            class="w-full p-3 rounded-xl bg-[#f5f3ef] border border-[#bfc9c3]/50 text-xs font-medium text-[#1b1c1a] focus:outline-none focus:bg-white focus:border-[#003527] focus:ring-2 focus:ring-[#003527]/10 resize-none shadow-sm transition-all"></textarea>
+        </div>
+
+        <!-- Langue des notifications -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-[#404944]">Langue des notifications de séance</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              (click)="setLangue('fr')"
+              [class.bg-[#003527]]="langue() === 'fr'"
+              [class.text-white]="langue() === 'fr'"
+              [class.bg-[#f5f3ef]]="langue() !== 'fr'"
+              [class.text-[#1b1c1a]]="langue() !== 'fr'"
+              class="h-10 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 shadow-sm border border-[#e4e2de] transition-all">
+              @if (langue() === 'fr') {
+                <span class="material-symbols-outlined text-[15px]">check</span>
+              }
+              <span>Français</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="setLangue('en')"
+              [class.bg-[#003527]]="langue() === 'en'"
+              [class.text-white]="langue() === 'en'"
+              [class.bg-[#f5f3ef]]="langue() !== 'en'"
+              [class.text-[#1b1c1a]]="langue() !== 'en'"
+              class="h-10 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 shadow-sm border border-[#e4e2de] transition-all">
+              @if (langue() === 'en') {
+                <span class="material-symbols-outlined text-[15px]">check</span>
+              }
+              <span>English</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="setLangue('loc')"
+              [class.bg-[#003527]]="langue() === 'loc'"
+              [class.text-white]="langue() === 'loc'"
+              [class.bg-[#f5f3ef]]="langue() !== 'loc'"
+              [class.text-[#1b1c1a]]="langue() !== 'loc'"
+              class="h-10 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 shadow-sm border border-[#e4e2de] transition-all">
+              @if (langue() === 'loc') {
+                <span class="material-symbols-outlined text-[15px]">check</span>
+              }
+              <span>Bamiléké/Duala</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2 : Paramétrage Financier -->
+      <section class="bg-white rounded-2xl p-4 shadow-sm border border-[#e4e2de] space-y-4">
+        <div class="flex items-center gap-2.5 pb-1 border-b border-[#e4e2de]/60">
+          <div class="w-8 h-8 rounded-xl bg-[#ffdcc3] flex items-center justify-center text-[#904d00] shrink-0 font-bold">
+            <span class="material-symbols-outlined text-[20px]">payments</span>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-[#1b1c1a] leading-tight">Caisse &amp; Cotisations</h3>
+            <p class="text-[11px] text-[#404944]">Montants en FCFA et périodicité des levées</p>
+          </div>
+        </div>
+
+        <!-- Mise unitaire par membre -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-[#404944] flex items-center justify-between">
+            <span>Mise unitaire par membre <strong class="text-[#ba1a1a]">*</strong></span>
+            <span class="text-[11px] text-[#904d00] font-bold">Diaspora : ~{{ diasporaAmountEur() }} €</span>
+          </label>
+          <div class="relative flex items-center">
+            <input
+              #miseInput
+              type="number"
+              min="5000"
+              step="5000"
+              [value]="miseUnitaire()"
+              (input)="onMiseInputChange(miseInput.value)"
+              class="w-full h-13 pl-4 pr-24 rounded-xl bg-[#f5f3ef] border border-[#bfc9c3]/50 font-mono text-xl font-extrabold text-[#003527] focus:outline-none focus:bg-white focus:border-[#003527] focus:ring-2 focus:ring-[#003527]/10 shadow-sm" />
+            <span class="absolute right-3 px-2 py-1 rounded-lg bg-[#e4e2de] text-[#003527] text-xs font-extrabold tracking-wider">
+              FCFA
+            </span>
+          </div>
+
+          <!-- Quick chips -->
+          <div class="flex gap-2 pt-1 overflow-x-auto">
+            @for (val of [25000, 50000, 100000, 250000]; track val) {
+              <button
+                type="button"
+                (click)="setMiseUnitaire(val)"
+                [class.bg-[#003527]]="miseUnitaire() === val"
+                [class.text-white]="miseUnitaire() === val"
+                [class.bg-[#f5f3ef]]="miseUnitaire() !== val"
+                [class.text-[#1b1c1a]]="miseUnitaire() !== val"
+                class="px-3 py-1 rounded-full text-xs font-bold border border-[#e4e2de] transition-all shrink-0">
+                {{ val.toLocaleString('fr-FR') }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Fréquence des versements -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-[#404944]">Fréquence des versements &amp; réunions</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              (click)="setFrequence('hebdo')"
+              [class.bg-[#003527]]="frequence() === 'hebdo'"
+              [class.text-white]="frequence() === 'hebdo'"
+              [class.bg-[#f5f3ef]]="frequence() !== 'hebdo'"
+              [class.text-[#1b1c1a]]="frequence() !== 'hebdo'"
+              class="h-11 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border border-[#e4e2de] transition-all">
+              <span class="material-symbols-outlined text-[18px]">calendar_view_week</span>
+              <span>Hebdomadaire</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="setFrequence('mensuel')"
+              [class.bg-[#003527]]="frequence() === 'mensuel'"
+              [class.text-white]="frequence() === 'mensuel'"
+              [class.bg-[#f5f3ef]]="frequence() !== 'mensuel'"
+              [class.text-[#1b1c1a]]="frequence() !== 'mensuel'"
+              class="h-11 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border border-[#e4e2de] transition-all">
+              <span class="material-symbols-outlined text-[18px]">event_repeat</span>
+              <span>Mensuelle</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="setFrequence('bimensuel')"
+              [class.bg-[#003527]]="frequence() === 'bimensuel'"
+              [class.text-white]="frequence() === 'bimensuel'"
+              [class.bg-[#f5f3ef]]="frequence() !== 'bimensuel'"
+              [class.text-[#1b1c1a]]="frequence() !== 'bimensuel'"
+              class="h-11 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border border-[#e4e2de] transition-all">
+              <span class="material-symbols-outlined text-[18px]">date_range</span>
+              <span>Bimensuelle</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="setFrequence('custom')"
+              [class.bg-[#003527]]="frequence() === 'custom'"
+              [class.text-white]="frequence() === 'custom'"
+              [class.bg-[#f5f3ef]]="frequence() !== 'custom'"
+              [class.text-[#1b1c1a]]="frequence() !== 'custom'"
+              class="h-11 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border border-[#e4e2de] transition-all">
+              <span class="material-symbols-outlined text-[18px]">tune</span>
+              <span>Personnalisée</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Nombre total de membres & Slider -->
+        <div class="space-y-2 pt-1">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-[#404944]">Nombre total de membres cotisants</label>
+            <span class="text-sm font-extrabold text-[#003527]">{{ nombreMembres() }} membres</span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              (click)="decrementMembres()"
+              class="w-10 h-10 rounded-xl bg-[#f5f3ef] border border-[#e4e2de] flex items-center justify-center text-[#1b1c1a] active:bg-[#eae8e4] font-bold">
+              <span class="material-symbols-outlined text-[20px]">remove</span>
+            </button>
+
+            <input
+              #sliderInput
+              type="range"
+              min="3"
+              max="36"
+              [value]="nombreMembres()"
+              (input)="onMembresRangeChange(sliderInput.value)"
+              class="w-full accent-[#003527] h-2 bg-[#eae8e4] rounded-lg cursor-pointer" />
+
+            <button
+              type="button"
+              (click)="incrementMembres()"
+              class="w-10 h-10 rounded-xl bg-[#f5f3ef] border border-[#e4e2de] flex items-center justify-center text-[#1b1c1a] active:bg-[#eae8e4] font-bold">
+              <span class="material-symbols-outlined text-[20px]">add</span>
+            </button>
+          </div>
+
+          <!-- Bannière Calcul Dynamique du Pot -->
+          <div class="mt-3 p-3.5 rounded-2xl bg-[#efeeea] border border-[#e4e2de] flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-[#003527] flex items-center justify-center text-white shrink-0 shadow-sm">
+                <span class="material-symbols-outlined text-[22px]">savings</span>
+              </div>
+              <div>
+                <div class="text-[10px] font-bold text-[#707974] uppercase tracking-wider">Pot total par levée</div>
+                <div class="font-mono text-lg font-black text-[#003527] leading-tight">{{ totalPotFormatted() }}</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-[#707974] font-semibold block">Durée du cycle</span>
+              <span class="text-xs font-extrabold text-[#904d00]">{{ cycleDuration() }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3 : TYPE DE SIÈGE (Critère F-03 Obligatoire) -->
+      <section class="bg-white rounded-2xl p-4 shadow-sm border border-[#e4e2de] space-y-3.5">
+        <div class="flex items-center justify-between pb-1 border-b border-[#e4e2de]/60">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-[#dae2fd] flex items-center justify-center text-[#262e42] shrink-0 font-bold">
+              <span class="material-symbols-outlined text-[20px]">meeting_room</span>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-[#1b1c1a] leading-tight">
+                Type de Siège <strong class="text-[#ba1a1a]">*</strong>
+              </h3>
+              <p class="text-[11px] text-[#404944]">Lieu des réunions traditionnelles</p>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded-full bg-[#ffdcc3] text-[#2f1500] text-[10px] font-bold">F-03 Requis</span>
+        </div>
+
+        <!-- Option A: Siège Fixe -->
+        <div
+          (click)="setTypeSiege('FIXE')"
+          [class.border-[#003527]]="typeSiege() === 'FIXE'"
+          [class.bg-[#f5f3ef]]="typeSiege() === 'FIXE'"
+          [class.border-[#e4e2de]]="typeSiege() !== 'FIXE'"
+          class="rounded-xl p-3.5 border transition-all cursor-pointer">
+          <div class="flex items-start gap-3">
+            <div class="w-5 h-5 rounded-full border-2 border-[#003527] flex items-center justify-center mt-0.5 shrink-0">
+              @if (typeSiege() === 'FIXE') {
+                <div class="w-2.5 h-2.5 rounded-full bg-[#003527]"></div>
+              }
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#1b1c1a]">Siège Fixe</span>
+                <span class="material-symbols-outlined text-[#707974] text-[18px]">apartment</span>
+              </div>
+              <p class="text-[11px] text-[#404944] mt-0.5 leading-snug">
+                Réunions tenues à une adresse permanente dédiée (foyer associatif, salle paroissiale, domicile permanent).
+              </p>
+              @if (typeSiege() === 'FIXE') {
+                <div class="mt-2.5 space-y-1 animate-fade-in">
+                  <label class="text-[10px] font-bold text-[#404944]">Adresse permanente du siège</label>
+                  <input
+                    #addrInput
+                    type="text"
+                    [value]="adresseSiegeFixe()"
+                    (input)="onAdresseFixeInput(addrInput.value)"
+                    placeholder="Ex: Foyer Bandjoun, Akwa, Douala"
+                    class="w-full h-10 px-3 rounded-lg bg-white border border-[#bfc9c3]/60 text-xs font-semibold text-[#1b1c1a] focus:outline-none focus:border-[#003527]" />
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Option B: Siège Rotatif (Coutumier & Default) -->
+        <div
+          (click)="setTypeSiege('ROTATIF')"
+          [class.border-[#003527]]="typeSiege() === 'ROTATIF'"
+          [class.bg-[#003527]/5]="typeSiege() === 'ROTATIF'"
+          [class.border-[#e4e2de]]="typeSiege() !== 'ROTATIF'"
+          class="rounded-xl p-3.5 border transition-all cursor-pointer">
+          <div class="flex items-start gap-3">
+            <div class="w-5 h-5 rounded-full border-2 border-[#003527] flex items-center justify-center mt-0.5 shrink-0">
+              @if (typeSiege() === 'ROTATIF') {
+                <div class="w-2.5 h-2.5 rounded-full bg-[#003527]"></div>
+              }
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-[#003527]">Siège Rotatif</span>
+                  <span class="px-1.5 py-0.5 rounded bg-[#ffdcc3] text-[#2f1500] text-[10px] font-bold">Coutumier</span>
+                </div>
+                <span class="material-symbols-outlined text-[#003527] text-[18px]">published_with_changes</span>
+              </div>
+              <p class="text-[11px] text-[#404944] mt-0.5 leading-snug">
+                Chaque séance mensuelle est hébergée par un membre différent à son domicile ou commerce familial.
+              </p>
+              @if (typeSiege() === 'ROTATIF') {
+                <div class="mt-2.5 p-2.5 rounded-lg bg-[#f5f3ef] space-y-1.5 animate-fade-in">
+                  <span class="text-[10px] font-bold text-[#404944] block">Méthode de rotation :</span>
+                  <div class="flex flex-col gap-1">
+                    <label class="flex items-center gap-2 text-[11px] text-[#1b1c1a] font-semibold cursor-pointer">
+                      <input
+                        type="radio"
+                        name="rot"
+                        [checked]="methodeRotation() === 'tirage'"
+                        (change)="setMethodeRotation('tirage')"
+                        class="accent-[#003527]" />
+                      <span>Tirage au sort préalable des tours</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-[11px] text-[#1b1c1a] font-semibold cursor-pointer">
+                      <input
+                        type="radio"
+                        name="rot"
+                        [checked]="methodeRotation() === 'alphabetique'"
+                        (change)="setMethodeRotation('alphabetique')"
+                        class="accent-[#003527]" />
+                      <span>Ordre alphabétique / Inscription</span>
+                    </label>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4 : Barème d'amendes & Secours -->
+      <section class="bg-white rounded-2xl p-4 shadow-sm border border-[#e4e2de] space-y-3">
+        <div class="flex items-center gap-2.5 pb-1 border-b border-[#e4e2de]/60">
+          <div class="w-8 h-8 rounded-xl bg-[#ffdad6] flex items-center justify-center text-[#ba1a1a] shrink-0 font-bold">
+            <span class="material-symbols-outlined text-[20px]">gavel</span>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-[#1b1c1a] leading-tight">Barème Coutumier &amp; Secours</h3>
+            <p class="text-[11px] text-[#404944]">Sanctions et caisse de solidarité décès</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="p-2.5 rounded-xl bg-[#f5f3ef] border border-[#e4e2de]">
+            <span class="text-[10px] text-[#707974] font-bold block">Retard séance</span>
+            <span class="font-mono text-xs font-bold text-[#904d00]">{{ amendeRetard().toLocaleString('fr-FR') }} FCFA</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-[#f5f3ef] border border-[#e4e2de]">
+            <span class="text-[10px] text-[#707974] font-bold block">Absence injustifiée</span>
+            <span class="font-mono text-xs font-bold text-[#ba1a1a]">{{ amendeAbsence().toLocaleString('fr-FR') }} FCFA</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Boutons d'Action Principaux -->
+      <div class="flex flex-col gap-2 pt-2">
+        <button
+          type="button"
+          (click)="onSubmitCreer()"
+          [disabled]="!isFormValid() || isSubmitting()"
+          class="w-full h-13 py-3.5 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99]"
+          [class.bg-[#003527]]="isFormValid()"
+          [class.hover:bg-[#022c22]]="isFormValid()"
+          [class.bg-[#707974]]="!isFormValid()"
+          [class.opacity-50]="!isFormValid()">
+          <span>Créer la tontine &amp; inviter les membres</span>
+          <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="onSauvegarderBrouillon()"
+          class="w-full h-11 rounded-xl bg-[#f5f3ef] border border-[#e4e2de] text-[#003527] font-bold text-xs flex items-center justify-center gap-1.5 active:bg-[#efeeea] transition-all">
+          <span class="material-symbols-outlined text-[16px]">save</span>
+          <span>Enregistrer comme modèle</span>
+        </button>
+      </div>
+
+    </main>
+
+  </div>
+</ion-content>

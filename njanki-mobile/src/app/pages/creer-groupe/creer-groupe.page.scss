@@ -1,0 +1,48 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.creer-groupe-content {
+  --background: #fbf9f5;
+  --color: #1b1c1a;
+  --padding-top: env(safe-area-inset-top, 0px);
+  --padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+// Sécurisation des border-radius contre les resets Ionic
+button.rounded-xl {
+  border-radius: 12px !important;
+}
+
+button.rounded-2xl {
+  border-radius: 16px !important;
+}
+
+button.rounded-lg {
+  border-radius: 8px !important;
+}
+
+button.rounded-full {
+  border-radius: 9999px !important;
+}
+
+input, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
