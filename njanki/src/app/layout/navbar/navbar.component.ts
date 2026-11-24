@@ -1,6 +1,6 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { TontineStateService } from '@core/services/tontine-state.service';
 import { RoleBadgeComponent } from '@shared/ui/role-badge/role-badge.component';
@@ -14,7 +14,6 @@ import { RoleBadgeComponent } from '@shared/ui/role-badge/role-badge.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NavbarComponent {
-  private readonly router = inject(Router);
   readonly authService = inject(AuthService);
   readonly tontineService = inject(TontineStateService);
 
@@ -33,6 +32,5 @@ export class NavbarComponent {
 
   onDeconnecter(): void {
     this.authService.deconnecter();
-    this.router.navigate(['/login']);
   }
 }

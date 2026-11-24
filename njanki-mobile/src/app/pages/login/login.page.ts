@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IonContent } from '@ionic/angular';
 import { MobileAuthService } from '../../core/services/auth.service';
 
@@ -18,13 +19,14 @@ import { MobileAuthService } from '../../core/services/auth.service';
 export class LoginPage {
   readonly authService = inject(MobileAuthService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   // État Signal Forms pur (aucun FormGroup, aucun ngModel)
   readonly loginMode = signal<'phone' | 'email'>('phone');
   readonly etape = signal<'FORM' | 'OTP'>('FORM');
   readonly telephone = signal<string>('699 123 456');
   readonly email = signal<string>('');
-  readonly codeSecret = signal<string>('1234');
+  readonly codeSecret = signal<string>('');
   readonly showPassword = signal<boolean>(false);
   readonly otpCode = signal<string>('');
   readonly errorMessage = signal<string>('');
@@ -132,17 +134,32 @@ export class LoginPage {
       }
     }
 
+    const identifiant =
+      this.loginMode() === 'phone' ? '+237' + this.cleanPhone() : this.email().trim();
+
     this.isSubmitting.set(true);
     this.errorMessage.set('');
 
-    // Connexion directe avec le code secret
-    const success = this.authService.verifyOtp('123456');
-    if (success) {
-      this.router.navigate(['/tabs/dashboard']);
-    } else {
-      this.errorMessage.set('Identifiants incorrects. Veuillez vérifier vos informations.');
-    }
-    this.isSubmitting.set(false);
+    this.authService
+      .loginWithPassword(identifiant, this.codeSecret())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (success) => {
+          this.isSubmitting.set(false);
+          if (success) {
+            this.router.navigate(['/tabs/dashboard']);
+          } else {
+            this.errorMessage.set(
+              this.authService.authError() ||
+                'Identifiants incorrects. Veuillez vérifier vos informations.'
+            );
+          }
+        },
+        error: () => {
+          this.isSubmitting.set(false);
+          this.errorMessage.set('Passerelle API indisponible. Veuillez réessayer.');
+        },
+      });
   }
 
   onTriggerOtpLogin(): void {
@@ -152,10 +169,29 @@ export class LoginPage {
     }
 
     const fullPhone = '+237' + this.cleanPhone();
-    this.authService.requestOtp(fullPhone);
-    this.otpCode.set(this.authService.simulatedOtp() || '884210');
-    this.etape.set('OTP');
+    this.isSubmitting.set(true);
     this.errorMessage.set('');
+
+    this.authService
+      .requestOtp(fullPhone)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (sent) => {
+          this.isSubmitting.set(false);
+          if (sent) {
+            this.otpCode.set(this.authService.simulatedOtp() || '');
+            this.etape.set('OTP');
+          } else {
+            this.errorMessage.set(
+              this.authService.authError() || 'Impossible d\'envoyer le code OTP par SMS.'
+            );
+          }
+        },
+        error: () => {
+          this.isSubmitting.set(false);
+          this.errorMessage.set('Impossible d\'envoyer le code OTP par SMS.');
+        },
+      });
   }
 
   onVerifyOtp(): void {
@@ -164,27 +200,85 @@ export class LoginPage {
       return;
     }
 
-    const ok = this.authService.verifyOtp(this.otpCode());
-    if (ok) {
-      this.router.navigate(['/tabs/dashboard']);
-    } else {
-      this.errorMessage.set('Code OTP invalide ou expiré. Veuillez réessayer.');
-    }
+    this.isSubmitting.set(true);
+    this.errorMessage.set('');
+
+    this.authService
+      .verifyOtp(this.otpCode())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (ok) => {
+          this.isSubmitting.set(false);
+          if (ok) {
+            this.router.navigate(['/tabs/dashboard']);
+          } else {
+            this.errorMessage.set(
+              this.authService.authError() || 'Code OTP invalide ou expiré. Veuillez réessayer.'
+            );
+          }
+        },
+        error: () => {
+          this.isSubmitting.set(false);
+          this.errorMessage.set('Erreur lors de la vérification du code OTP.');
+        },
+      });
   }
 
   onBiometricLogin(): void {
     this.errorMessage.set('');
-    // Simulation du capteur biométrique (WebAuthn / Biométrie native Capacitor)
-    const success = this.authService.verifyOtp('123456');
-    if (success) {
-      this.router.navigate(['/tabs/dashboard']);
+    const storedPin = this.authService.codePin();
+    if (!storedPin || !this.isPhoneValid()) {
+      this.errorMessage.set('Veuillez vous connecter une première fois avec votre code secret pour activer la biométrie.');
+      return;
     }
+
+    const identifiant = '+237' + this.cleanPhone();
+    this.isSubmitting.set(true);
+
+    this.authService
+      .loginWithPassword(identifiant, storedPin)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (success) => {
+          this.isSubmitting.set(false);
+          if (success) {
+            this.router.navigate(['/tabs/dashboard']);
+          } else {
+            this.errorMessage.set(
+              this.authService.authError() || 'Authentification biométrique refusée.'
+            );
+          }
+        },
+        error: () => {
+          this.isSubmitting.set(false);
+          this.errorMessage.set('Erreur lors de l\'authentification biométrique.');
+        },
+      });
   }
 
   onSsoLogin(provider: 'GOOGLE' | 'APPLE'): void {
     this.errorMessage.set('');
-    this.authService.connexionSociale(provider === 'GOOGLE' ? 'GOOGLE' : 'FACEBOOK');
-    this.router.navigate(['/tabs/dashboard']);
+    this.isSubmitting.set(true);
+
+    this.authService
+      .connexionSociale(provider === 'GOOGLE' ? 'GOOGLE' : 'FACEBOOK')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.isSubmitting.set(false);
+          if (res.succes) {
+            this.router.navigate(['/tabs/dashboard']);
+          } else {
+            this.errorMessage.set(
+              this.authService.authError() || 'Échec de la connexion sociale.'
+            );
+          }
+        },
+        error: () => {
+          this.isSubmitting.set(false);
+          this.errorMessage.set('Erreur réseau lors de la connexion sociale.');
+        },
+      });
   }
 
   onForgotPassword(): void {

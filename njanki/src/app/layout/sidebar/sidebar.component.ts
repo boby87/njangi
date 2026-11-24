@@ -1,6 +1,6 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { TontineStateService } from '@core/services/tontine-state.service';
 
@@ -13,7 +13,6 @@ import { TontineStateService } from '@core/services/tontine-state.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SidebarComponent {
-  private readonly router = inject(Router);
   readonly authService = inject(AuthService);
   readonly tontineService = inject(TontineStateService);
   readonly roleActif = this.tontineService.roleActif;
@@ -22,6 +21,5 @@ export class SidebarComponent {
 
   onDeconnecter(): void {
     this.authService.deconnecter();
-    this.router.navigate(['/login']);
   }
 }

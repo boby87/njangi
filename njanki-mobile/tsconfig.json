@@ -24,7 +24,8 @@
     "baseUrl": "./",
     "paths": {
       "@core/*": ["src/app/core/*"],
-      "@shared/*": ["src/app/shared/*"]
+      "@shared/*": ["../shared/*"],
+      "tslib": ["./node_modules/tslib"]
     }
   },
   "angularCompilerOptions": {

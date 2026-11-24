@@ -1,8 +1,8 @@
 # Cahier des Charges — Application de Tontine Camerounaise (Njangi)
 
-**Version :** 1.0  
-**Date :** 10 septembre 2026  
-**Statut :** Draft
+**Version :** 2.0  
+**Date :** 21 novembre 2026  
+**Statut :** Validé — Architecture consolidée (4 microservices métier)
 
 ---
 
@@ -232,18 +232,18 @@ Chaque utilisateur dispose d'un **tableau de bord personnalisé** qui s'adapte s
 
 ### 3.8 Sécurité et conformité
 
-**F-20 — Sécurité des données**
+**F-23 — Sécurité des données**
 - Chiffrement des données en transit (TLS 1.3) et au repos (AES-256)
 - Authentification à deux facteurs obligatoire pour les transactions
 - Journalisation des accès et actions sensibles
 
-**F-21 — Conformité RGPD**
+**F-24 — Conformité RGPD**
 - Hébergement des données en Europe (ou Cameroun si disponible)
 - Consentement explicite à la collecte des données
 - Droit à l'effacement et à la portabilité des données
 - Politique de confidentialité claire en français et anglais
 
-**F-22 — Accessibilité**
+**F-25 — Accessibilité**
 - Conformité WCAG 2.1 niveau AA
 - Support des grandes tailles de police
 - Contraste suffisant pour les environnements lumineux (usage extérieur)
@@ -257,71 +257,63 @@ Chaque utilisateur dispose d'un **tableau de bord personnalisé** qui s'adapte s
 
 | Couche | Technologie | Détail |
 |---|---|---|
-| Frontend Web | Angular 22 | Application web SPA |
-| Application Mobile | Ionic 8 | Application hybride iOS / Android basée sur Angular |
-| Backend | Java / Spring Boot 4 | Architecture microservices |
-| Gateway | Spring MVC | Point d'entrée unique, routage vers les microservices |
-| Messagerie | Apache Kafka | Communication asynchrone entre microservices |
-| Base de données | PostgreSQL | Une instance par microservice (isolation des données) |
-| Authentification | SSO (OpenID Connect / OAuth2) + OTP | Connexion unifiée et vérification par code |
-| Hébergement | LuxVps | Serveur dédié auto-hébergé |
-| Stockage fichiers | Stockage local serveur | Fichiers hébergés directement sur LuxVps |
-| Paiements | Module à développer | Intégration Mobile Money et paiements à concevoir en interne |
-| Notifications | Firebase FCM (push mobile) + SMS + Email | Couverture multi-canal |
+| Frontend Web | Angular 22 (SSR) + Tailwind CSS v4 | Application web réactive (Signal Forms, zéro Promise) |
+| Application Mobile | Ionic 9 + Angular 22 + Capacitor 8 | Application hybride Android / iOS (offline partiel 3G) |
+| Backend | Java 25 / Spring Boot 4.0 · Spring Cloud 2025.1 | Architecture microservices consolidée (4 services métier) |
+| Découverte | Netflix Eureka | Enregistrement et routage dynamique des instances |
+| Gateway | Spring MVC API Gateway + Virtual Threads | Point d'entrée unique, validation JWT OAuth2, routage Eureka |
+| Messagerie | Apache Kafka (mode KRaft) | Communication asynchrone sur 4 topics de domaine unifiés |
+| Base de données | PostgreSQL 16 | Instance unique avec 4 schémas isolés (Flyway) |
+| Authentification | SSO (OAuth2 Google / Facebook) + OTP E.164 + JWT | Connexion unifiée, normalisation `+237` et diaspora |
+| Hébergement | LuxVps | Serveur dédié auto-hébergé Docker Compose |
+| Stockage fichiers | Stockage local serveur | Reçus cash signés et PVs hébergés sur LuxVps |
+| Paiements | Module interne (`ms-finances`) | Cash (reçu obligatoire), MTN MoMo, Orange Money (idempotence & webhooks) |
+| Notifications | Firebase FCM + SMS fallback + Email + In-App | Couverture multi-canal (`ms-engagement`) |
 
-### 4.2 Architecture microservices
+### 4.2 Architecture microservices consolidée
 
-L'application repose sur une architecture **microservices** avec Spring Boot 4. Chaque domaine métier est un service indépendant, déployable séparément. La gateway Spring MVC centralise toutes les entrées clientes et route vers le bon service.
+Pour assurer une forte cohérence transactionnelle (notamment sur les flux financiers) et limiter l'empreinte mémoire sur le serveur dédié **LuxVps**, l'architecture repose sur **4 microservices métier** (regroupés par Bounded Contexts DDD) orchestrés par **Eureka Server** et **API Gateway** (**6 services Spring Boot** au total) :
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    CLIENTS                          │
-│    [Angular 22 Web]        [Ionic 8 Mobile]         │
-└──────────────────┬──────────────────────────────────┘
-                   │ HTTPS
-                   ▼
-        ┌─────────────────────┐
-        │   API Gateway       │
-        │   (Spring MVC)      │
-        │   Auth SSO / OTP    │
-        └────────┬────────────┘
-                 │
-    ┌────────────┼─────────────────────────────┐
-    │            │                             │
-    ▼            ▼                             ▼
-[MS Membres] [MS Groupes &      [MS Cotisations &
-             Sessions]          Paiements]
-    │            │                             │
-    ▼            ▼                             ▼
-[MS Réunions] [MS Notifications] [MS Pénalités]
+```text
+┌──────────────────────────────────────────────────────────┐
+│                        CLIENTS                           │
+│     [Angular 22 Web]            [Ionic 9 Mobile]         │
+└───────────────────────┬──────────────────────────────────┘
+                        │ HTTPS
+                        ▼
+             ┌─────────────────────┐
+             │   API Gateway       │◄────► [Eureka Server :8761]
+             │   (:9090 · JWT)     │
+             └──────────┬──────────┘
+                        │ Routage dynamique (lb://)
+   ┌────────────┬───────┴────────┬───────────────────┐
+   ▼            ▼                ▼                   ▼
+[ms-identite] [ms-gouvernance] [ms-finances]     [ms-engagement]
+  (:8001)        (:8002)         (:8003)            (:8004)
+  DDD Pur      En couches       En couches (ACID)  Consumer Kafka
+  schéma:      schéma:          schéma:            schéma:
+  identite     gouvernance      finances           engagement
 
-         ──── Communication via Apache Kafka ────
+     ────────── Communication via Apache Kafka (KRaft) ──────────
+       identite.events · gouvernance.events · finances.events
 
-Tous les microservices :
-  └─► Un SGBD PostgreSQL unique partagé (schémas séparés par service)
-  └─► Publient / consomment des événements Kafka
-
-Infrastructure : LuxVps (serveur dédié)
-Stockage fichiers : local sur LuxVps
+Infrastructure : LuxVps (Docker Compose) · PostgreSQL unique (4 schémas isolés)
 ```
 
 #### Stratégie base de données
 
-L'ensemble des microservices partagent **un seul SGBD PostgreSQL**, mais chaque microservice dispose de son propre **schéma** (`schema_membres`, `schema_groupes`, `schema_cotisations`, etc.) afin de maintenir l'isolation logique des données tout en simplifiant l'administration et la maintenance.
+L'ensemble des microservices partagent **un seul SGBD PostgreSQL**, avec **1 schéma isolé par microservice** (`identite`, `gouvernance`, `finances`, `engagement`). Aucune jointure SQL inter-schémas n'est autorisée ; les échanges inter-domaines transitent exclusivement par Kafka ou via REST/Eureka.
 
-#### Microservices identifiés
+#### Microservices consolidés
 
-| Microservice | Responsabilité | Schéma BDD |
-|---|---|---|
-| MS-Authentification | SSO, OTP, gestion des sessions utilisateur | `auth` |
-| MS-Membres | Profils, multi-groupes, rôles par groupe | `membres` |
-| MS-Groupes | Création, paramétrage, sessions, mandats de bureau | `groupes` |
-| MS-Réunions | Ordre du jour, présences, comptes-rendus, sanctions | `reunions` |
-| MS-Cotisations | Types de cotisations, paiements, statuts | `cotisations` |
-| MS-Paiements | Module de paiement interne (cash, Mobile Money, carte) | `paiements` |
-| MS-Pénalités | Tarification, application, historique | `penalites` |
-| MS-Notifications | Envoi push (FCM), SMS, email | `notifications` |
-| MS-Statistiques | Tableaux de bord, exports, rapports | `statistiques` |
+| Microservice | Port | Responsabilité | Schéma BDD | Architecture |
+|---|---:|---|---|---|
+| `eureka-server` | `8761` | Découverte et enregistrement dynamique des services | — | Netflix Eureka |
+| `api-gateway` | `9090` | Point d'entrée unique, validation JWT OAuth2, routage `/api/v1/*` | — | Spring MVC Gateway |
+| `ms-identite` | `8001` | Auth SSO/OAuth2, OTP E.164, JWT, profils membres, KYC, rôles par groupe | `identite` | **Hexagonale & DDD pur** |
+| `ms-gouvernance` | `8002` | Groupes, siège fixe/rotatif, sessions, mandats (démotion créateur), réunions live, présences, quorum, PV PDF | `gouvernance` | En couches |
+| `ms-finances` | `8003` | Multi-cotisations, cycles & tour de pot, paiements Cash (reçu) / MTN MoMo / Orange Money, idempotence, barèmes & sanctions | `finances` | En couches (ACID) |
+| `ms-engagement` | `8004` | Notifications multi-canaux (FCM, SMS, Email, In-App) et statistiques/bilans consolidés, exports | `engagement` | En couches (CQRS / Kafka) |
 
 ---
 

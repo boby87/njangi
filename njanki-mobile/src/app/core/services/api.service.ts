@@ -5,7 +5,7 @@ import { switchMap, catchError } from 'rxjs/operators';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { environment } from '../../../environments/environment';
-import { ApiResponse } from '../../shared/models/api-response.model';
+import { ApiResponse } from '@shared/models/api-response.model';
 
 const TOKEN_KEY = 'njangi_auth_token';
 

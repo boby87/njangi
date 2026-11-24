@@ -1,23 +1,172 @@
-import { Injectable, signal, computed, inject, DestroyRef } from '@angular/core';
+import {
+  Injectable,
+  PLATFORM_ID,
+  DestroyRef,
+  signal,
+  computed,
+  effect,
+  inject,
+  untracked,
+} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { AuthService } from './auth.service';
 import { ApiService } from './api.service';
-import { Groupe, MandatBureau, SessionTontine, TypeSiege, FrequenceReunion, StatutGroupe } from '@shared/models/groupe.model';
+import {
+  Groupe,
+  MandatBureau,
+  SessionTontine,
+  TypeSiege,
+  FrequenceReunion,
+  StatutGroupe,
+} from '@shared/models/groupe.model';
 import { Membre, RoleMembre } from '@shared/models/membre.model';
-import { Cotisation, TourPot, TypeCotisation } from '@shared/models/cotisation.model';
-import { Paiement, EnregistrerPaiementRequest } from '@shared/models/paiement.model';
-import { Reunion, StatutPresence } from '@shared/models/reunion.model';
-import { Penalite, TarificationPenalite, TypeInfraction } from '@shared/models/penalite.model';
+import {
+  Cotisation,
+  StatutCotisation,
+  StatutPot,
+  TourPot,
+  TypeCotisation,
+} from '@shared/models/cotisation.model';
+import {
+  Paiement,
+  EnregistrerPaiementRequest,
+  ModePaiement,
+  StatutPaiement,
+} from '@shared/models/paiement.model';
+import { Reunion, StatutPresence, StatutReunion } from '@shared/models/reunion.model';
+import {
+  Penalite,
+  StatutPenalite,
+  TarificationPenalite,
+  TypeInfraction,
+} from '@shared/models/penalite.model';
+
+interface BackendGroupeDto {
+  id: string;
+  nom: string;
+  description?: string;
+  createurMembreId?: string;
+  typeSiege?: TypeSiege;
+  adresseSiege?: string;
+  frequenceReunion?: FrequenceReunion;
+  nombreMembresMax?: number;
+  statut?: StatutGroupe;
+  premierBureauElu?: boolean;
+  createdAt?: string;
+}
+
+interface BackendMembreDto {
+  id: string;
+  nom: string;
+  prenom: string;
+  telephone: string;
+  email: string;
+  photoUrl?: string;
+  ville?: string;
+  createdAt?: string;
+}
+
+interface BackendReunionDto {
+  id: string;
+  groupeId: string;
+  sessionTontineId?: string;
+  titre: string;
+  dateReunion?: string;
+  typeSiege?: TypeSiege;
+  hoteId?: string;
+  lieuReunion?: string;
+  ordreJour?: string;
+  compteRendu?: string;
+  statut?: StatutReunion;
+}
+
+interface BackendCotisationDto {
+  id: string;
+  groupeId: string;
+  membreId: string;
+  sessionId?: string;
+  reunionId?: string;
+  typeCotisation?: TypeCotisation;
+  montantDu?: number;
+  montantPaye?: number;
+  statut?: StatutCotisation;
+  dateLimitePaiement?: string;
+  datePaiement?: string;
+}
+
+interface BackendPaiementDto {
+  id: string;
+  cotisationId?: string;
+  membreId: string;
+  groupeId: string;
+  sessionId?: string;
+  montant?: number;
+  modePaiement?: ModePaiement;
+  typeCotisation?: TypeCotisation;
+  cleIdempotence?: string;
+  reference?: string;
+  pieceJointeUrl?: string;
+  statut?: StatutPaiement;
+  validePar?: string;
+  dateValidation?: string;
+  commentaire?: string;
+  datePaiement?: string;
+  createdAt?: string;
+}
+
+interface BackendPenaliteDto {
+  id: string;
+  membreId: string;
+  groupeId: string;
+  sessionId?: string;
+  reunionId?: string;
+  typeInfraction?: TypeInfraction;
+  montant?: number;
+  statut?: StatutPenalite;
+  motif?: string;
+  datePaiement?: string;
+  creeLe?: string;
+}
+
+interface BackendTarificationDto {
+  id: string;
+  groupeId: string;
+  typeInfraction: TypeInfraction;
+  libelle?: string;
+  montant?: number;
+  actif?: boolean;
+}
+
+interface BackendPotSessionDto {
+  id: string;
+  groupeId: string;
+  sessionTontineId?: string;
+  reunionId?: string;
+  membreBeneficiaireId?: string;
+  ordrePassage?: number;
+  montantTotal?: number;
+  montantNet?: number;
+  statut?: string;
+  modeVersement?: string;
+  dateAttribution?: string;
+  dateVersement?: string;
+}
+
+const DEFAULT_AVATAR =
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fit=crop&w=256&h=256&q=80';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TontineStateService {
   private readonly authService = inject(AuthService);
   private readonly apiService = inject(ApiService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly platformId = inject(PLATFORM_ID);
 
-  // Jeu de données initial réaliste (Cameroun Njangi)
+  // Jeu de données initial réaliste (Cameroun Njangi — repli SSR & hors-ligne)
   private readonly initialMembres: Membre[] = [
     {
       id: 'usr-1',
@@ -25,7 +174,7 @@ export class TontineStateService {
       prenom: 'Jean-Paul',
       telephone: '+237699123456',
       email: 'jp.mbarga@njangi.cm',
-      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fit=crop&w=256&h=256&q=80',
+      avatarUrl: DEFAULT_AVATAR,
       ville: 'Douala',
       pays: 'Cameroun',
       dateInscription: '2025-01-15',
@@ -37,7 +186,8 @@ export class TontineStateService {
       prenom: 'Chantal',
       telephone: '+237677889900',
       email: 'chantal.ngo@njangi.cm',
-      avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?fit=crop&w=256&h=256&q=80',
+      avatarUrl:
+        'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?fit=crop&w=256&h=256&q=80',
       ville: 'Douala',
       pays: 'Cameroun',
       dateInscription: '2025-01-20',
@@ -49,7 +199,8 @@ export class TontineStateService {
       prenom: 'Pierre',
       telephone: '+237655443322',
       email: 'pierre.kamga@njangi.cm',
-      avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?fit=crop&w=256&h=256&q=80',
+      avatarUrl:
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?fit=crop&w=256&h=256&q=80',
       ville: 'Douala',
       pays: 'Cameroun',
       dateInscription: '2025-01-22',
@@ -57,11 +208,12 @@ export class TontineStateService {
     },
     {
       id: 'usr-4',
-      nom: 'Eto\'o Fils',
+      nom: "Eto'o Fils",
       prenom: 'Samuel',
       telephone: '+237699001122',
       email: 'samuel.etoo@njangi.cm',
-      avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?fit=crop&w=256&h=256&q=80',
+      avatarUrl:
+        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?fit=crop&w=256&h=256&q=80',
       ville: 'Yaoundé',
       pays: 'Cameroun',
       dateInscription: '2025-01-10',
@@ -73,7 +225,8 @@ export class TontineStateService {
       prenom: 'Rodrigue',
       telephone: '+237670112233',
       email: 'rodrigue.fokou@njangi.cm',
-      avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?fit=crop&w=256&h=256&q=80',
+      avatarUrl:
+        'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?fit=crop&w=256&h=256&q=80',
       ville: 'Douala',
       pays: 'Cameroun',
       dateInscription: '2025-02-05',
@@ -85,12 +238,13 @@ export class TontineStateService {
       prenom: 'Christelle',
       telephone: '+237691223344',
       email: 'christelle.fotso@njangi.cm',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?fit=crop&w=256&h=256&q=80',
+      avatarUrl:
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?fit=crop&w=256&h=256&q=80',
       ville: 'Bafoussam',
       pays: 'Cameroun',
       dateInscription: '2025-02-10',
       estVerifieKyc: true,
-    }
+    },
   ];
 
   private readonly initialMandat1: MandatBureau = {
@@ -126,16 +280,17 @@ export class TontineStateService {
     {
       id: 'grp-1',
       nom: 'Solidarité Douala Akwa',
-      description: 'Tontine d\'entraide et épargne rotative pour entrepreneurs et cadres du Littoral',
-      createurMembreId: 'usr-4', // Samuel Eto'o est le créateur
-      typeSiege: 'ROTATIF', // Siège rotatif chez les membres
+      description:
+        "Tontine d'entraide et épargne rotative pour entrepreneurs et cadres du Littoral",
+      createurMembreId: 'usr-4',
+      typeSiege: 'ROTATIF',
       ordreRotationSiege: ['usr-1', 'usr-2', 'usr-3', 'usr-5'],
       frequenceReunion: 'MENSUELLE',
       devise: 'XAF',
       nombreMembresMax: 15,
       nombreMembresActuels: 6,
       statut: 'ACTIF',
-      premierBureauElu: true, // Le créateur a été rétrogradé, le bureau est élu !
+      premierBureauElu: true,
       mandatActif: this.initialMandat1,
       sessionActive: this.initialSession1,
       soldeCaisseCashXaf: 450000,
@@ -145,7 +300,7 @@ export class TontineStateService {
     {
       id: 'grp-2',
       nom: 'Njangi Diaspora Yaoundé',
-      description: 'Réseau d\'investissement et caisse d\'entraide communautaire',
+      description: "Réseau d'investissement et caisse d'entraide communautaire",
       createurMembreId: 'usr-1',
       typeSiege: 'FIXE',
       adresseSiegeFixe: 'Maison de la Culture Bamiléké, Bastos, Yaoundé',
@@ -162,8 +317,9 @@ export class TontineStateService {
     {
       id: 'grp-3',
       nom: 'Tontine Jeunes Entrepreneurs',
-      description: 'Groupe en cours d\'initialisation, en attente de l\'élection du premier bureau',
-      createurMembreId: 'usr-1', // Jean-Paul Mbarga est ici le Créateur avec pouvoirs techniques
+      description:
+        "Groupe en cours d'initialisation, en attente de l'élection du premier bureau",
+      createurMembreId: 'usr-1',
       typeSiege: 'FIXE',
       adresseSiegeFixe: 'Immeuble Kouam, Rue Castelnau, Akwa',
       frequenceReunion: 'MENSUELLE',
@@ -171,11 +327,11 @@ export class TontineStateService {
       nombreMembresMax: 10,
       nombreMembresActuels: 3,
       statut: 'EN_CREATION',
-      premierBureauElu: false, // Pas encore élu : le créateur a les droits initiaux
+      premierBureauElu: false,
       soldeCaisseCashXaf: 0,
       soldeCaisseMobileMoneyXaf: 0,
       dateCreation: '2026-01-05',
-    }
+    },
   ];
 
   // Cotisations initiales (multi-caisses simultanées)
@@ -262,7 +418,7 @@ export class TontineStateService {
       dateEcheance: '2026-09-05',
       statut: 'PENALISE',
       penaliteAppliqueeXaf: 5000,
-    }
+    },
   ];
 
   // Ordre de passage de la cagnotte (le Pot)
@@ -318,7 +474,7 @@ export class TontineStateService {
       montantReelVerseXaf: 0,
       dateAttribution: '2026-11-15',
       statut: 'A_VENIR',
-    }
+    },
   ];
 
   // Réunions
@@ -343,19 +499,51 @@ export class TontineStateService {
         '4. Collecte des cotisations (Pot, Secours, Réserve)',
         '5. Décaissement du pot à M. Jean-Paul Mbarga',
         '6. Examen des demandes de prêt de secours',
-        '7. Divers & fixation de la prochaine réunion'
+        '7. Divers & fixation de la prochaine réunion',
       ],
       presences: [
-        { membreId: 'usr-1', membreNom: 'Jean-Paul Mbarga', statut: 'PRESENT', heureArrivee: '17:25' },
-        { membreId: 'usr-2', membreNom: 'Chantal Ngo Bikoï', statut: 'PRESENT', heureArrivee: '17:15' },
-        { membreId: 'usr-3', membreNom: 'Pierre Kamga', statut: 'RETARD', heureArrivee: '18:10', sanctionAppliquee: true },
-        { membreId: 'usr-4', membreNom: 'Samuel Eto\'o Fils', statut: 'ABSENT_JUSTIFIE', motifAbsence: 'Voyage officiel CAF' },
-        { membreId: 'usr-5', membreNom: 'Rodrigue Fokou', statut: 'PRESENT', heureArrivee: '17:30' },
-        { membreId: 'usr-6', membreNom: 'Christelle Fotso', statut: 'ABSENT_NON_JUSTIFIE', sanctionAppliquee: true }
+        {
+          membreId: 'usr-1',
+          membreNom: 'Jean-Paul Mbarga',
+          statut: 'PRESENT',
+          heureArrivee: '17:25',
+        },
+        {
+          membreId: 'usr-2',
+          membreNom: 'Chantal Ngo Bikoï',
+          statut: 'PRESENT',
+          heureArrivee: '17:15',
+        },
+        {
+          membreId: 'usr-3',
+          membreNom: 'Pierre Kamga',
+          statut: 'RETARD',
+          heureArrivee: '18:10',
+          sanctionAppliquee: true,
+        },
+        {
+          membreId: 'usr-4',
+          membreNom: "Samuel Eto'o Fils",
+          statut: 'ABSENT_JUSTIFIE',
+          motifAbsence: 'Voyage officiel CAF',
+        },
+        {
+          membreId: 'usr-5',
+          membreNom: 'Rodrigue Fokou',
+          statut: 'PRESENT',
+          heureArrivee: '17:30',
+        },
+        {
+          membreId: 'usr-6',
+          membreNom: 'Christelle Fotso',
+          statut: 'ABSENT_NON_JUSTIFIE',
+          sanctionAppliquee: true,
+        },
       ],
       totalCollecteSeanceXaf: 214000,
       totalAmendesSeanceXaf: 6000,
-      compteRenduRedige: 'Séance ouverte à 17h35 par le Président Mbarga. Quorum atteint avec 4 membres présents physiquement. Mme Ngo a reçu ses félicitations pour l\'accueil au siège rotatif. Les cotisations ont été enregistrées avec rigueur par la Trésorière.',
+      compteRenduRedige:
+        "Séance ouverte à 17h35 par le Président Mbarga. Quorum atteint avec 4 membres présents physiquement. Mme Ngo a reçu ses félicitations pour l'accueil au siège rotatif. Les cotisations ont été enregistrées avec rigueur par la Trésorière.",
       statut: 'EN_COURS',
     },
     {
@@ -363,7 +551,7 @@ export class TontineStateService {
       groupeId: 'grp-1',
       sessionId: 'ses-1',
       numeroOrdre: 7,
-      titre: 'Séance Ordinaire d\'Août 2026',
+      titre: "Séance Ordinaire d'Août 2026",
       dateReunion: '2026-08-15',
       heureDebut: '17:00',
       heureFin: '19:45',
@@ -375,7 +563,7 @@ export class TontineStateService {
         '1. Ouverture de séance',
         '2. Présences',
         '3. Décaissement du pot à Mme Ngo Bikoï (600 000 XAF)',
-        '4. Clôture'
+        '4. Clôture',
       ],
       presences: [
         { membreId: 'usr-1', membreNom: 'Jean-Paul Mbarga', statut: 'PRESENT' },
@@ -385,9 +573,10 @@ export class TontineStateService {
       ],
       totalCollecteSeanceXaf: 614000,
       totalAmendesSeanceXaf: 1000,
-      compteRenduRedige: 'La séance s\'est tenue dans une ambiance fraternelle. Versement intégral du pot de 600 000 XAF à Mme Ngo Bikoï par Mobile Money, avec quittance signée par la Trésorière.',
+      compteRenduRedige:
+        "La séance s'est tenue dans une ambiance fraternelle. Versement intégral du pot de 600 000 XAF à Mme Ngo Bikoï par Mobile Money, avec quittance signée par la Trésorière.",
       statut: 'CLOTUREE',
-    }
+    },
   ];
 
   // Paiements enregistrés (avec preuves reçus signés)
@@ -404,7 +593,8 @@ export class TontineStateService {
       typeCotisation: 'ROTATIVE_POT',
       statut: 'VALIDE',
       cleIdempotence: 'idemp-pay-001',
-      preuveUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?fit=crop&w=600&h=400&q=80',
+      preuveUrl:
+        'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?fit=crop&w=600&h=400&q=80',
       commentaire: 'Remise en espèces à la Trésorière Ngo Bikoï',
       valideParTresorierId: 'usr-2',
       datePaiement: '2026-09-10 14:20',
@@ -441,7 +631,7 @@ export class TontineStateService {
       referenceTransaction: 'OM-CM-99482103',
       datePaiement: '2026-09-11 09:15',
       dateValidation: '2026-09-11 09:16',
-    }
+    },
   ];
 
   // Pénalités
@@ -474,16 +664,56 @@ export class TontineStateService {
       statut: 'EN_ATTENTE',
       dateApplication: '2026-09-15 18:00',
       appliqueParNom: 'Jean-Paul Mbarga (Président)',
-    }
+    },
   ];
 
   private readonly initialTarifications: TarificationPenalite[] = [
-    { id: 'tar-1', groupeId: 'grp-1', typeInfraction: 'RETARD_REUNION', libelle: 'Retard à la réunion (> 15 min)', montantForfaitaireXaf: 1000, estPourcentage: false },
-    { id: 'tar-2', groupeId: 'grp-1', typeInfraction: 'BAVARDAGE_SONNERIE', libelle: 'Sonnerie de téléphone ou bavardage en séance', montantForfaitaireXaf: 500, estPourcentage: false },
-    { id: 'tar-3', groupeId: 'grp-1', typeInfraction: 'ABSENCE_NON_JUSTIFIEE', libelle: 'Absence sans mot d\'excuse', montantForfaitaireXaf: 5000, estPourcentage: false },
-    { id: 'tar-4', groupeId: 'grp-1', typeInfraction: 'RETARD_PAIEMENT', libelle: 'Retard de cotisation après échéance', montantForfaitaireXaf: 2000, estPourcentage: false },
-    { id: 'tar-5', groupeId: 'grp-1', typeInfraction: 'NON_RESPECT_REGLE', libelle: 'Non-respect du code de conduite', montantForfaitaireXaf: 2500, estPourcentage: false }
+    {
+      id: 'tar-1',
+      groupeId: 'grp-1',
+      typeInfraction: 'RETARD_REUNION',
+      libelle: 'Retard à la réunion (> 15 min)',
+      montantForfaitaireXaf: 1000,
+      estPourcentage: false,
+    },
+    {
+      id: 'tar-2',
+      groupeId: 'grp-1',
+      typeInfraction: 'BAVARDAGE_SONNERIE',
+      libelle: 'Sonnerie de téléphone ou bavardage en séance',
+      montantForfaitaireXaf: 500,
+      estPourcentage: false,
+    },
+    {
+      id: 'tar-3',
+      groupeId: 'grp-1',
+      typeInfraction: 'ABSENCE_NON_JUSTIFIEE',
+      libelle: "Absence sans mot d'excuse",
+      montantForfaitaireXaf: 5000,
+      estPourcentage: false,
+    },
+    {
+      id: 'tar-4',
+      groupeId: 'grp-1',
+      typeInfraction: 'RETARD_PAIEMENT',
+      libelle: 'Retard de cotisation après échéance',
+      montantForfaitaireXaf: 2000,
+      estPourcentage: false,
+    },
+    {
+      id: 'tar-5',
+      groupeId: 'grp-1',
+      typeInfraction: 'NON_RESPECT_REGLE',
+      libelle: 'Non-respect du code de conduite',
+      montantForfaitaireXaf: 2500,
+      estPourcentage: false,
+    },
   ];
+
+  // SIGNALS DE SYNCHRONISATION API
+  readonly isLoading = signal<boolean>(false);
+  readonly syncError = signal<string | null>(null);
+  readonly lastSyncedAt = signal<string | null>(null);
 
   // SIGNALS PRINCIPAUX (État réactif pur)
   readonly membres = signal<Membre[]>(this.initialMembres);
@@ -498,14 +728,14 @@ export class TontineStateService {
   // Groupe actif sélectionné
   readonly groupeActif = computed<Groupe>(() => {
     const gid = this.authService.groupeActifId();
-    return this.groupes().find(g => g.id === gid) || this.groupes()[0];
+    return this.groupes().find((g) => g.id === gid) || this.groupes()[0];
   });
 
   // Rôle actif de l'utilisateur connecté dans le groupe actif
   readonly roleActif = computed<RoleMembre>(() => {
     const grp = this.groupeActif();
     const adhesions = this.authService.adhesions();
-    const adh = adhesions.find(a => a.groupeId === grp.id);
+    const adh = adhesions.find((a) => a.groupeId === grp.id);
     return adh?.role || 'MEMBRE';
   });
 
@@ -522,17 +752,23 @@ export class TontineStateService {
   // Statistiques calculées dynamiquement pour le groupe actif
   readonly statsGroupeActif = computed(() => {
     const grp = this.groupeActif();
-    const cots = this.cotisations().filter(c => c.groupeId === grp.id);
-    const pens = this.penalites().filter(p => p.groupeId === grp.id);
-    
+    const cots = this.cotisations().filter((c) => c.groupeId === grp.id);
+    const pens = this.penalites().filter((p) => p.groupeId === grp.id);
+
     const totalCollecte = cots.reduce((acc, c) => acc + c.montantPayeXaf, 0);
     const totalAttendu = cots.reduce((acc, c) => acc + c.montantAttenduXaf, 0);
     const tauxCollecte = totalAttendu > 0 ? Math.round((totalCollecte / totalAttendu) * 100) : 0;
-    
-    const totalPenalitesPayees = pens.filter(p => p.statut === 'PAYEE').reduce((acc, p) => acc + p.montantXaf, 0);
-    const totalPenalitesImpayees = pens.filter(p => p.statut === 'EN_ATTENTE').reduce((acc, p) => acc + p.montantXaf, 0);
-    
-    const membresEnRetard = cots.filter(c => c.statut === 'EN_RETARD' || c.statut === 'PENALISE');
+
+    const totalPenalitesPayees = pens
+      .filter((p) => p.statut === 'PAYEE')
+      .reduce((acc, p) => acc + p.montantXaf, 0);
+    const totalPenalitesImpayees = pens
+      .filter((p) => p.statut === 'EN_ATTENTE')
+      .reduce((acc, p) => acc + p.montantXaf, 0);
+
+    const membresEnRetard = cots.filter(
+      (c) => c.statut === 'EN_RETARD' || c.statut === 'PENALISE'
+    );
 
     return {
       totalCollecte,
@@ -552,52 +788,106 @@ export class TontineStateService {
   readonly mesCotisations = computed<Cotisation[]>(() => {
     const uid = this.authService.utilisateur().id;
     const gid = this.groupeActif().id;
-    return this.cotisations().filter(c => c.membreId === uid && c.groupeId === gid);
+    return this.cotisations().filter((c) => c.membreId === uid && c.groupeId === gid);
   });
 
   // Prochaine réunion du groupe actif
   readonly prochaineReunion = computed<Reunion | undefined>(() => {
     const gid = this.groupeActif().id;
-    return this.reunions().find(r => r.groupeId === gid && (r.statut === 'EN_COURS' || r.statut === 'PLANIFIEE'));
+    return this.reunions().find(
+      (r) => r.groupeId === gid && (r.statut === 'EN_COURS' || r.statut === 'PLANIFIEE')
+    );
   });
 
   // Tour de pot en cours pour le groupe actif
   readonly potEnCours = computed<TourPot | undefined>(() => {
     const gid = this.groupeActif().id;
-    return this.toursPot().find(t => t.groupeId === gid && t.statut === 'PRET_POUR_VERSEMENT') 
-      || this.toursPot().find(t => t.groupeId === gid && t.statut === 'A_VENIR');
+    return (
+      this.toursPot().find((t) => t.groupeId === gid && t.statut === 'PRET_POUR_VERSEMENT') ||
+      this.toursPot().find((t) => t.groupeId === gid && t.statut === 'A_VENIR')
+    );
   });
 
   // Tour de pot de l'utilisateur connecté
   readonly monTourPot = computed<TourPot | undefined>(() => {
     const uid = this.authService.utilisateur().id;
     const gid = this.groupeActif().id;
-    return this.toursPot().find(t => t.beneficiaireMembreId === uid && t.groupeId === gid);
+    return this.toursPot().find((t) => t.beneficiaireMembreId === uid && t.groupeId === gid);
   });
 
   constructor() {
-    this.chargerDonneesReelles();
+    if (isPlatformBrowser(this.platformId)) {
+      effect(() => {
+        if (this.authService.estConnecte()) {
+          untracked(() => this.chargerDonneesReelles());
+        }
+      });
+
+      effect(() => {
+        const estConnecte = this.authService.estConnecte();
+        const groupeId = this.authService.groupeActifId();
+        if (estConnecte && groupeId) {
+          untracked(() => this.chargerDonneesGroupe(groupeId));
+        }
+      });
+    }
   }
 
   // Chargement réactif des données réelles depuis PostgreSQL via API Gateway
   chargerDonneesReelles(): void {
-    // 1. Groupes réels (ms-groupes)
-    this.apiService.get<unknown[]>('/groupes').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (res) => {
-        const data = (res.data ?? res) as Array<{
-          id: string;
-          nom: string;
-          description?: string;
-          createurMembreId?: string;
-          typeSiege?: TypeSiege;
-          adresseSiege?: string;
-          frequenceReunion?: FrequenceReunion;
-          nombreMembresMax?: number;
-          statut?: StatutGroupe;
-          createdAt?: string;
-        }>;
-        if (Array.isArray(data) && data.length > 0) {
-          const mapped: Groupe[] = data.map(g => ({
+    this.isLoading.set(true);
+    this.syncError.set(null);
+
+    const erreurs: string[] = [];
+
+    forkJoin({
+      groupes: this.apiService.get<BackendGroupeDto[]>('/groupes').pipe(
+        catchError((err: Error) => {
+          erreurs.push(err.message);
+          return of(null);
+        })
+      ),
+      membres: this.apiService.get<BackendMembreDto[]>('/membres').pipe(
+        catchError((err: Error) => {
+          erreurs.push(err.message);
+          return of(null);
+        })
+      ),
+      reunions: this.apiService.get<BackendReunionDto[]>('/reunions').pipe(
+        catchError((err: Error) => {
+          erreurs.push(err.message);
+          return of(null);
+        })
+      ),
+    })
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isLoading.set(false))
+      )
+      .subscribe((result) => {
+        // 1. Membres réels (ms-identite)
+        const membresData = this.extraireListe<BackendMembreDto>(result.membres);
+        if (membresData.length > 0) {
+          const mappedMembres: Membre[] = membresData.map((m) => ({
+            id: m.id,
+            nom: m.nom,
+            prenom: m.prenom,
+            telephone: m.telephone,
+            email: m.email,
+            avatarUrl: m.photoUrl || DEFAULT_AVATAR,
+            photoUrl: m.photoUrl,
+            ville: m.ville || 'Douala',
+            pays: 'Cameroun',
+            dateInscription: m.createdAt ? m.createdAt.substring(0, 10) : '2026-01-15',
+            estVerifieKyc: true,
+          }));
+          this.membres.set(mappedMembres);
+        }
+
+        // 2. Groupes réels (ms-gouvernance)
+        const groupesData = this.extraireListe<BackendGroupeDto>(result.groupes);
+        if (groupesData.length > 0) {
+          const mappedGroupes: Groupe[] = groupesData.map((g) => ({
             id: g.id,
             nom: g.nom,
             description: g.description || '',
@@ -607,70 +897,27 @@ export class TontineStateService {
             frequenceReunion: g.frequenceReunion || 'MENSUELLE',
             devise: 'XAF',
             nombreMembresMax: g.nombreMembresMax || 15,
-            nombreMembresActuels: 6,
+            nombreMembresActuels: this.membres().length,
             statut: g.statut || 'ACTIF',
-            premierBureauElu: true,
-            soldeCaisseCashXaf: 450000,
-            soldeCaisseMobileMoneyXaf: 834000,
+            premierBureauElu: g.premierBureauElu ?? true,
+            soldeCaisseCashXaf: 0,
+            soldeCaisseMobileMoneyXaf: 0,
             dateCreation: g.createdAt ? g.createdAt.substring(0, 10) : '2026-02-01',
             sessionActive: this.initialSession1,
-            mandatActif: this.initialMandat1
+            mandatActif: this.initialMandat1,
           }));
-          this.groupes.set(mapped);
-        }
-      },
-      error: () => {}
-    });
+          this.groupes.set(mappedGroupes);
 
-    // 2. Membres réels (ms-membres)
-    this.apiService.get<unknown[]>('/membres').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (res) => {
-        const data = (res.data ?? res) as Array<{
-          id: string;
-          nom: string;
-          prenom: string;
-          telephone: string;
-          email: string;
-          photoUrl?: string;
-          ville?: string;
-          createdAt?: string;
-        }>;
-        if (Array.isArray(data) && data.length > 0) {
-          const mapped: Membre[] = data.map(m => ({
-            id: m.id,
-            nom: m.nom,
-            prenom: m.prenom,
-            telephone: m.telephone,
-            email: m.email,
-            avatarUrl: m.photoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fit=crop&w=256&h=256&q=80',
-            ville: m.ville || 'Douala',
-            pays: 'Cameroun',
-            dateInscription: m.createdAt ? m.createdAt.substring(0, 10) : '2026-01-15',
-            estVerifieKyc: true
-          }));
-          this.membres.set(mapped);
+          const actifId = this.authService.groupeActifId();
+          if (!actifId || !mappedGroupes.some((g) => g.id === actifId)) {
+            this.authService.setGroupeActif(mappedGroupes[0].id);
+          }
         }
-      },
-      error: () => {}
-    });
 
-    // 3. Réunions réelles (ms-reunions)
-    this.apiService.get<unknown[]>('/reunions').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (res) => {
-        const data = (res.data ?? res) as Array<{
-          id: string;
-          groupeId: string;
-          sessionTontineId?: string;
-          titre: string;
-          dateReunion?: string;
-          typeSiege?: TypeSiege;
-          hoteId?: string;
-          lieuReunion?: string;
-          ordreJour?: string;
-          statut?: string;
-        }>;
-        if (Array.isArray(data) && data.length > 0) {
-          const mapped: Reunion[] = data.map((r, idx) => ({
+        // 3. Réunions réelles (ms-gouvernance)
+        const reunionsData = this.extraireListe<BackendReunionDto>(result.reunions);
+        if (reunionsData.length > 0) {
+          const mappedReunions: Reunion[] = reunionsData.map((r, idx) => ({
             id: r.id,
             groupeId: r.groupeId,
             sessionId: r.sessionTontineId || 'ses-1',
@@ -680,88 +927,342 @@ export class TontineStateService {
             heureDebut: '17:30',
             typeSiege: r.typeSiege || 'ROTATIF',
             hoteMembreId: r.hoteId || 'usr-1',
-            hoteNom: 'Jean-Paul Mbarga',
+            hoteNom: this.nomCompletMembre(r.hoteId),
             lieuAdresse: r.lieuReunion || 'Douala',
             ordreDuJour: r.ordreJour ? r.ordreJour.split('\n') : ['Ouverture', 'Appel', 'Cotisations'],
             presences: this.initialReunions[0].presences,
-            totalCollecteSeanceXaf: 105000,
-            totalAmendesSeanceXaf: 1000,
-            statut: r.statut === 'PLANIFIEE' ? 'EN_COURS' : 'EN_COURS'
+            totalCollecteSeanceXaf: 0,
+            totalAmendesSeanceXaf: 0,
+            compteRenduRedige: r.compteRendu,
+            statut: r.statut || 'PLANIFIEE',
           }));
-          this.reunions.set(mapped);
+          this.reunions.set(mappedReunions);
         }
-      },
-      error: () => {}
-    });
+
+        if (erreurs.length > 0) {
+          this.syncError.set(erreurs[0]);
+        } else {
+          this.lastSyncedAt.set(new Date().toISOString());
+        }
+      });
   }
 
-  // ACTIONS RÉACTIVES (aucune Promise)
+  // Chargement des données financières pour le groupe actif (ms-finances)
+  chargerDonneesGroupe(groupeId: string): void {
+    if (!groupeId) {
+      return;
+    }
+
+    const erreurs: string[] = [];
+
+    forkJoin({
+      cotisations: this.apiService
+        .get<BackendCotisationDto[]>(`/cotisations/groupe/${groupeId}`)
+        .pipe(
+          catchError((err: Error) => {
+            erreurs.push(err.message);
+            return of(null);
+          })
+        ),
+      paiements: this.apiService
+        .get<BackendPaiementDto[]>(`/paiements/groupe/${groupeId}`)
+        .pipe(
+          catchError((err: Error) => {
+            erreurs.push(err.message);
+            return of(null);
+          })
+        ),
+      penalites: this.apiService
+        .get<BackendPenaliteDto[]>(`/penalites/groupe/${groupeId}`)
+        .pipe(
+          catchError((err: Error) => {
+            erreurs.push(err.message);
+            return of(null);
+          })
+        ),
+      tarifs: this.apiService
+        .get<BackendTarificationDto[]>(`/penalites/tarifs/groupe/${groupeId}`)
+        .pipe(
+          catchError((err: Error) => {
+            erreurs.push(err.message);
+            return of(null);
+          })
+        ),
+      pots: this.apiService
+        .get<BackendPotSessionDto[]>(`/cotisations/pots/groupe/${groupeId}`)
+        .pipe(
+          catchError((err: Error) => {
+            erreurs.push(err.message);
+            return of(null);
+          })
+        ),
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        const cotisationsData = this.extraireListe<BackendCotisationDto>(result.cotisations);
+        if (cotisationsData.length > 0) {
+          this.cotisations.set(
+            cotisationsData.map((c) => ({
+              id: c.id,
+              groupeId: c.groupeId,
+              sessionId: c.sessionId || this.sessionActive()?.id || 'ses-1',
+              reunionId: c.reunionId,
+              membreId: c.membreId,
+              membreNom: this.nomCompletMembre(c.membreId),
+              typeCotisation: c.typeCotisation || 'ROTATIVE_POT',
+              montantAttenduXaf: Number(c.montantDu ?? 0),
+              montantPayeXaf: Number(c.montantPaye ?? 0),
+              dateEcheance: c.dateLimitePaiement ? c.dateLimitePaiement.substring(0, 10) : '',
+              datePaiement: c.datePaiement ? c.datePaiement.substring(0, 10) : undefined,
+              statut: c.statut || 'EN_ATTENTE',
+            }))
+          );
+        }
+
+        const paiementsData = this.extraireListe<BackendPaiementDto>(result.paiements);
+        if (paiementsData.length > 0) {
+          const mappedPaiements: Paiement[] = paiementsData.map((p) => ({
+            id: p.id,
+            cotisationId: p.cotisationId,
+            groupeId: p.groupeId,
+            sessionId: p.sessionId || this.sessionActive()?.id || 'ses-1',
+            membreId: p.membreId,
+            membreNom: this.nomCompletMembre(p.membreId),
+            montantXaf: Number(p.montant ?? 0),
+            modePaiement: p.modePaiement || 'CASH',
+            typeCotisation: p.typeCotisation || 'ROTATIVE_POT',
+            statut: p.statut || 'VALIDE',
+            cleIdempotence: p.cleIdempotence || p.id,
+            referenceTransaction: p.reference,
+            preuveUrl: p.pieceJointeUrl,
+            commentaire: p.commentaire,
+            valideParTresorierId: p.validePar,
+            datePaiement: this.formaterDateHeure(p.datePaiement || p.createdAt),
+            dateValidation: p.dateValidation ? this.formaterDateHeure(p.dateValidation) : undefined,
+          }));
+          this.paiements.set(mappedPaiements);
+
+          const soldeCash = mappedPaiements
+            .filter((p) => p.modePaiement === 'CASH' && p.statut === 'VALIDE')
+            .reduce((acc, p) => acc + p.montantXaf, 0);
+          const soldeMoMo = mappedPaiements
+            .filter((p) => p.modePaiement !== 'CASH' && p.statut === 'VALIDE')
+            .reduce((acc, p) => acc + p.montantXaf, 0);
+
+          this.groupes.update((list) =>
+            list.map((g) =>
+              g.id === groupeId
+                ? {
+                    ...g,
+                    soldeCaisseCashXaf: soldeCash,
+                    soldeCaisseMobileMoneyXaf: soldeMoMo,
+                  }
+                : g
+            )
+          );
+        }
+
+        const penalitesData = this.extraireListe<BackendPenaliteDto>(result.penalites);
+        if (penalitesData.length > 0) {
+          this.penalites.set(
+            penalitesData.map((p) => ({
+              id: p.id,
+              groupeId: p.groupeId,
+              sessionId: p.sessionId || this.sessionActive()?.id || 'ses-1',
+              reunionId: p.reunionId,
+              membreId: p.membreId,
+              membreNom: this.nomCompletMembre(p.membreId),
+              typeInfraction: p.typeInfraction || 'AUTRE',
+              motif: p.motif || 'Sanction disciplinaire',
+              montantXaf: Number(p.montant ?? 0),
+              statut: p.statut || 'EN_ATTENTE',
+              dateApplication: this.formaterDateHeure(p.creeLe),
+              dateReglement: p.datePaiement ? this.formaterDateHeure(p.datePaiement) : undefined,
+              appliqueParNom: 'Bureau exécutif',
+            }))
+          );
+        }
+
+        const tarifsData = this.extraireListe<BackendTarificationDto>(result.tarifs);
+        if (tarifsData.length > 0) {
+          this.tarifications.set(
+            tarifsData.map((t) => ({
+              id: t.id,
+              groupeId: t.groupeId,
+              typeInfraction: t.typeInfraction,
+              libelle: t.libelle || t.typeInfraction.replace(/_/g, ' '),
+              montantForfaitaireXaf: Number(t.montant ?? 0),
+              estPourcentage: false,
+              actif: t.actif ?? true,
+            }))
+          );
+        }
+
+        const potsData = this.extraireListe<BackendPotSessionDto>(result.pots);
+        if (potsData.length > 0) {
+          this.toursPot.set(
+            potsData.map((pot, idx) => ({
+              id: pot.id,
+              groupeId: pot.groupeId,
+              sessionId: pot.sessionTontineId || this.sessionActive()?.id || 'ses-1',
+              reunionId: pot.reunionId,
+              numeroTour: pot.ordrePassage ?? idx + 1,
+              beneficiaireMembreId: pot.membreBeneficiaireId || '',
+              beneficiaireNom: this.nomCompletMembre(pot.membreBeneficiaireId),
+              montantTheoriqueXaf: Number(pot.montantTotal ?? 0),
+              montantReelVerseXaf: Number(pot.montantNet ?? 0),
+              dateAttribution: pot.dateAttribution ? pot.dateAttribution.substring(0, 10) : '',
+              dateVersementEffective: pot.dateVersement
+                ? pot.dateVersement.substring(0, 10)
+                : undefined,
+              statut: this.mapperStatutPot(pot.statut),
+              modeVersement: pot.modeVersement,
+            }))
+          );
+        }
+
+        if (erreurs.length === 0) {
+          this.lastSyncedAt.set(new Date().toISOString());
+        } else {
+          this.syncError.set(erreurs[0]);
+        }
+      });
+  }
+
+  // ACTIONS RÉACTIVES (Signaux optimistes + synchronisation API Gateway via RxJS)
 
   // Enregistrer un paiement (Cash avec preuve obligatoire ou Mobile Money)
   enregistrerPaiement(req: EnregistrerPaiementRequest): void {
+    const cleIdempotence = req.cleIdempotence || 'idemp-' + Date.now();
+    const cotisationAssociee = this.cotisations().find(
+      (c) =>
+        c.groupeId === req.groupeId &&
+        c.membreId === req.membreId &&
+        c.typeCotisation === req.typeCotisation
+    );
+    const membre = this.membres().find((m) => m.id === req.membreId);
+    const preuveUrl =
+      req.preuveRecuBase64 ||
+      'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?fit=crop&w=600&h=400&q=80';
+
     const nouveauPaiement: Paiement = {
       id: 'pay-' + Date.now(),
-      cotisationId: undefined,
+      cotisationId: cotisationAssociee?.id,
       groupeId: req.groupeId,
       sessionId: req.sessionId,
       membreId: req.membreId,
-      membreNom: this.membres().find(m => m.id === req.membreId)?.nom || 'Membre',
+      membreNom: membre ? `${membre.prenom} ${membre.nom}` : 'Membre',
       montantXaf: req.montantXaf,
       modePaiement: req.modePaiement,
       typeCotisation: req.typeCotisation,
       statut: 'VALIDE',
-      cleIdempotence: req.cleIdempotence || 'idemp-' + Date.now(),
+      cleIdempotence,
       referenceTransaction: req.referenceTransaction,
-      preuveUrl: req.preuveRecuBase64 || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?fit=crop&w=600&h=400&q=80',
+      preuveUrl,
       commentaire: req.commentaire,
       valideParTresorierId: this.authService.utilisateur().id,
       datePaiement: new Date().toISOString().replace('T', ' ').substring(0, 16),
       dateValidation: new Date().toISOString().replace('T', ' ').substring(0, 16),
     };
 
-    // Mettre à jour la liste des paiements
-    this.paiements.update(list => [nouveauPaiement, ...list]);
+    // Mise à jour optimiste
+    this.paiements.update((list) => [nouveauPaiement, ...list]);
 
-    // Mettre à jour la cotisation correspondante si existante
-    this.cotisations.update(list => list.map(c => {
-      if (c.groupeId === req.groupeId && c.membreId === req.membreId && c.typeCotisation === req.typeCotisation) {
-        return {
-          ...c,
-          montantPayeXaf: c.montantPayeXaf + req.montantXaf,
-          statut: 'PAYE',
-          datePaiement: new Date().toISOString().substring(0, 10),
-        };
-      }
-      return c;
-    }));
+    this.cotisations.update((list) =>
+      list.map((c) => {
+        if (
+          c.groupeId === req.groupeId &&
+          c.membreId === req.membreId &&
+          c.typeCotisation === req.typeCotisation
+        ) {
+          return {
+            ...c,
+            montantPayeXaf: c.montantPayeXaf + req.montantXaf,
+            statut: 'PAYE',
+            datePaiement: new Date().toISOString().substring(0, 10),
+          };
+        }
+        return c;
+      })
+    );
 
-    // Mettre à jour la caisse du groupe
-    this.groupes.update(list => list.map(g => {
-      if (g.id === req.groupeId) {
-        return {
-          ...g,
-          soldeCaisseCashXaf: req.modePaiement === 'CASH' 
-            ? g.soldeCaisseCashXaf + req.montantXaf 
-            : g.soldeCaisseCashXaf,
-          soldeCaisseMobileMoneyXaf: req.modePaiement !== 'CASH' 
-            ? g.soldeCaisseMobileMoneyXaf + req.montantXaf 
-            : g.soldeCaisseMobileMoneyXaf,
-        };
-      }
-      return g;
-    }));
+    this.groupes.update((list) =>
+      list.map((g) => {
+        if (g.id === req.groupeId) {
+          return {
+            ...g,
+            soldeCaisseCashXaf:
+              req.modePaiement === 'CASH'
+                ? g.soldeCaisseCashXaf + req.montantXaf
+                : g.soldeCaisseCashXaf,
+            soldeCaisseMobileMoneyXaf:
+              req.modePaiement !== 'CASH'
+                ? g.soldeCaisseMobileMoneyXaf + req.montantXaf
+                : g.soldeCaisseMobileMoneyXaf,
+          };
+        }
+        return g;
+      })
+    );
+
+    const endpoint = req.modePaiement === 'CASH' ? '/paiements/cash' : '/paiements/mobile-money';
+    const payload =
+      req.modePaiement === 'CASH'
+        ? {
+            cotisationId: cotisationAssociee?.id ?? null,
+            membreId: req.membreId,
+            groupeId: req.groupeId,
+            montant: req.montantXaf,
+            cleIdempotence,
+            pieceJointeUrl: preuveUrl,
+            commentaire: req.commentaire ?? null,
+          }
+        : {
+            cotisationId: cotisationAssociee?.id ?? null,
+            membreId: req.membreId,
+            groupeId: req.groupeId,
+            montant: req.montantXaf,
+            cleIdempotence,
+            numeroTelephone: membre?.telephone || this.authService.utilisateur().telephone,
+            modePaiement: req.modePaiement,
+          };
+
+    this.apiService
+      .post<BackendPaiementDto>(endpoint, payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.syncError.set(null);
+          this.lastSyncedAt.set(new Date().toISOString());
+          if (res?.data?.id) {
+            this.paiements.update((list) =>
+              list.map((p) => (p.id === nouveauPaiement.id ? { ...p, id: res.data.id } : p))
+            );
+          }
+        },
+        error: (err: Error) => {
+          this.syncError.set(err.message);
+        },
+      });
   }
 
   // Appliquer une sanction / amende
-  appliquerSanction(param: { membreId: string; typeInfraction: TypeInfraction; montantXaf: number; motif: string }): void {
-    const membre = this.membres().find(m => m.id === param.membreId);
+  appliquerSanction(param: {
+    membreId: string;
+    typeInfraction: TypeInfraction;
+    montantXaf: number;
+    motif: string;
+  }): void {
+    const membre = this.membres().find((m) => m.id === param.membreId);
     const grp = this.groupeActif();
     const ses = this.sessionActive();
+    const reunion = this.prochaineReunion();
 
     const nouvellePenalite: Penalite = {
       id: 'pen-' + Date.now(),
       groupeId: grp.id,
       sessionId: ses?.id || 'ses-1',
+      reunionId: reunion?.id,
       membreId: param.membreId,
       membreNom: membre ? `${membre.prenom} ${membre.nom}` : 'Membre',
       typeInfraction: param.typeInfraction,
@@ -772,76 +1273,180 @@ export class TontineStateService {
       appliqueParNom: `${this.authService.utilisateur().prenom} ${this.authService.utilisateur().nom} (${this.roleActif()})`,
     };
 
-    this.penalites.update(list => [nouvellePenalite, ...list]);
+    this.penalites.update((list) => [nouvellePenalite, ...list]);
+
+    this.apiService
+      .post<BackendPenaliteDto>('/penalites', {
+        membreId: param.membreId,
+        groupeId: grp.id,
+        sessionId: ses?.id ?? null,
+        reunionId: reunion?.id ?? null,
+        typeInfraction: param.typeInfraction,
+        montant: param.montantXaf,
+        motif: param.motif,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.syncError.set(null);
+          this.lastSyncedAt.set(new Date().toISOString());
+          if (res?.data?.id) {
+            this.penalites.update((list) =>
+              list.map((p) => (p.id === nouvellePenalite.id ? { ...p, id: res.data.id } : p))
+            );
+          }
+        },
+        error: (err: Error) => {
+          this.syncError.set(err.message);
+        },
+      });
   }
 
   // Régler une amende
   reglerSanction(penaliteId: string): void {
-    this.penalites.update(list => list.map(p => {
-      if (p.id === penaliteId) {
-        return {
-          ...p,
-          statut: 'PAYEE',
-          dateReglement: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        };
-      }
-      return p;
-    }));
+    this.penalites.update((list) =>
+      list.map((p) => {
+        if (p.id === penaliteId) {
+          return {
+            ...p,
+            statut: 'PAYEE',
+            dateReglement: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          };
+        }
+        return p;
+      })
+    );
+
+    this.apiService
+      .put<BackendPenaliteDto>(`/penalites/${penaliteId}/payer`, {})
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.syncError.set(null);
+          this.lastSyncedAt.set(new Date().toISOString());
+        },
+        error: (err: Error) => {
+          this.syncError.set(err.message);
+        },
+      });
   }
 
   // Marquer une présence pendant la réunion en direct
-  mettreAJourPresence(reunionId: string, membreId: string, nouveauStatut: StatutPresence): void {
-    this.reunions.update(list => list.map(r => {
-      if (r.id === reunionId) {
-        return {
-          ...r,
-          presences: r.presences.map(p => {
-            if (p.membreId === membreId) {
-              return {
-                ...p,
-                statut: nouveauStatut,
-                heureArrivee: (nouveauStatut === 'PRESENT' || nouveauStatut === 'RETARD') 
-                  ? new Date().toTimeString().substring(0, 5) 
-                  : undefined,
-              };
-            }
-            return p;
-          })
-        };
-      }
-      return r;
-    }));
+  mettreAJourPresence(
+    reunionId: string,
+    membreId: string,
+    nouveauStatut: StatutPresence
+  ): void {
+    const estArrive = nouveauStatut === 'PRESENT' || nouveauStatut === 'RETARD';
+
+    this.reunions.update((list) =>
+      list.map((r) => {
+        if (r.id === reunionId) {
+          return {
+            ...r,
+            presences: r.presences.map((p) => {
+              if (p.membreId === membreId) {
+                return {
+                  ...p,
+                  statut: nouveauStatut,
+                  heureArrivee: estArrive ? new Date().toTimeString().substring(0, 5) : undefined,
+                };
+              }
+              return p;
+            }),
+          };
+        }
+        return r;
+      })
+    );
+
+    this.apiService
+      .post<unknown>(`/reunions/${reunionId}/presences`, {
+        membreId,
+        statut: nouveauStatut,
+        heureArrivee: estArrive ? new Date().toISOString() : null,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.syncError.set(null);
+          this.lastSyncedAt.set(new Date().toISOString());
+        },
+        error: (err: Error) => {
+          this.syncError.set(err.message);
+        },
+      });
   }
 
   // Sauvegarder le compte-rendu de réunion
   sauvegarderCompteRendu(reunionId: string, texte: string, cloturer: boolean): void {
-    this.reunions.update(list => list.map(r => {
-      if (r.id === reunionId) {
-        return {
-          ...r,
-          compteRenduRedige: texte,
-          statut: cloturer ? 'CLOTUREE' : r.statut,
-          heureFin: cloturer ? new Date().toTimeString().substring(0, 5) : r.heureFin,
-        };
-      }
-      return r;
-    }));
+    this.reunions.update((list) =>
+      list.map((r) => {
+        if (r.id === reunionId) {
+          return {
+            ...r,
+            compteRenduRedige: texte,
+            statut: cloturer ? 'CLOTUREE' : r.statut,
+            heureFin: cloturer ? new Date().toTimeString().substring(0, 5) : r.heureFin,
+          };
+        }
+        return r;
+      })
+    );
+
+    const endpoint = cloturer
+      ? `/reunions/${reunionId}/cloturer`
+      : `/reunions/${reunionId}/compte-rendu`;
+
+    this.apiService
+      .put<BackendReunionDto>(endpoint, { compteRendu: texte })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.syncError.set(null);
+          this.lastSyncedAt.set(new Date().toISOString());
+        },
+        error: (err: Error) => {
+          this.syncError.set(err.message);
+        },
+      });
   }
 
   // Décaisser le pot au bénéficiaire du tour
   decaisserPot(tourPotId: string, mode: string): void {
-    this.toursPot.update(list => list.map(t => {
-      if (t.id === tourPotId) {
-        return {
-          ...t,
-          statut: 'VERSE',
-          montantReelVerseXaf: t.montantTheoriqueXaf,
-          dateVersementEffective: new Date().toISOString().substring(0, 10),
-          modeVersement: mode,
-        };
-      }
-      return t;
-    }));
+    const tour = this.toursPot().find((t) => t.id === tourPotId);
+
+    this.toursPot.update((list) =>
+      list.map((t) => {
+        if (t.id === tourPotId) {
+          return {
+            ...t,
+            statut: 'VERSE',
+            montantReelVerseXaf: t.montantTheoriqueXaf,
+            dateVersementEffective: new Date().toISOString().substring(0, 10),
+            modeVersement: mode,
+          };
+        }
+        return t;
+      })
+    );
+
+    this.apiService
+      .put<BackendPotSessionDto>(`/cotisations/pots/${tourPotId}/decaisser`, {
+        modeVersement: this.normaliserModeVersement(mode),
+        referencePaiement: `POT-${Date.now()}`,
+        montantNet: tour?.montantTheoriqueXaf ?? null,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.syncError.set(null);
+          this.lastSyncedAt.set(new Date().toISOString());
+        },
+        error: (err: Error) => {
+          this.syncError.set(err.message);
+        },
+      });
   }
 
   // Créer un nouveau groupe
@@ -869,16 +1474,16 @@ export class TontineStateService {
       nombreMembresMax: data.nombreMembresMax,
       nombreMembresActuels: 1,
       statut: 'EN_CREATION',
-      premierBureauElu: false, // Tant que pas de bureau, le créateur a les pouvoirs techniques !
+      premierBureauElu: false,
       soldeCaisseCashXaf: 0,
       soldeCaisseMobileMoneyXaf: 0,
       dateCreation: new Date().toISOString().substring(0, 10),
     };
 
-    this.groupes.update(list => [...list, nouveauGroupe]);
+    this.groupes.update((list) => [...list, nouveauGroupe]);
 
     // Ajouter l'adhésion en tant que CREATEUR
-    this.authService.session.update(s => ({
+    this.authService.session.update((s) => ({
       ...s,
       adhesions: [
         ...s.adhesions,
@@ -893,19 +1498,64 @@ export class TontineStateService {
           totalPenalitesXaf: 0,
           aRecuPot: false,
           dateAdhesion: new Date().toISOString().substring(0, 10),
-        }
+        },
       ],
       groupeActifId: nouveauId,
     }));
+
+    this.apiService
+      .post<BackendGroupeDto>('/groupes', {
+        nom: data.nom,
+        description: data.description,
+        createurMembreId: createur.id,
+        typeSiege: data.typeSiege,
+        adresseSiege: data.adresseSiegeFixe ?? null,
+        montantCotisationPrincipale: data.montantPotTourXaf,
+        frequenceReunion: data.frequenceReunion,
+        nombreMembresMax: data.nombreMembresMax,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.syncError.set(null);
+          this.lastSyncedAt.set(new Date().toISOString());
+          const serverId = res?.data?.id;
+          if (serverId) {
+            this.groupes.update((list) =>
+              list.map((g) => (g.id === nouveauId ? { ...g, id: serverId } : g))
+            );
+            this.authService.session.update((s) => ({
+              ...s,
+              adhesions: s.adhesions.map((a) =>
+                a.groupeId === nouveauId ? { ...a, groupeId: serverId } : a
+              ),
+              groupeActifId: s.groupeActifId === nouveauId ? serverId : s.groupeActifId,
+            }));
+          }
+        },
+        error: (err: Error) => {
+          this.syncError.set(err.message);
+        },
+      });
 
     return nouveauId;
   }
 
   // Élection du premier bureau (entraîne la rétrogradation automatique du créateur)
-  elireBureau(groupeId: string, presidentId: string, tresorierId: string, secretaireId: string): void {
-    const pres = this.membres().find(m => m.id === presidentId);
-    const tres = this.membres().find(m => m.id === tresorierId);
-    const sec = this.membres().find(m => m.id === secretaireId);
+  elireBureau(
+    groupeId: string,
+    presidentId: string,
+    tresorierId: string,
+    secretaireId: string
+  ): void {
+    const pres = this.membres().find((m) => m.id === presidentId);
+    const tres = this.membres().find((m) => m.id === tresorierId);
+    const sec = this.membres().find((m) => m.id === secretaireId);
+
+    const dateDebut = new Date().toISOString().substring(0, 10);
+    const dateFinPrevue = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .substring(0, 10);
 
     const nouveauMandat: MandatBureau = {
       id: 'man-' + Date.now(),
@@ -916,24 +1566,25 @@ export class TontineStateService {
       tresorierNom: tres ? `${tres.prenom} ${tres.nom}` : 'Trésorier',
       secretaireMembreId: secretaireId,
       secretaireNom: sec ? `${sec.prenom} ${sec.nom}` : 'Secrétaire',
-      dateDebut: new Date().toISOString().substring(0, 10),
-      dateFinPrevue: new Date(Date.now() + 365*24*60*60*1000).toISOString().substring(0, 10),
+      dateDebut,
+      dateFinPrevue,
       estActif: true,
     };
 
-    this.groupes.update(list => list.map(g => {
-      if (g.id === groupeId) {
-        return {
-          ...g,
-          premierBureauElu: true, // Rétrograde automatiquement le créateur
-          mandatActif: nouveauMandat,
-          statut: 'ACTIF',
-        };
-      }
-      return g;
-    }));
+    this.groupes.update((list) =>
+      list.map((g) => {
+        if (g.id === groupeId) {
+          return {
+            ...g,
+            premierBureauElu: true,
+            mandatActif: nouveauMandat,
+            statut: 'ACTIF',
+          };
+        }
+        return g;
+      })
+    );
 
-    // Si l'utilisateur connecté était le créateur, il est rétrogradé en membre ou prend le rôle assigné
     const uid = this.authService.utilisateur().id;
     let nouveauRolePourMoi: RoleMembre = 'MEMBRE';
     if (uid === presidentId) nouveauRolePourMoi = 'PRESIDENT';
@@ -941,5 +1592,81 @@ export class TontineStateService {
     else if (uid === secretaireId) nouveauRolePourMoi = 'SECRETAIRE';
 
     this.authService.changerRoleActifDansGroupe(groupeId, nouveauRolePourMoi);
+
+    this.apiService
+      .post<unknown>(`/groupes/${groupeId}/bureau/election`, {
+        presidentMembreId: presidentId,
+        tresorierMembreId: tresorierId,
+        secretaireMembreId: secretaireId,
+        dateDebut,
+        dateFin: dateFinPrevue,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.syncError.set(null);
+          this.lastSyncedAt.set(new Date().toISOString());
+        },
+        error: (err: Error) => {
+          this.syncError.set(err.message);
+        },
+      });
+  }
+
+  private extraireListe<T>(response: { data?: T[] } | T[] | null | undefined): T[] {
+    if (!response) {
+      return [];
+    }
+    if (Array.isArray(response)) {
+      return response;
+    }
+    return Array.isArray(response.data) ? response.data : [];
+  }
+
+  private nomCompletMembre(membreId?: string): string {
+    if (!membreId) {
+      return 'Membre';
+    }
+    const found = this.membres().find((m) => m.id === membreId);
+    return found ? `${found.prenom} ${found.nom}` : 'Membre';
+  }
+
+  private formaterDateHeure(iso?: string): string {
+    if (!iso) {
+      return new Date().toISOString().replace('T', ' ').substring(0, 16);
+    }
+    return iso.replace('T', ' ').substring(0, 16);
+  }
+
+  private mapperStatutPot(statut?: string): StatutPot {
+    switch (statut) {
+      case 'DECAISSE':
+      case 'VERSE':
+        return 'VERSE';
+      case 'ATTRIBUE':
+      case 'PRET_POUR_VERSEMENT':
+        return 'PRET_POUR_VERSEMENT';
+      case 'ANNULE':
+      case 'REPORTE':
+        return 'REPORTE';
+      case 'PLANIFIE':
+      case 'A_VENIR':
+      default:
+        return 'A_VENIR';
+    }
+  }
+
+  private normaliserModeVersement(mode: string): 'CASH' | 'MTN_MOMO' | 'ORANGE_MONEY' | 'VIREMENT' {
+    const upper = mode.toUpperCase();
+    if (upper.includes('MTN') || upper.includes('MOMO')) {
+      return 'MTN_MOMO';
+    }
+    if (upper.includes('ORANGE')) {
+      return 'ORANGE_MONEY';
+    }
+    if (upper.includes('VIREMENT')) {
+      return 'VIREMENT';
+    }
+    return 'CASH';
   }
 }

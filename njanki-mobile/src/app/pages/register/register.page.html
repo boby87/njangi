@@ -116,7 +116,7 @@
 
         <!-- Registration Form Card -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-[#e4e2de] mb-4">
-          <form (ngSubmit)="onSubmitRegister()" class="flex flex-col gap-4">
+          <form (submit)="$event.preventDefault(); onSubmitRegister()" class="flex flex-col gap-4">
             
             <!-- Nom complet & Prénoms -->
             <div class="flex flex-col gap-1.5">
@@ -372,11 +372,13 @@
               </div>
             </div>
 
-            <!-- Pill de simulation pour test rapide -->
-            <div class="bg-[#ffdcc3]/50 border border-[#fe932c]/40 p-2 rounded-xl text-center">
-              <span class="text-[11px] text-[#904d00] font-medium">Code simulé de test : </span>
-              <strong class="text-[#904d00] font-mono text-xs font-bold tracking-widest">{{ authService.simulatedOtp() }}</strong>
-            </div>
+            @if (authService.simulatedOtp()) {
+              <!-- Pill de simulation pour test rapide -->
+              <div class="bg-[#ffdcc3]/50 border border-[#fe932c]/40 p-2 rounded-xl text-center">
+                <span class="text-[11px] text-[#904d00] font-medium">Code simulé de test : </span>
+                <strong class="text-[#904d00] font-mono text-xs font-bold tracking-widest">{{ authService.simulatedOtp() }}</strong>
+              </div>
+            }
 
             <div>
               <label class="block text-xs font-bold text-[#404944] mb-1.5 text-left">Code de validation (6 chiffres)</label>

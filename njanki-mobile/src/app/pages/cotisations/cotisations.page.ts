@@ -16,9 +16,9 @@ import {
   personOutline
 } from 'ionicons/icons';
 import { MobileTontineStateService } from '../../core/services/tontine-state.service';
-import { TypeCotisation } from '../../shared/models/cotisation.model';
-import { AmountBadgeComponent } from '../../shared/ui/amount-badge/amount-badge.component';
-import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge.component';
+import { TypeCotisation } from '@shared/models/cotisation.model';
+import { AmountBadgeComponent } from '@shared/ui/amount-badge/amount-badge.component';
+import { StatusBadgeComponent } from '@shared/ui/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-cotisations',

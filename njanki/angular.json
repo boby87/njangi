@@ -18,6 +18,7 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
+            "preserveSymlinks": true,
             "assets": [
               {
                 "glob": "**/*",
@@ -33,11 +34,25 @@
               "entry": "src/server.ts"
             },
             "security": {
-              "allowedHosts": ["localhost", "localhost:4000", "127.0.0.1", "127.0.0.1:4000"]
+              "allowedHosts": ["localhost", "localhost:4000", "localhost:4200", "127.0.0.1", "127.0.0.1:4000", "127.0.0.1:4200"]
             }
           },
           "configurations": {
             "production": {
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": true
+                },
+                "fonts": false
+              },
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
               "budgets": [
                 {
                   "type": "initial",

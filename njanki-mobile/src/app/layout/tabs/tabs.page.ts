@@ -22,7 +22,7 @@ import {
 import { NetworkService } from '../../core/services/network.service';
 import { MobileTontineStateService } from '../../core/services/tontine-state.service';
 
-import { NetworkBannerComponent } from '../../shared/ui/network-banner/network-banner.component';
+import { NetworkBannerComponent } from '../../core/components/network-banner/network-banner.component';
 
 @Component({
   selector: 'app-tabs',

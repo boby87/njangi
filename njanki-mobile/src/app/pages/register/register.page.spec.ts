@@ -1,138 +1,134 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
+import { signal } from '@angular/core';
+import { of } from 'rxjs';
+import { vi } from 'vitest';
+import { Membre } from '@shared/models/membre.model';
 import { RegisterPage } from './register.page';
 import { MobileAuthService } from '../../core/services/auth.service';
 
-describe('RegisterPage', () => {
+describe('RegisterPage (Signal Forms pur — RxJS)', () => {
   let component: RegisterPage;
-  let authService: MobileAuthService;
+  let fixture: ComponentFixture<RegisterPage>;
+  let router: Router;
+
+  const pendingPhoneSignal = signal<string>('');
+  const simulatedOtpSignal = signal<string | null>(null);
+  const authErrorSignal = signal<string | null>(null);
+
+  const mockMembre: Membre = {
+    id: 'm-999',
+    authUtilisateurId: 'u-999',
+    nom: 'TCHOUA',
+    prenom: 'Alain',
+    email: '',
+    telephone: '+237699123456',
+    ville: 'Douala',
+    pays: 'Cameroun',
+    statut: 'ACTIF',
+    dateInscription: '2026-03-01',
+    estVerifieKyc: false,
+  };
+
+  const mockAuthService = {
+    pendingPhone: pendingPhoneSignal,
+    simulatedOtp: simulatedOtpSignal,
+    authError: authErrorSignal,
+    requestOtp: vi.fn((phone: string) => {
+      pendingPhoneSignal.set(phone);
+      return of(true);
+    }),
+    inscrire: vi.fn(() => of(mockMembre)),
+    connexionSociale: vi.fn(() => of({ succes: true, telephoneRequis: false })),
+  };
 
   beforeEach(() => {
+    pendingPhoneSignal.set('');
+    simulatedOtpSignal.set(null);
+    authErrorSignal.set(null);
+    mockAuthService.requestOtp.mockClear();
+    mockAuthService.inscrire.mockClear();
+    mockAuthService.connexionSociale.mockClear();
+
     TestBed.configureTestingModule({
       imports: [RegisterPage],
       providers: [
         provideRouter([]),
-        provideHttpClient(),
+        { provide: MobileAuthService, useValue: mockAuthService },
       ],
     });
 
-    const fixture = TestBed.createComponent(RegisterPage);
+    fixture = TestBed.createComponent(RegisterPage);
     component = fixture.componentInstance;
-    authService = TestBed.inject(MobileAuthService);
+    router = TestBed.inject(Router);
+    fixture.detectChanges();
   });
 
-  it('devrait être instancié avec succès', () => {
+  it('devrait initialiser le formulaire sur l’étape FORM avec indicatif Cameroun +237', () => {
     expect(component).toBeTruthy();
-    expect(component.etape()).toBe('PHONE');
-    expect(component.indicatifChoisi()).toBe('+237');
+    expect(component.etape()).toBe('FORM');
+    expect(component.countryCode()).toBe('+237');
+    expect(component.isFormValid()).toBe(false);
   });
 
-  it('devrait valider réactivement le numéro de téléphone', () => {
-    // Invalide avec 4 chiffres
-    component.onNumeroLocalInput('6991');
-    expect(component.isPhoneValid()).toBe(false);
+  it('devrait valider le nom, le téléphone formaté et le code PIN 4 chiffres via Signals', () => {
+    component.onFullNameInput('Alain TCHOUA');
+    component.onPhoneInput('699123456');
+    component.onPinDigitInput(0, '9');
+    component.onPinDigitInput(1, '8');
+    component.onPinDigitInput(2, '7');
+    component.onPinDigitInput(3, '6');
 
-    // Valide avec 9 chiffres pour le Cameroun (+237)
-    component.onNumeroLocalInput('699123456');
+    expect(component.isFullNameValid()).toBe(true);
+    expect(component.cleanPhone()).toBe('699123456');
     expect(component.isPhoneValid()).toBe(true);
-    expect(component.telephoneComplet()).toBe('+237699123456');
+    expect(component.pin()).toBe('9876');
+    expect(component.isPinValid()).toBe(true);
+    expect(component.isFormValid()).toBe(true);
   });
 
-  it('devrait passer à l’étape OTP après demande de code', () => {
-    component.onNumeroLocalInput('699123456');
-    component.onRequestOtp();
+  it('devrait appeler requestOtp via Observable et passer à l’étape OTP après soumission valide', () => {
+    component.onFullNameInput('Alain TCHOUA');
+    component.onPhoneInput('699123456');
+    ['1', '2', '3', '4'].forEach((d, idx) => component.onPinDigitInput(idx, d));
 
+    component.onSubmitRegister();
+
+    expect(mockAuthService.requestOtp).toHaveBeenCalledWith('+237699123456');
     expect(component.etape()).toBe('OTP');
-    expect(component.isOtpValid()).toBe(true); // Pré-rempli avec code simulé
-    expect(component.countdown()).toBe(60);
+    expect(pendingPhoneSignal()).toBe('+237699123456');
   });
 
-  it('devrait valider le code OTP et passer à l’étape PROFIL', () => {
-    component.onNumeroLocalInput('699123456');
-    component.onRequestOtp();
+  it('devrait finaliser l’inscription via inscrire() et naviguer vers /tabs/dashboard', () => {
+    const navSpy = vi
+      .spyOn(router, 'navigate')
+      .mockImplementation(() => true as unknown as ReturnType<Router['navigate']>);
 
-    // Saisie du code OTP valide généré ou code passe-partout 123456
-    const codeValide = authService.simulatedOtp() || '123456';
-    component.otpDigits.set(codeValide.split(''));
+    component.onFullNameInput('Alain TCHOUA');
+    component.onPhoneInput('699123456');
+    ['1', '2', '3', '4'].forEach((d, idx) => component.onPinDigitInput(idx, d));
+    component.onSubmitRegister();
+
+    component.onOtpInput('123456');
+    expect(component.isOtpValid()).toBe(true);
     component.onVerifyOtp();
 
-    expect(component.etape()).toBe('PROFIL');
+    expect(mockAuthService.inscrire).toHaveBeenCalledWith(
+      expect.objectContaining({
+        telephone: '+237699123456',
+        prenom: 'Alain',
+        nom: 'TCHOUA',
+        ville: 'Douala',
+        pays: 'Cameroun',
+        codePin: '1234',
+      })
+    );
+    expect(navSpy).toHaveBeenCalledWith(['/tabs/dashboard']);
   });
 
-  it('devrait contrôler la validité des champs du profil', () => {
-    component.etape.set('PROFIL');
-
-    // Invalide si nom ou prénom manquant
-    component.onNomInput('');
-    component.onPrenomInput('');
-    expect(component.isProfileValid()).toBe(false);
-
-    component.onNomInput('KAMGA');
-    component.onPrenomInput('Eric');
-    component.onVilleInput('Douala');
-    component.onEmailInput('eric.kamga@njangi.cm');
-
-    expect(component.isProfileValid()).toBe(true);
-  });
-
-  it('devrait calculer la force du mot de passe et valider la sécurité', () => {
-    component.etape.set('SECURITE');
-
-    // Mot de passe faible
-    component.onMotDePasseInput('12345');
-    expect(component.passwordStrength()).toBe('FAIBLE');
-
-    // Mot de passe moyen
-    component.onMotDePasseInput('Njangi123');
-    expect(component.passwordStrength()).toBe('MOYEN');
-
-    // Mot de passe fort
-    component.onMotDePasseInput('Njangi2026!#');
-    expect(component.passwordStrength()).toBe('FORT');
-
-    component.onConfirmerMotDePasseInput('Njangi2026!#');
-    component.onCodePinInput('4321');
-    component.onConfirmerCodePinInput('4321');
-    component.charteAcceptee.set(true);
-
-    expect(component.isSecurityValid()).toBe(true);
-  });
-
-  it('devrait finaliser l’inscription et afficher l’écran de succès avec carte membre', () => {
-    component.onNumeroLocalInput('699123456');
-    component.onNomInput('TCHOUA');
-    component.onPrenomInput('Alain');
-    component.onVilleInput('Yaoundé');
-    component.onMotDePasseInput('SecretPass123!');
-    component.onCodePinInput('9876');
-
-    component.onTerminerInscription(false);
-
-    expect(component.etape()).toBe('SUCCES');
-    expect(component.membreInscrit()).toBeTruthy();
-    expect(component.membreInscrit()?.nom).toBe('TCHOUA');
-    expect(component.membreInscrit()?.prenom).toBe('Alain');
-    expect(component.membreInscrit()?.telephone).toBe('+237699123456');
-    expect(authService.currentUser()?.nom).toBe('TCHOUA');
-  });
-
-  it('devrait permettre de naviguer en arrière entre les étapes', () => {
+  it('devrait revenir de OTP à FORM lors du clic retour', () => {
     component.etape.set('OTP');
-    component.onRetourArriere();
-    expect(component.etape()).toBe('PHONE');
-
-    component.etape.set('PROFIL');
-    component.onRetourArriere();
-    expect(component.etape()).toBe('OTP');
-
-    component.etape.set('SECURITE');
-    component.onRetourArriere();
-    expect(component.etape()).toBe('PROFIL');
-
-    component.etape.set('KYC');
-    component.onRetourArriere();
-    expect(component.etape()).toBe('SECURITE');
+    component.onRetour();
+    expect(component.etape()).toBe('FORM');
   });
 });

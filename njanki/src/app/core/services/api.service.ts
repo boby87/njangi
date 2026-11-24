@@ -2,28 +2,22 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
 import { ApiResponse, ProblemDetail } from '@shared/models/api-response.model';
-import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
   private readonly http = inject(HttpClient);
-  private readonly authService = inject(AuthService);
 
-  // URL de l'API Gateway Spring MVC (Port 9090 per GEMINI.md)
-  private readonly baseUrl = 'http://localhost:9090/api/v1';
+  // URL de l'API Gateway injectée via environment.ts (GEMINI.md)
+  private readonly baseUrl = environment.apiUrl;
 
   private getHeaders(): HttpHeaders {
-    const token = this.authService.session().token;
-    let headers = new HttpHeaders({
+    return new HttpHeaders({
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     });
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-    return headers;
   }
 
   get<T>(endpoint: string): Observable<ApiResponse<T>> {
@@ -59,8 +53,12 @@ export class ApiService {
   }
 
   private handleError(error: unknown): Observable<never> {
-    const prob = error as { error?: ProblemDetail; message?: string };
-    const errorMsg = prob?.error?.detail || prob?.message || 'Erreur réseau avec la passerelle API Gateway';
+    const prob = error as { error?: ProblemDetail & { message?: string }; message?: string };
+    const errorMsg =
+      prob?.error?.detail ||
+      prob?.error?.message ||
+      prob?.message ||
+      'Erreur réseau avec la passerelle API Gateway';
     return throwError(() => new Error(errorMsg));
   }
 }

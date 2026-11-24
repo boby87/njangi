@@ -1,16 +1,17 @@
-export type TypeCotisation = 
+export type TypeCotisation =
   | 'ROTATIVE_POT'
   | 'SECOURS_DECES'
   | 'CAISSE_RESERVE'
   | 'EVENEMENTIELLE';
 
-export type StatutCotisation = 
+export type StatutCotisation =
   | 'EN_ATTENTE'
+  | 'PARTIEL'
   | 'PAYE'
   | 'EN_RETARD'
   | 'PENALISE';
 
-export type StatutPot = 
+export type StatutPot =
   | 'A_VENIR'
   | 'PRET_POUR_VERSEMENT'
   | 'VERSE'

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../../shared/ui/**/*.{html,ts}";
 
 @layer base {
   :root {

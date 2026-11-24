@@ -1,7 +1,14 @@
 import { TypeCotisation } from './cotisation.model';
 
 export type ModePaiement = 'CASH' | 'ORANGE_MONEY' | 'MTN_MOMO' | 'CARTE';
-export type StatutPaiement = 'INITIE' | 'VALIDE' | 'REJETE' | 'ANNULE';
+export type StatutPaiement =
+  | 'INITIE'
+  | 'EN_ATTENTE_VALIDATION'
+  | 'EN_COURS'
+  | 'VALIDE'
+  | 'REJETE'
+  | 'ECHOUE'
+  | 'ANNULE';
 
 export interface Paiement {
   id: string;

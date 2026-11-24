@@ -36,10 +36,10 @@ import {
 } from 'ionicons/icons';
 import { MobileTontineStateService } from '../../core/services/tontine-state.service';
 import { MobileAuthService } from '../../core/services/auth.service';
-import { RoleMembre } from '../../shared/models/membre.model';
-import { AmountBadgeComponent } from '../../shared/ui/amount-badge/amount-badge.component';
-import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge.component';
-import { RoleBadgeComponent } from '../../shared/ui/role-badge/role-badge.component';
+import { RoleMembre } from '@shared/models/membre.model';
+import { AmountBadgeComponent } from '@shared/ui/amount-badge/amount-badge.component';
+import { StatusBadgeComponent } from '@shared/ui/status-badge/status-badge.component';
+import { RoleBadgeComponent } from '@shared/ui/role-badge/role-badge.component';
 
 @Component({
   selector: 'app-dashboard',

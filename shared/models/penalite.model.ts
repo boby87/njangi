@@ -1,4 +1,4 @@
-export type TypeInfraction = 
+export type TypeInfraction =
   | 'RETARD_PAIEMENT'
   | 'ABSENCE_NON_JUSTIFIEE'
   | 'RETARD_REUNION'
@@ -16,6 +16,7 @@ export interface TarificationPenalite {
   montantForfaitaireXaf: number;
   estPourcentage: boolean;
   valeurPourcentage?: number;
+  actif?: boolean;
 }
 
 export interface Penalite {

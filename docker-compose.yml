@@ -1,18 +1,21 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:16-alpine
     container_name: njangi-postgres
     environment:
-      POSTGRES_USER: njangi
-      POSTGRES_PASSWORD: njangi_secret
-      POSTGRES_DB: njangi
+      POSTGRES_USER: ${POSTGRES_USER:-njangi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-njangi_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-njangi}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-schemas.sql:/docker-entrypoint-initdb.d/init-schemas.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-njangi} -d ${POSTGRES_DB:-njangi}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - njangi-network
 
@@ -60,182 +63,102 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      MS_AUTH_URL: http://ms-auth:8001
-      MS_MEMBRES_URL: http://ms-membres:8002
-      MS_GROUPES_URL: http://ms-groupes:8003
-      MS_REUNIONS_URL: http://ms-reunions:8004
-      MS_COTISATIONS_URL: http://ms-cotisations:8005
-      MS_PAIEMENTS_URL: http://ms-paiements:8006
-      MS_PENALITES_URL: http://ms-penalites:8007
-      MS_NOTIFICATIONS_URL: http://ms-notifications:8008
-      MS_STATISTIQUES_URL: http://ms-statistiques:8009
+      NJANGI_JWT_SECRET: ${NJANGI_JWT_SECRET:-NjangiPlateformeSecreteTresLonguePourHmacSha256Signature2026!}
+      MS_IDENTITE_URL: lb://ms-identite
+      MS_GOUVERNANCE_URL: lb://ms-gouvernance
+      MS_FINANCES_URL: lb://ms-finances
+      MS_ENGAGEMENT_URL: lb://ms-engagement
     depends_on:
       - eureka-server
-      - ms-auth
-      - ms-membres
-      - ms-groupes
+      - ms-identite
+      - ms-gouvernance
+      - ms-finances
+      - ms-engagement
     networks:
       - njangi-network
 
-  ms-auth:
-    build: ./ms-auth
-    container_name: njangi-ms-auth
+  ms-identite:
+    build: ./ms-identite
+    container_name: njangi-ms-identite
     ports:
       - "8001:8001"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=auth
-      SPRING_DATASOURCE_USERNAME: njangi
-      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-njangi}?currentSchema=identite
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-njangi}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-njangi_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      NJANGI_JWT_SECRET: ${NJANGI_JWT_SECRET:-NjangiPlateformeSecreteTresLonguePourHmacSha256Signature2026!}
     depends_on:
-      - eureka-server
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      eureka-server:
+        condition: service_started
     networks:
       - njangi-network
 
-  ms-membres:
-    build: ./ms-membres
-    container_name: njangi-ms-membres
+  ms-gouvernance:
+    build: ./ms-gouvernance
+    container_name: njangi-ms-gouvernance
     ports:
       - "8002:8002"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=membres
-      SPRING_DATASOURCE_USERNAME: njangi
-      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-njangi}?currentSchema=gouvernance
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-njangi}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-njangi_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
-      - eureka-server
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      eureka-server:
+        condition: service_started
     networks:
       - njangi-network
 
-  ms-groupes:
-    build: ./ms-groupes
-    container_name: njangi-ms-groupes
+  ms-finances:
+    build: ./ms-finances
+    container_name: njangi-ms-finances
     ports:
       - "8003:8003"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=groupes
-      SPRING_DATASOURCE_USERNAME: njangi
-      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-njangi}?currentSchema=finances
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-njangi}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-njangi_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
-      - eureka-server
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      eureka-server:
+        condition: service_started
     networks:
       - njangi-network
 
-  ms-reunions:
-    build: ./ms-reunions
-    container_name: njangi-ms-reunions
+  ms-engagement:
+    build: ./ms-engagement
+    container_name: njangi-ms-engagement
     ports:
       - "8004:8004"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=reunions
-      SPRING_DATASOURCE_USERNAME: njangi
-      SPRING_DATASOURCE_PASSWORD: njangi_secret
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-njangi}?currentSchema=engagement
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-njangi}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-njangi_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
-      - eureka-server
-      - postgres
-      - kafka
-    networks:
-      - njangi-network
-
-  ms-cotisations:
-    build: ./ms-cotisations
-    container_name: njangi-ms-cotisations
-    ports:
-      - "8005:8005"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=cotisations
-      SPRING_DATASOURCE_USERNAME: njangi
-      SPRING_DATASOURCE_PASSWORD: njangi_secret
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    depends_on:
-      - eureka-server
-      - postgres
-      - kafka
-    networks:
-      - njangi-network
-
-  ms-paiements:
-    build: ./ms-paiements
-    container_name: njangi-ms-paiements
-    ports:
-      - "8006:8006"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=paiements
-      SPRING_DATASOURCE_USERNAME: njangi
-      SPRING_DATASOURCE_PASSWORD: njangi_secret
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    depends_on:
-      - eureka-server
-      - postgres
-      - kafka
-    networks:
-      - njangi-network
-
-  ms-penalites:
-    build: ./ms-penalites
-    container_name: njangi-ms-penalites
-    ports:
-      - "8007:8007"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=penalites
-      SPRING_DATASOURCE_USERNAME: njangi
-      SPRING_DATASOURCE_PASSWORD: njangi_secret
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    depends_on:
-      - eureka-server
-      - postgres
-      - kafka
-    networks:
-      - njangi-network
-
-  ms-notifications:
-    build: ./ms-notifications
-    container_name: njangi-ms-notifications
-    ports:
-      - "8008:8008"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=notifications
-      SPRING_DATASOURCE_USERNAME: njangi
-      SPRING_DATASOURCE_PASSWORD: njangi_secret
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    depends_on:
-      - eureka-server
-      - postgres
-      - kafka
-    networks:
-      - njangi-network
-
-  ms-statistiques:
-    build: ./ms-statistiques
-    container_name: njangi-ms-statistiques
-    ports:
-      - "8009:8009"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/njangi?currentSchema=statistiques
-      SPRING_DATASOURCE_USERNAME: njangi
-      SPRING_DATASOURCE_PASSWORD: njangi_secret
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    depends_on:
-      - eureka-server
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      eureka-server:
+        condition: service_started
     networks:
       - njangi-network
 

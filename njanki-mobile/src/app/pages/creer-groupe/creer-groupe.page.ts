@@ -2,6 +2,8 @@ import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@a
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { IonContent } from '@ionic/angular';
+import { FrequenceReunion } from '@shared/models/groupe.model';
+import { MobileTontineStateService } from '../../core/services/tontine-state.service';
 
 @Component({
   selector: 'app-creer-groupe',
@@ -13,6 +15,7 @@ import { IonContent } from '@ionic/angular';
 })
 export class CreerGroupePage {
   private readonly router = inject(Router);
+  private readonly tontineState = inject(MobileTontineStateService);
 
   // État Signal Forms pur
   readonly nomGroupe = signal<string>('Solidarité Bonapriso Yaoundé');
@@ -138,8 +141,21 @@ export class CreerGroupePage {
       this.errorMessage.set('Veuillez vérifier les informations saisies.');
       return;
     }
+
     this.isSubmitting.set(true);
-    // Redirection vers le dashboard
+    this.errorMessage.set('');
+
+    this.tontineState.creerGroupe({
+      nom: this.nomGroupe(),
+      description: this.description(),
+      typeSiege: this.typeSiege(),
+      adresseSiegeFixe: this.typeSiege() === 'FIXE' ? this.adresseSiegeFixe() : undefined,
+      frequenceReunion: this.mapFrequence(this.frequence()),
+      montantCotisationBaseXaf: this.miseUnitaire(),
+      nombreMembresMax: this.nombreMembres(),
+    });
+
+    this.isSubmitting.set(false);
     this.router.navigate(['/tabs/dashboard']);
   }
 
@@ -149,5 +165,19 @@ export class CreerGroupePage {
 
   onRetour(): void {
     this.router.navigate(['/tabs/dashboard']);
+  }
+
+  private mapFrequence(freq: 'hebdo' | 'mensuel' | 'bimensuel' | 'custom'): FrequenceReunion {
+    switch (freq) {
+      case 'hebdo':
+        return 'HEBDOMADAIRE';
+      case 'bimensuel':
+        return 'BIMENSUELLE';
+      case 'custom':
+        return 'PERSONNALISEE';
+      case 'mensuel':
+      default:
+        return 'MENSUELLE';
+    }
   }
 }

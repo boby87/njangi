@@ -1,5 +1,3 @@
-import { RoleMembre } from './membre.model';
-
 export type TypeSiege = 'FIXE' | 'ROTATIF';
 export type FrequenceReunion = 'HEBDOMADAIRE' | 'BIMENSUELLE' | 'MENSUELLE' | 'PERSONNALISEE';
 export type StatutGroupe = 'ACTIF' | 'EN_CREATION' | 'CLOTURE' | 'SUSPENDU';
@@ -13,6 +11,7 @@ export interface MandatBureau {
   tresorierNom: string;
   secretaireMembreId: string;
   secretaireNom: string;
+  commissaireAuxComptesId?: string;
   dateDebut: string;
   dateFinPrevue: string;
   dateFinReelle?: string;
@@ -30,6 +29,8 @@ export interface SessionTontine {
   montantPotParTourXaf: number;
   montantSecoursXaf: number;
   montantReserveXaf: number;
+  nombreToursPrevu?: number;
+  tourActuel?: number;
   estActive: boolean;
   totalCollecteXaf: number;
   totalDistribueXaf: number;
@@ -44,6 +45,9 @@ export interface Groupe {
   adresseSiegeFixe?: string;
   ordreRotationSiege?: string[]; // IDs des membres hôtes
   frequenceReunion: FrequenceReunion;
+  jourSeance?: string;
+  reglementInterieurUrl?: string;
+  montantCotisationBaseXaf?: number;
   devise: 'XAF';
   nombreMembresMax: number;
   nombreMembresActuels: number;

@@ -70,6 +70,12 @@
           </div>
         }
 
+        @if (tontineState.syncError()) {
+          <div class="text-[11px] text-amber-300 font-medium flex items-center gap-1.5 pt-1">
+            <span>{{ tontineState.syncError() }}</span>
+          </div>
+        }
+
         @if (tontineState.offlineQueue().length > 0) {
           <button
             type="button"

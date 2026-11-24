@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @source "./**/*.{html,ts}";
+@source "../../shared/ui/**/*.{html,ts}";
 
 @theme {
   --color-primary: #003527;

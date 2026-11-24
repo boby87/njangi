@@ -1,0 +1,77 @@
+server:
+  port: 8001
+
+spring:
+  application:
+    name: ms-identite
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:njangi}?currentSchema=identite}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:njangi}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASS:njangi_secret}}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        default_schema: identite
+  flyway:
+    enabled: true
+    schemas: identite
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:${KAFKA_SERVERS:localhost:9092}}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+    consumer:
+      group-id: ms-identite-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.njangi.*"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+njangi:
+  jwt:
+    # Clé secrète de 256 bits minimum pour signature HMAC-SHA256 (doit être définie par NJANGI_JWT_SECRET hors dev)
+    secret: ${NJANGI_JWT_SECRET:${JWT_SECRET:NjangiPlateformeSecreteTresLonguePourHmacSha256Signature2026!}}
+    # 24 heures en millisecondes = 86400000
+    expiration: ${NJANGI_JWT_EXPIRATION:${JWT_EXPIRATION:86400000}}
+  otp:
+    expiration-minutes: ${NJANGI_OTP_EXPIRATION_MINUTES:5}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
+    display-request-duration: true
+
+logging:
+  level:
+    com.njangi.identite: DEBUG
+    org.springframework.security: INFO

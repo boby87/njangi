@@ -1,41 +1,48 @@
 import { Routes } from '@angular/router';
+import { from } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { mobileAuthGuard, mobileGuestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: 'login',
-    loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
+    canActivate: [mobileGuestGuard],
+    loadComponent: () => from(import('./pages/login/login.page')).pipe(map((m) => m.LoginPage)),
   },
   {
     path: 'register',
-    loadComponent: () => import('./pages/register/register.page').then((m) => m.RegisterPage),
+    canActivate: [mobileGuestGuard],
+    loadComponent: () => from(import('./pages/register/register.page')).pipe(map((m) => m.RegisterPage)),
   },
   {
     path: 'creer-groupe',
-    loadComponent: () => import('./pages/creer-groupe/creer-groupe.page').then((m) => m.CreerGroupePage),
+    canActivate: [mobileAuthGuard],
+    loadComponent: () => from(import('./pages/creer-groupe/creer-groupe.page')).pipe(map((m) => m.CreerGroupePage)),
   },
   {
     path: 'tabs',
-    loadComponent: () => import('./layout/tabs/tabs.page').then((m) => m.TabsPage),
+    canActivate: [mobileAuthGuard],
+    loadComponent: () => from(import('./layout/tabs/tabs.page')).pipe(map((m) => m.TabsPage)),
     children: [
       {
         path: 'dashboard',
-        loadComponent: () => import('./pages/dashboard/dashboard.page').then((m) => m.DashboardPage),
+        loadComponent: () => from(import('./pages/dashboard/dashboard.page')).pipe(map((m) => m.DashboardPage)),
       },
       {
         path: 'cotisations',
-        loadComponent: () => import('./pages/cotisations/cotisations.page').then((m) => m.CotisationsPage),
+        loadComponent: () => from(import('./pages/cotisations/cotisations.page')).pipe(map((m) => m.CotisationsPage)),
       },
       {
         path: 'reunions',
-        loadComponent: () => import('./pages/reunions/reunions.page').then((m) => m.ReunionsPage),
+        loadComponent: () => from(import('./pages/reunions/reunions.page')).pipe(map((m) => m.ReunionsPage)),
       },
       {
         path: 'paiements',
-        loadComponent: () => import('./pages/paiements/paiements.page').then((m) => m.PaiementsPage),
+        loadComponent: () => from(import('./pages/paiements/paiements.page')).pipe(map((m) => m.PaiementsPage)),
       },
       {
         path: 'profil',
-        loadComponent: () => import('./pages/profil/profil.page').then((m) => m.ProfilPage),
+        loadComponent: () => from(import('./pages/profil/profil.page')).pipe(map((m) => m.ProfilPage)),
       },
       {
         path: '',

@@ -17,10 +17,10 @@ import {
 } from 'ionicons/icons';
 import { MobileTontineStateService } from '../../core/services/tontine-state.service';
 import { MobileAuthService } from '../../core/services/auth.service';
-import { ModePaiement } from '../../shared/models/paiement.model';
-import { AmountBadgeComponent } from '../../shared/ui/amount-badge/amount-badge.component';
-import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge.component';
-import { ProofPreviewComponent } from '../../shared/ui/proof-preview/proof-preview.component';
+import { ModePaiement } from '@shared/models/paiement.model';
+import { AmountBadgeComponent } from '@shared/ui/amount-badge/amount-badge.component';
+import { StatusBadgeComponent } from '@shared/ui/status-badge/status-badge.component';
+import { ProofPreviewComponent } from '@shared/ui/proof-preview/proof-preview.component';
 
 @Component({
   selector: 'app-paiements',
@@ -111,18 +111,25 @@ export class PaiementsPage {
   onSubmit(): void {
     if (!this.isValid()) return;
 
+    const membre = this.tontineState.membres().find((m) => m.id === this.membreId());
+    const membreNom = membre ? `${membre.prenom} ${membre.nom}` : 'Membre';
+
     this.tontineState.enregistrerPaiement({
       cotisationId: 'cot-001',
       groupeId: this.tontineState.activeGroupId(),
       sessionId: this.tontineState.activeSession().id,
       membreId: this.membreId(),
-      membreNom: 'Jean-Paul FOKOU',
+      membreNom,
       montantXaf: this.montantXaf(),
       modePaiement: this.modePaiement(),
       typeCotisation: 'ROTATIVE_POT',
-      valideParTresorierId: 'm-003',
+      valideParTresorierId: this.authService.currentUser()?.id || 'm-003',
       preuveUrl: this.modePaiement() === 'CASH' ? this.recuUrl() : undefined,
-      referenceTransaction: this.modePaiement() !== 'CASH' ? 'MOMO-TX-' + Math.floor(100000 + Math.random() * 900000) : undefined,
+      referenceTransaction:
+        this.modePaiement() !== 'CASH'
+          ? 'MOMO-TX-' + Math.floor(100000 + Math.random() * 900000)
+          : undefined,
+      numeroTelephone: this.modePaiement() !== 'CASH' ? this.telephoneMoMo() : undefined,
     });
 
     this.showSuccessToast.set(true);

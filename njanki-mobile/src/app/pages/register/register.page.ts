@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IonContent } from '@ionic/angular';
 import { MobileAuthService } from '../../core/services/auth.service';
 
@@ -21,6 +22,7 @@ export interface CountryOption {
 export class RegisterPage {
   readonly authService = inject(MobileAuthService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   // État Signal Forms pur
   readonly etape = signal<'FORM' | 'OTP'>('FORM');
@@ -169,10 +171,29 @@ export class RegisterPage {
     }
 
     const fullPhone = `${this.countryCode()}${this.cleanPhone()}`;
-    this.authService.requestOtp(fullPhone);
-    this.otpCode.set(this.authService.simulatedOtp() || '884210');
-    this.etape.set('OTP');
+    this.isSubmitting.set(true);
     this.errorMessage.set('');
+
+    this.authService
+      .requestOtp(fullPhone)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (sent) => {
+          this.isSubmitting.set(false);
+          if (sent) {
+            this.otpCode.set(this.authService.simulatedOtp() || '');
+            this.etape.set('OTP');
+          } else {
+            this.errorMessage.set(
+              this.authService.authError() || 'Impossible d\'envoyer le code OTP par SMS.'
+            );
+          }
+        },
+        error: () => {
+          this.isSubmitting.set(false);
+          this.errorMessage.set('Erreur réseau lors de la demande de code OTP.');
+        },
+      });
   }
 
   onVerifyOtp(): void {
@@ -181,18 +202,70 @@ export class RegisterPage {
       return;
     }
 
-    const ok = this.authService.verifyOtp(this.otpCode());
-    if (ok) {
-      this.router.navigate(['/tabs/dashboard']);
-    } else {
-      this.errorMessage.set('Code OTP invalide. Veuillez réessayer.');
-    }
+    const nameParts = this.fullName().trim().split(/\s+/);
+    const prenom = nameParts[0] || 'Membre';
+    const nom = nameParts.length > 1 ? nameParts.slice(1).join(' ') : prenom;
+
+    const cityParts = this.cityResidence().split(',').map((s) => s.trim());
+    const ville = cityParts[0] || 'Douala';
+    const pays = cityParts[1] || 'Cameroun';
+    const fullPhone = `${this.countryCode()}${this.cleanPhone()}`;
+
+    this.isSubmitting.set(true);
+    this.errorMessage.set('');
+
+    this.authService
+      .inscrire({
+        telephone: fullPhone,
+        nom,
+        prenom,
+        ville,
+        pays,
+        motDePasse: `${this.pin()}00`,
+        codePin: this.pin(),
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (membre) => {
+          this.isSubmitting.set(false);
+          if (membre) {
+            this.router.navigate(['/tabs/dashboard']);
+          } else {
+            this.errorMessage.set(
+              this.authService.authError() || 'Impossible de finaliser l\'inscription. Veuillez réessayer.'
+            );
+          }
+        },
+        error: () => {
+          this.isSubmitting.set(false);
+          this.errorMessage.set('Erreur réseau lors de la création du compte.');
+        },
+      });
   }
 
   onSocialLogin(provider: 'Google' | 'Apple'): void {
     this.errorMessage.set('');
-    this.authService.connexionSociale(provider === 'Google' ? 'GOOGLE' : 'FACEBOOK');
-    this.router.navigate(['/tabs/dashboard']);
+    this.isSubmitting.set(true);
+
+    this.authService
+      .connexionSociale(provider === 'Google' ? 'GOOGLE' : 'FACEBOOK')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.isSubmitting.set(false);
+          if (res.succes) {
+            this.router.navigate(['/tabs/dashboard']);
+          } else {
+            this.errorMessage.set(
+              this.authService.authError() || 'Échec de la connexion sociale.'
+            );
+          }
+        },
+        error: () => {
+          this.isSubmitting.set(false);
+          this.errorMessage.set('Erreur réseau lors de la connexion sociale.');
+        },
+      });
   }
 
   onRetour(): void {

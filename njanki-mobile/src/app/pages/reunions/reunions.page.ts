@@ -17,10 +17,10 @@ import {
 } from 'ionicons/icons';
 import { MobileTontineStateService } from '../../core/services/tontine-state.service';
 import { MobileAuthService } from '../../core/services/auth.service';
-import { PresenceSeance } from '../../shared/models/reunion.model';
-import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge.component';
-import { AmountBadgeComponent } from '../../shared/ui/amount-badge/amount-badge.component';
-import { PenaltyModalComponent, SanctionFormValue } from '../../shared/ui/penalty-modal/penalty-modal.component';
+import { StatutPresence } from '@shared/models/reunion.model';
+import { StatusBadgeComponent } from '@shared/ui/status-badge/status-badge.component';
+import { AmountBadgeComponent } from '@shared/ui/amount-badge/amount-badge.component';
+import { PenaltyModalComponent, SanctionFormValue } from '@shared/ui/penalty-modal/penalty-modal.component';
 
 @Component({
   selector: 'app-reunions',
@@ -56,7 +56,7 @@ export class ReunionsPage {
     });
   }
 
-  onMarkPresence(membreId: string, statut: PresenceSeance['statut']): void {
+  onMarkPresence(membreId: string, statut: StatutPresence): void {
     this.tontineState.marquerPresence(membreId, statut);
   }
 
@@ -71,6 +71,7 @@ export class ReunionsPage {
   onSubmitSanction(form: SanctionFormValue): void {
     this.tontineState.infligerSanction({
       groupeId: this.tontineState.activeGroupId(),
+      sessionId: this.tontineState.activeSession().id,
       reunionId: this.tontineState.activeReunion().id,
       membreId: form.membreId,
       typeInfraction: form.typeInfraction,

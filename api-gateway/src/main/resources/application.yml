@@ -18,18 +18,17 @@ eureka:
     prefer-ip-address: true
 
 njangi:
+  jwt:
+    secret: ${NJANGI_JWT_SECRET:NjangiPlateformeSecreteTresLonguePourHmacSha256Signature2026!}
   services:
-    auth-url: ${MS_AUTH_URL:http://localhost:8001}
-    membres-url: ${MS_MEMBRES_URL:http://localhost:8002}
-    groupes-url: ${MS_GROUPES_URL:http://localhost:8003}
-    reunions-url: ${MS_REUNIONS_URL:http://localhost:8004}
-    cotisations-url: ${MS_COTISATIONS_URL:http://localhost:8005}
-    paiements-url: ${MS_PAIEMENTS_URL:http://localhost:8006}
-    penalites-url: ${MS_PENALITES_URL:http://localhost:8007}
-    notifications-url: ${MS_NOTIFICATIONS_URL:http://localhost:8008}
-    statistiques-url: ${MS_STATISTIQUES_URL:http://localhost:8009}
+    identite-url: ${MS_IDENTITE_URL:lb://ms-identite}
+    gouvernance-url: ${MS_GOUVERNANCE_URL:lb://ms-gouvernance}
+    finances-url: ${MS_FINANCES_URL:lb://ms-finances}
+    engagement-url: ${MS_ENGAGEMENT_URL:lb://ms-engagement}
   cors:
     allow-origins:
+      - http://localhost:4000
+      - http://127.0.0.1:4000
       - http://localhost:4200
       - http://localhost:8100
 
@@ -44,6 +43,6 @@ management:
 
 logging:
   level:
-    com.njangi.gateway: DEBUG
+    com.njangi.gateway: INFO
     org.springframework.security: INFO
     org.springframework.web: INFO
