@@ -47,6 +47,7 @@ export interface Groupe {
   frequenceReunion: FrequenceReunion;
   jourSeance?: string;
   reglementInterieurUrl?: string;
+  codeInvitation?: string;
   montantCotisationBaseXaf?: number;
   devise: 'XAF';
   nombreMembresMax: number;

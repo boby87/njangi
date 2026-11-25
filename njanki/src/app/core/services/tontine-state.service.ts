@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { catchError, finalize, forkJoin, of } from 'rxjs';
+import { Observable, catchError, finalize, forkJoin, map, of, tap } from 'rxjs';
 import { AuthService } from './auth.service';
 import { ApiService } from './api.service';
 import {
@@ -50,11 +50,27 @@ interface BackendGroupeDto {
   createurMembreId?: string;
   typeSiege?: TypeSiege;
   adresseSiege?: string;
+  montantCotisationPrincipale?: number;
   frequenceReunion?: FrequenceReunion;
   nombreMembresMax?: number;
+  codeInvitation?: string;
   statut?: StatutGroupe;
   premierBureauElu?: boolean;
   createdAt?: string;
+}
+
+interface BackendGroupeMembreDto {
+  id: string;
+  groupeId: string;
+  membreId: string;
+  role: RoleMembre;
+  statut?: string;
+  dateAdhesion?: string;
+}
+
+export interface MembreGroupeItem extends Membre {
+  role: RoleMembre;
+  dateAdhesion?: string;
 }
 
 interface BackendMembreDto {
@@ -156,6 +172,23 @@ interface BackendPotSessionDto {
 
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fit=crop&w=256&h=256&q=80';
+
+const EMPTY_GROUPE: Groupe = {
+  id: '',
+  nom: 'Aucune tontine',
+  description: '',
+  createurMembreId: '',
+  typeSiege: 'ROTATIF',
+  frequenceReunion: 'MENSUELLE',
+  devise: 'XAF',
+  nombreMembresMax: 0,
+  nombreMembresActuels: 0,
+  statut: 'ACTIF',
+  premierBureauElu: false,
+  soldeCaisseCashXaf: 0,
+  soldeCaisseMobileMoneyXaf: 0,
+  dateCreation: '',
+};
 
 @Injectable({
   providedIn: 'root',
@@ -717,6 +750,7 @@ export class TontineStateService {
 
   // SIGNALS PRINCIPAUX (État réactif pur)
   readonly membres = signal<Membre[]>(this.initialMembres);
+  readonly membresGroupeActif = signal<MembreGroupeItem[]>([]);
   readonly groupes = signal<Groupe[]>(this.initialGroupes);
   readonly cotisations = signal<Cotisation[]>(this.initialCotisations);
   readonly toursPot = signal<TourPot[]>(this.initialToursPot);
@@ -725,10 +759,13 @@ export class TontineStateService {
   readonly penalites = signal<Penalite[]>(this.initialPenalites);
   readonly tarifications = signal<TarificationPenalite[]>(this.initialTarifications);
 
-  // Groupe actif sélectionné
+  // Indique si l'utilisateur appartient à au moins une tontine
+  readonly hasGroupes = computed<boolean>(() => this.groupes().length > 0);
+
+  // Groupe actif sélectionné (sentinelle sûre si l'utilisateur n'a encore aucune tontine)
   readonly groupeActif = computed<Groupe>(() => {
     const gid = this.authService.groupeActifId();
-    return this.groupes().find((g) => g.id === gid) || this.groupes()[0];
+    return this.groupes().find((g) => g.id === gid) || this.groupes()[0] || EMPTY_GROUPE;
   });
 
   // Rôle actif de l'utilisateur connecté dans le groupe actif
@@ -818,8 +855,15 @@ export class TontineStateService {
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
       effect(() => {
-        if (this.authService.estConnecte() && !this.authService.estModeDemo()) {
-          untracked(() => this.chargerDonneesReelles());
+        const estConnecte = this.authService.estConnecte();
+        const estModeDemo = this.authService.estModeDemo();
+        if (estConnecte && estModeDemo) {
+          untracked(() => this.restaurerDonneesDemo());
+        } else if (estConnecte && !estModeDemo) {
+          untracked(() => {
+            this.reinitialiserEtatReelVide();
+            this.chargerDonneesReelles();
+          });
         }
       });
 
@@ -834,7 +878,42 @@ export class TontineStateService {
     }
   }
 
-  // Chargement réactif des données réelles depuis PostgreSQL via API Gateway
+  private restaurerDonneesDemo(): void {
+    this.membres.set(this.initialMembres);
+    this.membresGroupeActif.set(
+      this.initialMembres.map((m) => ({
+        ...m,
+        role:
+          m.id === 'usr-1'
+            ? 'PRESIDENT'
+            : m.id === 'usr-2'
+              ? 'TRESORIER'
+              : m.id === 'usr-3'
+                ? 'SECRETAIRE'
+                : 'MEMBRE',
+      }))
+    );
+    this.groupes.set(this.initialGroupes);
+    this.cotisations.set(this.initialCotisations);
+    this.toursPot.set(this.initialToursPot);
+    this.reunions.set(this.initialReunions);
+    this.paiements.set(this.initialPaiements);
+    this.penalites.set(this.initialPenalites);
+    this.tarifications.set(this.initialTarifications);
+  }
+
+  private reinitialiserEtatReelVide(): void {
+    this.membresGroupeActif.set([]);
+    this.groupes.set([]);
+    this.cotisations.set([]);
+    this.toursPot.set([]);
+    this.reunions.set([]);
+    this.paiements.set([]);
+    this.penalites.set([]);
+    this.tarifications.set([]);
+  }
+
+  // Chargement réactif des données réelles depuis PostgreSQL via API Gateway (strictement filtré par utilisateur)
   chargerDonneesReelles(): void {
     this.isLoading.set(true);
     this.syncError.set(null);
@@ -842,7 +921,7 @@ export class TontineStateService {
     const erreurs: string[] = [];
 
     forkJoin({
-      groupes: this.apiService.get<BackendGroupeDto[]>('/groupes').pipe(
+      groupes: this.apiService.get<BackendGroupeDto[]>('/groupes/mes-groupes').pipe(
         catchError((err: Error) => {
           erreurs.push(err.message);
           return of(null);
@@ -879,33 +958,35 @@ export class TontineStateService {
             photoUrl: m.photoUrl,
             ville: m.ville || 'Douala',
             pays: 'Cameroun',
-            dateInscription: m.createdAt ? m.createdAt.substring(0, 10) : '2026-01-15',
+            dateInscription: m.createdAt ? m.createdAt.substring(0, 10) : '',
             estVerifieKyc: true,
           }));
           this.membres.set(mappedMembres);
         }
 
-        // 2. Groupes réels (ms-gouvernance)
+        // 2. Groupes réels de l'utilisateur connecté uniquement (ms-gouvernance)
         const groupesData = this.extraireListe<BackendGroupeDto>(result.groupes);
         if (groupesData.length > 0) {
           const mappedGroupes: Groupe[] = groupesData.map((g) => ({
             id: g.id,
             nom: g.nom,
             description: g.description || '',
-            createurMembreId: g.createurMembreId || 'usr-1',
+            createurMembreId: g.createurMembreId || '',
             typeSiege: g.typeSiege || 'ROTATIF',
             adresseSiegeFixe: g.adresseSiege,
+            codeInvitation: g.codeInvitation,
+            montantCotisationBaseXaf: g.montantCotisationPrincipale
+              ? Number(g.montantCotisationPrincipale)
+              : undefined,
             frequenceReunion: g.frequenceReunion || 'MENSUELLE',
             devise: 'XAF',
             nombreMembresMax: g.nombreMembresMax || 15,
-            nombreMembresActuels: this.membres().length,
+            nombreMembresActuels: 1,
             statut: g.statut || 'ACTIF',
-            premierBureauElu: g.premierBureauElu ?? true,
+            premierBureauElu: g.premierBureauElu ?? false,
             soldeCaisseCashXaf: 0,
             soldeCaisseMobileMoneyXaf: 0,
-            dateCreation: g.createdAt ? g.createdAt.substring(0, 10) : '2026-02-01',
-            sessionActive: this.initialSession1,
-            mandatActif: this.initialMandat1,
+            dateCreation: g.createdAt ? g.createdAt.substring(0, 10) : '',
           }));
           this.groupes.set(mappedGroupes);
 
@@ -913,31 +994,37 @@ export class TontineStateService {
           if (!actifId || !mappedGroupes.some((g) => g.id === actifId)) {
             this.authService.setGroupeActif(mappedGroupes[0].id);
           }
-        }
 
-        // 3. Réunions réelles (ms-gouvernance)
-        const reunionsData = this.extraireListe<BackendReunionDto>(result.reunions);
-        if (reunionsData.length > 0) {
-          const mappedReunions: Reunion[] = reunionsData.map((r, idx) => ({
-            id: r.id,
-            groupeId: r.groupeId,
-            sessionId: r.sessionTontineId || 'ses-1',
-            numeroOrdre: idx + 1,
-            titre: r.titre,
-            dateReunion: r.dateReunion ? r.dateReunion.substring(0, 10) : '2026-09-15',
-            heureDebut: '17:30',
-            typeSiege: r.typeSiege || 'ROTATIF',
-            hoteMembreId: r.hoteId || 'usr-1',
-            hoteNom: this.nomCompletMembre(r.hoteId),
-            lieuAdresse: r.lieuReunion || 'Douala',
-            ordreDuJour: r.ordreJour ? r.ordreJour.split('\n') : ['Ouverture', 'Appel', 'Cotisations'],
-            presences: this.initialReunions[0].presences,
-            totalCollecteSeanceXaf: 0,
-            totalAmendesSeanceXaf: 0,
-            compteRenduRedige: r.compteRendu,
-            statut: r.statut || 'PLANIFIEE',
-          }));
-          this.reunions.set(mappedReunions);
+          // 3. Réunions filtrées sur les groupes de l'utilisateur uniquement
+          const mesGroupeIds = new Set(mappedGroupes.map((g) => g.id));
+          const reunionsData = this.extraireListe<BackendReunionDto>(result.reunions).filter((r) =>
+            mesGroupeIds.has(r.groupeId)
+          );
+          this.reunions.set(
+            reunionsData.map((r, idx) => ({
+              id: r.id,
+              groupeId: r.groupeId,
+              sessionId: r.sessionTontineId || '',
+              numeroOrdre: idx + 1,
+              titre: r.titre,
+              dateReunion: r.dateReunion ? r.dateReunion.substring(0, 10) : '',
+              heureDebut: r.dateReunion ? r.dateReunion.substring(11, 16) : '17:30',
+              typeSiege: r.typeSiege || 'ROTATIF',
+              hoteMembreId: r.hoteId,
+              hoteNom: this.nomCompletMembre(r.hoteId),
+              lieuAdresse: r.lieuReunion || 'À confirmer',
+              ordreDuJour: r.ordreJour ? r.ordreJour.split('\n').filter((l) => l.trim().length > 0) : [],
+              presences: [],
+              totalCollecteSeanceXaf: 0,
+              totalAmendesSeanceXaf: 0,
+              compteRenduRedige: r.compteRendu,
+              statut: r.statut || 'PLANIFIEE',
+            }))
+          );
+        } else {
+          // Nouvel utilisateur sans tontine : état propre vide (aucune tontine d'autrui exposée)
+          this.reinitialiserEtatReelVide();
+          this.authService.setGroupeActif('');
         }
 
         if (erreurs.length > 0) {
@@ -948,15 +1035,46 @@ export class TontineStateService {
       });
   }
 
-  // Chargement des données financières pour le groupe actif (ms-finances)
+  rejoindreGroupeParCode(codeInvitation: string): Observable<{ succes: boolean; message: string }> {
+    const code = codeInvitation.trim().toUpperCase();
+    const membreId = this.authService.utilisateur().id;
+    if (!code) {
+      return of({ succes: false, message: "Veuillez saisir un code d'invitation valide." });
+    }
+
+    const query = membreId
+      ? `/groupes/rejoindre?codeInvitation=${encodeURIComponent(code)}&membreId=${encodeURIComponent(membreId)}`
+      : `/groupes/rejoindre?codeInvitation=${encodeURIComponent(code)}`;
+
+    return this.apiService.post<unknown>(query, {}).pipe(
+      tap(() => this.chargerDonneesReelles()),
+      map(() => ({ succes: true, message: 'Vous avez rejoint la tontine avec succès !' })),
+      catchError((err: Error) =>
+        of({
+          succes: false,
+          message: err.message || "Code d'invitation introuvable ou invalide.",
+        })
+      )
+    );
+  }
+
+  // Chargement des données financières et membres pour le groupe actif (ms-gouvernance + ms-finances)
   chargerDonneesGroupe(groupeId: string): void {
-    if (!groupeId) {
+    if (!groupeId || groupeId.startsWith('grp-')) {
       return;
     }
 
     const erreurs: string[] = [];
 
     forkJoin({
+      membresGroupe: this.apiService
+        .get<BackendGroupeMembreDto[]>(`/groupes/${groupeId}/membres`)
+        .pipe(
+          catchError((err: Error) => {
+            erreurs.push(err.message);
+            return of(null);
+          })
+        ),
       cotisations: this.apiService
         .get<BackendCotisationDto[]>(`/cotisations/groupe/${groupeId}`)
         .pipe(
@@ -1000,6 +1118,74 @@ export class TontineStateService {
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result) => {
+        // Membres réellement adhérents à CE groupe (isolation multi-tenant stricte)
+        const membresGroupeData = this.extraireListe<BackendGroupeMembreDto>(result.membresGroupe);
+        const utilisateurCourant = this.authService.utilisateur();
+        const annuaire = this.membres();
+
+        const mappedMembresGroupe: MembreGroupeItem[] = membresGroupeData.map((gm) => {
+          const fromUser =
+            utilisateurCourant.id && utilisateurCourant.id === gm.membreId
+              ? utilisateurCourant
+              : undefined;
+          const fromDirectory = annuaire.find((m) => m.id === gm.membreId);
+          const profil = fromUser || fromDirectory;
+
+          return {
+            id: gm.membreId,
+            nom: profil?.nom || 'Membre',
+            prenom: profil?.prenom || '',
+            telephone: profil?.telephone || '',
+            email: profil?.email || '',
+            avatarUrl: profil?.avatarUrl || DEFAULT_AVATAR,
+            ville: profil?.ville || '',
+            pays: profil?.pays || 'Cameroun',
+            dateInscription: gm.dateAdhesion ? gm.dateAdhesion.substring(0, 10) : '',
+            estVerifieKyc: profil?.estVerifieKyc ?? false,
+            role: gm.role || 'MEMBRE',
+            dateAdhesion: gm.dateAdhesion ? gm.dateAdhesion.substring(0, 10) : undefined,
+          };
+        });
+
+        this.membresGroupeActif.set(mappedMembresGroupe);
+        if (mappedMembresGroupe.length > 0) {
+          this.groupes.update((list) =>
+            list.map((g) =>
+              g.id === groupeId ? { ...g, nombreMembresActuels: mappedMembresGroupe.length } : g
+            )
+          );
+
+          // Synchroniser le rôle réel de l'utilisateur courant dans ce groupe
+          const monAdhesionGroupe = mappedMembresGroupe.find(
+            (m) => m.id === utilisateurCourant.id
+          );
+          if (monAdhesionGroupe) {
+            this.authService.session.update((s) => {
+              const existe = s.adhesions.some((a) => a.groupeId === groupeId);
+              const adhesions = existe
+                ? s.adhesions.map((a) =>
+                    a.groupeId === groupeId ? { ...a, role: monAdhesionGroupe.role } : a
+                  )
+                : [
+                    ...s.adhesions,
+                    {
+                      id: `adh-${groupeId}`,
+                      groupeId,
+                      groupeNom: this.groupeActif().nom,
+                      membreId: utilisateurCourant.id,
+                      role: monAdhesionGroupe.role,
+                      statut: 'ACTIF' as const,
+                      totalCotiseXaf: 0,
+                      totalPenalitesXaf: 0,
+                      aRecuPot: false,
+                      dateAdhesion: monAdhesionGroupe.dateAdhesion || '',
+                    },
+                  ];
+              return { ...s, adhesions };
+            });
+          }
+        }
+
         const cotisationsData = this.extraireListe<BackendCotisationDto>(result.cotisations);
         if (cotisationsData.length > 0) {
           this.cotisations.set(
@@ -1470,11 +1656,12 @@ export class TontineStateService {
       createurMembreId: createur.id,
       typeSiege: data.typeSiege,
       adresseSiegeFixe: data.adresseSiegeFixe,
+      montantCotisationBaseXaf: data.montantPotTourXaf,
       frequenceReunion: data.frequenceReunion,
       devise: 'XAF',
       nombreMembresMax: data.nombreMembresMax,
       nombreMembresActuels: 1,
-      statut: 'EN_CREATION',
+      statut: 'ACTIF',
       premierBureauElu: false,
       soldeCaisseCashXaf: 0,
       soldeCaisseMobileMoneyXaf: 0,
@@ -1482,6 +1669,13 @@ export class TontineStateService {
     };
 
     this.groupes.update((list) => [...list, nouveauGroupe]);
+    this.membresGroupeActif.set([
+      {
+        ...createur,
+        role: 'CREATEUR',
+        dateAdhesion: new Date().toISOString().substring(0, 10),
+      },
+    ]);
 
     // Ajouter l'adhésion en tant que CREATEUR
     this.authService.session.update((s) => ({
@@ -1520,10 +1714,23 @@ export class TontineStateService {
         next: (res) => {
           this.syncError.set(null);
           this.lastSyncedAt.set(new Date().toISOString());
-          const serverId = res?.data?.id;
+          const serverGroup = res?.data;
+          const serverId = serverGroup?.id;
           if (serverId) {
             this.groupes.update((list) =>
-              list.map((g) => (g.id === nouveauId ? { ...g, id: serverId } : g))
+              list.map((g) =>
+                g.id === nouveauId
+                  ? {
+                      ...g,
+                      id: serverId,
+                      codeInvitation: serverGroup.codeInvitation || g.codeInvitation,
+                      montantCotisationBaseXaf: serverGroup.montantCotisationPrincipale
+                        ? Number(serverGroup.montantCotisationPrincipale)
+                        : g.montantCotisationBaseXaf,
+                      statut: serverGroup.statut || 'ACTIF',
+                    }
+                  : g
+              )
             );
             this.authService.session.update((s) => ({
               ...s,
@@ -1532,6 +1739,7 @@ export class TontineStateService {
               ),
               groupeActifId: s.groupeActifId === nouveauId ? serverId : s.groupeActifId,
             }));
+            this.authService.setGroupeActif(serverId);
           }
         },
         error: (err: Error) => {

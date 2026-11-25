@@ -16,6 +16,7 @@ export class SidebarComponent {
   readonly authService = inject(AuthService);
   readonly tontineService = inject(TontineStateService);
   readonly roleActif = this.tontineService.roleActif;
+  readonly hasGroupes = this.tontineService.hasGroupes;
   readonly groupeActif = this.tontineService.groupeActif;
   readonly stats = this.tontineService.statsGroupeActif;
 

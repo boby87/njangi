@@ -93,8 +93,8 @@
           {{ potEnCours()?.beneficiaireNom || 'Non défini' }}
         </span>
       </div>
-      <p class="text-[11px] text-slate-400 mt-2 font-medium">
-        Pot : <strong class="text-white">{{ (potEnCours()?.montantTheoriqueXaf || 600000).toLocaleString('fr-FR') }} XAF</strong>
+      <p class="text-[11px] text-slate-300 mt-2 font-medium">
+        Pot : <strong class="text-white">{{ (potEnCours()?.montantTheoriqueXaf || 0).toLocaleString('fr-FR') }} XAF</strong>
       </p>
     </div>
 
@@ -131,12 +131,16 @@
           <h3 class="text-base font-bold text-white font-heading">
             {{ prochaineReunion()?.titre || 'Ordre du Jour — Prochaine Réunion' }}
           </h3>
-          <p class="text-xs text-slate-400 mt-0.5">
-            📅 {{ prochaineReunion()?.dateReunion || '2026-09-15' }} à {{ prochaineReunion()?.heureDebut || '17:30' }}
-            • Siège chez : <strong class="text-emerald-400">{{ prochaineReunion()?.hoteNom || 'Mme Ngo Bikoï' }}</strong>
+          <p class="text-xs text-slate-300 mt-0.5">
+            @if (prochaineReunion(); as reu) {
+              📅 {{ reu.dateReunion }} à {{ reu.heureDebut }}
+              • Siège : <strong class="text-emerald-400">{{ reu.hoteNom || reu.lieuAdresse }}</strong>
+            } @else {
+              Aucune séance planifiée pour le moment
+            }
           </p>
         </div>
-        <app-status-badge [status]="prochaineReunion()?.statut || 'EN_COURS'"></app-status-badge>
+        <app-status-badge [status]="prochaineReunion()?.statut || 'PLANIFIEE'"></app-status-badge>
       </div>
 
       <!-- Liste de l'ordre du jour -->
@@ -172,27 +176,27 @@
         <div class="p-3 rounded-xl bg-purple-950/20 border border-purple-800/30 flex items-center justify-between">
           <div>
             <span class="text-[10px] font-bold uppercase text-purple-400 tracking-wider">Président</span>
-            <p class="text-sm font-semibold text-white">{{ mandat()?.presidentNom || 'Jean-Paul Mbarga' }}</p>
+            <p class="text-sm font-semibold text-white">{{ mandat()?.presidentNom || 'Non élu' }}</p>
           </div>
-          <span class="text-xs text-purple-400">Vous</span>
+          <span class="text-xs text-purple-300">Direction</span>
         </div>
 
         <!-- Trésorier -->
         <div class="p-3 rounded-xl bg-amber-950/20 border border-amber-800/30 flex items-center justify-between">
           <div>
             <span class="text-[10px] font-bold uppercase text-amber-400 tracking-wider">Trésorier</span>
-            <p class="text-sm font-semibold text-white">{{ mandat()?.tresorierNom || 'Chantal Ngo Bikoï' }}</p>
+            <p class="text-sm font-semibold text-white">{{ mandat()?.tresorierNom || 'Non nommé' }}</p>
           </div>
-          <span class="text-xs text-slate-400 font-mono">Caisse & MoMo</span>
+          <span class="text-xs text-slate-300 font-mono">Caisse &amp; MoMo</span>
         </div>
 
         <!-- Secrétaire -->
         <div class="p-3 rounded-xl bg-blue-950/20 border border-blue-800/30 flex items-center justify-between">
           <div>
             <span class="text-[10px] font-bold uppercase text-blue-400 tracking-wider">Secrétaire</span>
-            <p class="text-sm font-semibold text-white">{{ mandat()?.secretaireNom || 'Pierre Kamga' }}</p>
+            <p class="text-sm font-semibold text-white">{{ mandat()?.secretaireNom || 'Non nommé' }}</p>
           </div>
-          <span class="text-xs text-slate-400 font-mono">PV & Convocations</span>
+          <span class="text-xs text-slate-300 font-mono">PV &amp; Convocations</span>
         </div>
       </div>
 

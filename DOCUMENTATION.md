@@ -7,6 +7,7 @@ Ce fichier centralise l'ensemble de la documentation technique, fonctionnelle et
 ## 1. Documents Principaux
 
 - **[README.md](./README.md)** : Vue d'ensemble du projet, architecture consolidée à 4 microservices métier (+ Eureka + Gateway), matrice des ports et démarrage rapide.
+- **[FEATURE_TRACKER.md](./FEATURE_TRACKER.md)** : Tracker complet d'avancement des fonctionnalités (`F-01` à `F-25`), statut Backend/Web, intégrations restantes et roadmap des prochains sprints.
 - **[GEMINI.md](./GEMINI.md)** : Directives strictes d'architecture et conventions de code (Signal Forms purs, Zéro Promise, DDD Hexagonal sur `ms-identite`, Virtual Threads, Java 25 / Spring Boot 4 cible).
 - **[ARCHITECTURE_MIGRATION.md](./ARCHITECTURE_MIGRATION.md)** : Plan complet de consolidation des 9 anciens microservices vers les 4 microservices métier cibles, unification du contrat Kafka, durcissement sécurité JWT et montée vers Java 25 / Spring Boot 4.
 - **[cahier_des_charges_tontine.md](./cahier_des_charges_tontine.md)** : Spécification fonctionnelle et métier officielle (règles Njangi, Session vs Mandat, Siège Fixe vs Rotatif, multi-cotisations, sanctions).

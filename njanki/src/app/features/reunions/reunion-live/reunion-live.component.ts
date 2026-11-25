@@ -20,13 +20,10 @@ export class ReunionLiveComponent {
   readonly groupe = this.tontineService.groupeActif;
   readonly session = this.tontineService.sessionActive;
   readonly reunion = this.tontineService.prochaineReunion;
-  readonly membres = this.tontineService.membres;
+  readonly membres = this.tontineService.membresGroupeActif;
 
   readonly showPenaltyModal = signal<boolean>(false);
-  readonly compteRenduTexte = signal<string>(
-    'La séance s\'est ouverte à l\'heure prévue sous la présidence de M. Mbarga. ' +
-    'Le secrétaire a procédé à l\'appel nominal. Les cotisations du jour ont été collectées avec rigueur.'
-  );
+  readonly compteRenduTexte = signal<string>('');
 
   marquerPresence(membreId: string, statut: StatutPresence): void {
     const r = this.reunion();

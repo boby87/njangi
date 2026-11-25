@@ -22,12 +22,16 @@ export class PaiementFormComponent {
 
   readonly groupe = this.tontineService.groupeActif;
   readonly session = this.tontineService.sessionActive;
-  readonly membres = this.tontineService.membres;
+  readonly membres = this.tontineService.membresGroupeActif;
 
   // État du formulaire en Signal Forms purs (zéro FormGroup/ngModel)
   readonly membreId = signal<string>(this.authService.utilisateur().id);
   readonly typeCotisation = signal<TypeCotisation>('ROTATIVE_POT');
-  readonly montantXaf = signal<number>(100000);
+  readonly montantXaf = signal<number>(
+    this.tontineService.sessionActive()?.montantPotParTourXaf ||
+      this.tontineService.groupeActif().montantCotisationBaseXaf ||
+      0
+  );
   readonly modePaiement = signal<ModePaiement>('CASH');
   readonly referenceTransaction = signal<string>('');
   readonly preuveRecuBase64 = signal<string>('https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?fit=crop&w=600&h=400&q=80');
@@ -47,9 +51,15 @@ export class PaiementFormComponent {
   onTypeCotisationChange(t: string): void { 
     const typ = t as TypeCotisation;
     this.typeCotisation.set(typ);
-    if (typ === 'ROTATIVE_POT') this.montantXaf.set(100000);
-    else if (typ === 'SECOURS_DECES') this.montantXaf.set(5000);
-    else this.montantXaf.set(2000);
+    if (typ === 'ROTATIVE_POT') {
+      this.montantXaf.set(
+        this.session()?.montantPotParTourXaf || this.groupe().montantCotisationBaseXaf || 0
+      );
+    } else if (typ === 'SECOURS_DECES') {
+      this.montantXaf.set(this.session()?.montantSecoursXaf || 5000);
+    } else {
+      this.montantXaf.set(this.session()?.montantReserveXaf || 2000);
+    }
   }
   onMontantInput(val: string): void { this.montantXaf.set(parseInt(val, 10) || 0); }
   onModePaiementChange(m: string): void { 

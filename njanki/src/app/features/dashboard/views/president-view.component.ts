@@ -20,7 +20,7 @@ export class PresidentViewComponent {
   readonly session = this.tontineService.sessionActive;
   readonly mandat = this.tontineService.mandatActif;
   readonly stats = this.tontineService.statsGroupeActif;
-  readonly membres = this.tontineService.membres;
+  readonly membres = this.tontineService.membresGroupeActif;
   readonly prochaineReunion = this.tontineService.prochaineReunion;
   readonly potEnCours = this.tontineService.potEnCours;
   readonly penalites = this.tontineService.penalites;

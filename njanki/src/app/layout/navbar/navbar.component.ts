@@ -19,6 +19,7 @@ export class NavbarComponent {
 
   readonly utilisateur = this.authService.utilisateur;
   readonly estModeDemo = this.authService.estModeDemo;
+  readonly hasGroupes = this.tontineService.hasGroupes;
   readonly groupes = this.tontineService.groupes;
   readonly groupeActif = this.tontineService.groupeActif;
   readonly roleActif = this.tontineService.roleActif;

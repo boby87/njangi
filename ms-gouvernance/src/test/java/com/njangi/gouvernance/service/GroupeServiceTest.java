@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -135,5 +136,46 @@ class GroupeServiceTest {
         when(groupeRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> groupeService.findById(id));
+    }
+
+    @Test
+    @DisplayName("Un nouvel utilisateur sans adhésion ne reçoit aucune tontine (isolation multi-tenant)")
+    void testFindByMembreVidePourNouvelUtilisateur() {
+        UUID nouveauMembreId = UUID.randomUUID();
+        when(groupeMembreRepository.findByMembreId(nouveauMembreId)).thenReturn(List.of());
+        when(groupeRepository.findByCreateurMembreId(nouveauMembreId)).thenReturn(List.of());
+
+        List<GroupeDto> result = groupeService.findByMembre(nouveauMembreId);
+
+        assertTrue(result.isEmpty());
+        verify(groupeRepository, never()).findAllById(any());
+    }
+
+    @Test
+    @DisplayName("findByMembre retourne uniquement les tontines actives du membre sans doublons")
+    void testFindByMembreIsolation() {
+        UUID membreId = UUID.randomUUID();
+        UUID groupeId = UUID.randomUUID();
+
+        GroupeMembre gm = new GroupeMembre();
+        gm.setGroupeId(groupeId);
+        gm.setMembreId(membreId);
+        gm.setStatut(StatutMembreGroupe.ACTIF);
+
+        Groupe groupe = new Groupe();
+        groupe.setId(groupeId);
+        groupe.setNom("Ma Tontine Privée");
+        groupe.setCreateurMembreId(membreId);
+        groupe.setTypeSiege(TypeSiege.FIXE);
+        groupe.setStatut(StatutGroupe.ACTIF);
+
+        when(groupeMembreRepository.findByMembreId(membreId)).thenReturn(List.of(gm));
+        when(groupeRepository.findByCreateurMembreId(membreId)).thenReturn(List.of(groupe));
+        when(groupeRepository.findAllById(any())).thenReturn(List.of(groupe));
+
+        List<GroupeDto> result = groupeService.findByMembre(membreId);
+
+        assertEquals(1, result.size());
+        assertEquals("Ma Tontine Privée", result.getFirst().nom());
     }
 }

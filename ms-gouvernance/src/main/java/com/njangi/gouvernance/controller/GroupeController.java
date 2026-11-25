@@ -24,9 +24,21 @@ public class GroupeController {
     }
 
     @GetMapping
-    @Operation(summary = "Lister toutes les tontines")
-    public ResponseEntity<ApiResponse<List<GroupeDto>>> getAll() {
+    @Operation(summary = "Lister les tontines de l'utilisateur connecté (ou toutes si tous=true)")
+    public ResponseEntity<ApiResponse<List<GroupeDto>>> getAll(
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            @RequestParam(value = "tous", defaultValue = "false") boolean tous) {
+        if (userId != null && !tous) {
+            return ResponseEntity.ok(ApiResponse.ok(groupeService.findByMembre(userId)));
+        }
         return ResponseEntity.ok(ApiResponse.ok(groupeService.findAll()));
+    }
+
+    @GetMapping("/mes-groupes")
+    @Operation(summary = "Lister uniquement les tontines dont l'utilisateur connecté est membre ou créateur")
+    public ResponseEntity<ApiResponse<List<GroupeDto>>> getMesGroupes(
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId) {
+        return ResponseEntity.ok(ApiResponse.ok(groupeService.findByMembre(userId)));
     }
 
     @GetMapping("/{id}")
@@ -82,8 +94,13 @@ public class GroupeController {
     @Operation(summary = "Rejoindre une tontine en saisissant un code d'invitation")
     public ResponseEntity<ApiResponse<GroupeMembreDto>> rejoindreParCode(
             @RequestParam String codeInvitation,
-            @RequestParam UUID membreId) {
-        GroupeMembreDto dto = groupeService.rejoindreParCode(codeInvitation, membreId);
+            @RequestParam(required = false) UUID membreId,
+            @RequestHeader(value = "X-User-Id", required = false) UUID headerUserId) {
+        UUID effectiveMembreId = headerUserId != null ? headerUserId : membreId;
+        if (effectiveMembreId == null) {
+            throw new IllegalArgumentException("Identifiant membre manquant (X-User-Id ou membreId requis)");
+        }
+        GroupeMembreDto dto = groupeService.rejoindreParCode(codeInvitation.trim(), effectiveMembreId);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Vous avez rejoint la tontine avec succès", dto));
     }
 }

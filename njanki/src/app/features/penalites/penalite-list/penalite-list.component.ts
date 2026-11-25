@@ -19,7 +19,7 @@ export class PenaliteListComponent {
   readonly groupe = this.tontineService.groupeActif;
   readonly penalites = this.tontineService.penalites;
   readonly tarifications = this.tontineService.tarifications;
-  readonly membres = this.tontineService.membres;
+  readonly membres = this.tontineService.membresGroupeActif;
 
   readonly showModal = signal<boolean>(false);
 

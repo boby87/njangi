@@ -1,6 +1,7 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, PLATFORM_ID, inject, signal, computed, effect, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { TontineStateService } from '@core/services/tontine-state.service';
+
 @Component({
   selector: 'app-createur-view',
   standalone: true,
@@ -11,37 +12,68 @@ import { TontineStateService } from '@core/services/tontine-state.service';
 })
 export class CreateurViewComponent {
   readonly tontineService = inject(TontineStateService);
+  private readonly platformId = inject(PLATFORM_ID);
 
   readonly groupe = this.tontineService.groupeActif;
-  readonly membres = this.tontineService.membres;
+  readonly membres = this.tontineService.membresGroupeActif;
   readonly premierBureauElu = computed(() => this.groupe().premierBureauElu);
+  readonly peutElireBureau = computed(() => this.membres().length >= 3);
 
-  // Formulaire d'élection du premier bureau (Signal Forms purs)
-  readonly presidentId = signal<string>('usr-1');
-  readonly tresorierId = signal<string>('usr-2');
-  readonly secretaireId = signal<string>('usr-3');
+  // Formulaire d'élection du premier bureau (Signal Forms purs — zéro ID mocké)
+  readonly presidentId = signal<string>('');
+  readonly tresorierId = signal<string>('');
+  readonly secretaireId = signal<string>('');
+  readonly feedbackMessage = signal<string>('');
+  readonly errorMessage = signal<string>('');
 
-  copierLienInvitation(): void {
-    const url = `https://njangi.cm/rejoindre/${this.groupe().id}`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(url);
+  constructor() {
+    effect(() => {
+      const list = this.membres();
+      if (list.length >= 3) {
+        if (!list.some((m) => m.id === this.presidentId())) {
+          this.presidentId.set(list[0].id);
+        }
+        if (!list.some((m) => m.id === this.tresorierId())) {
+          this.tresorierId.set(list[1].id);
+        }
+        if (!list.some((m) => m.id === this.secretaireId())) {
+          this.secretaireId.set(list[2].id);
+        }
+      }
+    });
+  }
+
+  copierCodeInvitation(): void {
+    const code = this.groupe().codeInvitation || this.groupe().id;
+    const texte = `Rejoignez notre tontine "${this.groupe().nom}" sur Njangi avec le code d'invitation : ${code}`;
+    if (isPlatformBrowser(this.platformId) && navigator.clipboard) {
+      navigator.clipboard.writeText(code);
     }
-    alert(`Lien d'invitation copié : ${url}\nPartagez-le par WhatsApp ou SMS avec vos membres.`);
+    this.errorMessage.set('');
+    this.feedbackMessage.set(`Code copié (${code}) — ${texte}`);
   }
 
   elirePremierBureau(): void {
-    if (this.presidentId() === this.tresorierId() || this.presidentId() === this.secretaireId()) {
-      alert('Le Président, le Trésorier et le Secrétaire doivent être des personnes distinctes.');
+    this.errorMessage.set('');
+    this.feedbackMessage.set('');
+
+    if (!this.peutElireBureau()) {
+      this.errorMessage.set('Il faut au moins 3 membres dans la tontine pour élire un bureau exécutif.');
       return;
     }
 
-    this.tontineService.elireBureau(
-      this.groupe().id,
-      this.presidentId(),
-      this.tresorierId(),
-      this.secretaireId()
-    );
+    const p = this.presidentId();
+    const t = this.tresorierId();
+    const s = this.secretaireId();
 
-    alert('Félicitations ! Le premier bureau exécutif a été élu. En tant que créateur, vos pouvoirs techniques provisoires sont maintenant transférés au Président.');
+    if (!p || !t || !s || p === t || p === s || t === s) {
+      this.errorMessage.set('Le Président, le Trésorier et le Secrétaire doivent être trois membres distincts.');
+      return;
+    }
+
+    this.tontineService.elireBureau(this.groupe().id, p, t, s);
+    this.feedbackMessage.set(
+      'Premier bureau exécutif élu avec succès ! Les droits techniques provisoires de Créateur ont été transférés au Président.'
+    );
   }
 }

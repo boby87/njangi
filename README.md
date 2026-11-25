@@ -140,4 +140,4 @@ npm start
 
 ## 7. Documentation Complète
 
-Consultez **[DOCUMENTATION.md](./DOCUMENTATION.md)** pour l'index complet, **[ARCHITECTURE_MIGRATION.md](./ARCHITECTURE_MIGRATION.md)** pour le plan de consolidation des microservices et **[TESTING_E2E.md](./TESTING_E2E.md)** pour la suite de tests bout-en-bout.
+Consultez **[DOCUMENTATION.md](./DOCUMENTATION.md)** pour l'index complet, **[FEATURE_TRACKER.md](./FEATURE_TRACKER.md)** pour le suivi des fonctionnalités restantes (`F-01` à `F-25`), **[ARCHITECTURE_MIGRATION.md](./ARCHITECTURE_MIGRATION.md)** pour le plan de consolidation des microservices et **[TESTING_E2E.md](./TESTING_E2E.md)** pour la suite de tests bout-en-bout.

@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -36,6 +38,25 @@ public class GroupeService {
 
     public List<GroupeDto> findAll() {
         return groupeRepository.findAll().stream().map(this::toDto).toList();
+    }
+
+    public List<GroupeDto> findByMembre(UUID membreId) {
+        if (membreId == null) {
+            return List.of();
+        }
+        Set<UUID> groupeIds = new LinkedHashSet<>();
+        groupeMembreRepository.findByMembreId(membreId).stream()
+                .filter(gm -> gm.getStatut() == null || gm.getStatut() == StatutMembreGroupe.ACTIF)
+                .map(GroupeMembre::getGroupeId)
+                .forEach(groupeIds::add);
+        groupeRepository.findByCreateurMembreId(membreId).stream()
+                .map(Groupe::getId)
+                .forEach(groupeIds::add);
+
+        if (groupeIds.isEmpty()) {
+            return List.of();
+        }
+        return groupeRepository.findAllById(groupeIds).stream().map(this::toDto).toList();
     }
 
     public GroupeDto findById(UUID id) {
