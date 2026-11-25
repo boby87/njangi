@@ -36,10 +36,7 @@ Ce fichier centralise l'ensemble de la documentation technique, fonctionnelle et
 - Tableaux de bord dynamiques par rôle : `njanki/src/app/features/dashboard/views/`
 - Modules métier : `auth/` (OTP + Google Sign-In OIDC), `groupes/`, `reunions/`, `cotisations/`, `paiements/`, `penalites/`, `statistiques/`
 - Services réactifs : `njanki/src/app/core/services/`
-
-### D. Package Partagé (`shared/`)
-- `shared/models/` : Modèles TypeScript stricts (source unique de vérité).
-- `shared/ui/` : Composants Standalone réutilisables (`amount-badge`, `status-badge`, `role-badge`, `proof-preview`, `penalty-modal`).
+- Modèles & UI réutilisables (`@shared/*`) : `njanki/src/app/shared/models/` et `njanki/src/app/shared/ui/` (`amount-badge`, `status-badge`, `role-badge`, `proof-preview`, `penalty-modal`).
 
 > *Note : l'application mobile (`njanki-mobile/`) a été retirée temporairement du workspace (disponible dans l'historique Git au commit `8f1ffc4`).*
 

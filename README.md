@@ -41,8 +41,7 @@ njangi/
 ├── ms-gouvernance/         # Groupes, Sessions, Mandats, Réunions live, Présences, PV (Port 8002)
 ├── ms-finances/            # Multi-cotisations, Tour de pot, Paiements Cash/MoMo, Pénalités (Port 8003)
 ├── ms-engagement/          # Notifications (FCM, SMS, Email, In-App) & Statistiques/Bilans (Port 8004)
-├── njanki/                 # Portail Web — Angular 22 · SSR · Tailwind CSS v4
-├── shared/                 # Source unique : modèles TypeScript & composants UI partagés
+├── njanki/                 # Portail Web — Angular 22 · SSR · Tailwind CSS v4 (inclut src/app/shared/)
 ├── postman/                # Collection E2E Postman / Newman
 ├── scripts/                # Scripts Docker, seed et tests E2E PowerShell
 ├── docker-compose.yml      # PostgreSQL 16, Kafka KRaft, Eureka, Gateway et 4 MS métier

@@ -14,11 +14,10 @@
     "importHelpers": true,
     "target": "ES2022",
     "module": "preserve",
-    "preserveSymlinks": true,
     "baseUrl": "./",
     "ignoreDeprecations": "6.0",
     "paths": {
-      "@shared/*": ["./.shared/*"],
+      "@shared/*": ["src/app/shared/*"],
       "@core/*": ["src/app/core/*"],
       "@features/*": ["src/app/features/*"]
     }

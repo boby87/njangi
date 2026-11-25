@@ -11,8 +11,7 @@ Digitalisation de la gouvernance communautaire et de l'épargne rotative camerou
 | Sous-projet | Dossier | Stack cible | Rôle |
 |---|---|---|---|
 | Backend | `eureka-server/`, `api-gateway/`, `ms-*/` | Java 25 · Spring Boot 4.0 · Spring Cloud 2025.1 · Eureka · Kafka | Microservices métier consolidés, transactions ACID, événements |
-| Frontend Web | `njanki/` | Angular 22 · SSR · Tailwind CSS v4 | Portail web complet (dashboards par rôle, gestion) |
-| Partagé | `shared/` | TypeScript strict · Angular Standalone | Source unique de vérité pour DTOs (`models/`) et composants (`ui/`) |
+| Frontend Web | `njanki/` | Angular 22 · SSR · Tailwind CSS v4 | Portail web complet (dashboards par rôle, gestion, `src/app/shared/`) |
 
 **Acteurs & Rôles dynamiques (un utilisateur possède un rôle par groupe) :**
 - **Créateur** — droits techniques initiaux, rétrogradé automatiquement en membre simple dès l'élection du premier bureau.
