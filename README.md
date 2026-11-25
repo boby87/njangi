@@ -42,7 +42,6 @@ njangi/
 ├── ms-finances/            # Multi-cotisations, Tour de pot, Paiements Cash/MoMo, Pénalités (Port 8003)
 ├── ms-engagement/          # Notifications (FCM, SMS, Email, In-App) & Statistiques/Bilans (Port 8004)
 ├── njanki/                 # Portail Web — Angular 22 · SSR · Tailwind CSS v4
-├── njanki-mobile/          # Application Mobile — Ionic 9 · Angular 22 · Capacitor 8
 ├── shared/                 # Source unique : modèles TypeScript & composants UI partagés
 ├── postman/                # Collection E2E Postman / Newman
 ├── scripts/                # Scripts Docker, seed et tests E2E PowerShell
@@ -55,8 +54,7 @@ njangi/
 ## 3. Matrice des Services, Ports & Routes Gateway
 
 Toutes les requêtes clientes transitent **obligatoirement** par l'API Gateway :
-- **Web** : `http://localhost:9090`
-- **Mobile (Émulateur Android)** : `http://10.0.2.2:9090`
+- **Web (Local)** : `http://localhost:9090`
 - **Production (LuxVps)** : `https://api.njangi.cm`
 
 | Service | Port | Schéma BDD | Routes exposées via Gateway | Architecture | Swagger UI |
@@ -76,17 +74,14 @@ Toutes les requêtes clientes transitent **obligatoirement** par l'API Gateway :
 
 ---
 
-## 4. Frontends Web & Mobile
+## 4. Frontend Web
 
-### Portail Web (`njanki/`) — Angular 22 & Tailwind CSS v4
+### Portail Web (`njanki/`) — Angular 22 · SSR · Tailwind CSS v4
 - **Architecture réactive stricte** ([GEMINI.md](./GEMINI.md)) : Zéro `Promise`, Signal Forms exclusifs (`signal()` + `computed()`), zéro inline (`.ts`/`.html`/`.scss`), zéro `any`, injection via `inject()`.
 - **Tableau de bord dynamique par rôle (`/dashboard`)** : Vue Président, Vue Trésorier, Vue Secrétaire, Vue Membre, Vue Créateur.
-- **Modules** : Authentification, Groupes, Réunions live & PV, Multi-cotisations & Tour de pot, Caisse/Paiements, Pénalités, Statistiques.
+- **Modules** : Authentification (OTP + Google Sign-In OIDC), Groupes, Réunions live & PV, Multi-cotisations & Tour de pot, Caisse/Paiements, Pénalités, Statistiques.
 
-### Application Mobile (`njanki-mobile/`) — Ionic 9, Angular 22 & Capacitor 8
-- **Sécurité des tokens** : Stockage exclusif via `@capacitor/preferences` (**zéro `localStorage`**).
-- **Mode dégradé 3G & Offline-first partiel** : Détection réseau via `@capacitor/network`, file d'attente hors ligne et synchronisation vers la Gateway.
-- **Pages** : Login, Inscription, Création de groupe, Onglets (`Dashboard`, `Cotisations`, `Séance Live`, `Caisse`, `Profil`).
+> *Note : le sous-projet mobile (`njanki-mobile/`) a été retiré temporairement du workspace (conservé dans l'historique Git au commit `8f1ffc4`) afin de concentrer le développement sur le backend et le portail Web.*
 
 ---
 
@@ -115,19 +110,6 @@ mvn clean test
 cd njanki
 npm install
 npm start
-```
-
-### Étape 4 : Lancer l'Application Mobile (`http://localhost:8100`)
-```bash
-cd njanki-mobile
-npm install
-npm start
-```
-
-Pour générer et ouvrir le projet Android natif :
-```bash
-npx cap sync android
-npx cap open android
 ```
 
 ---

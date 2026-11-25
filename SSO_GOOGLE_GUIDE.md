@@ -3,7 +3,8 @@
 Ce guide explique comment configurer et activer l'authentification **Google Sign-In (OpenID Connect)** de bout en bout sur :
 - **Backend** : `ms-identite` (vérification cryptographique RS256 via JWKS Google) + `api-gateway`
 - **Frontend Web** : `njanki/` (Google Identity Services — GIS)
-- **Mobile Android** : `njanki-mobile/` (Google Identity Services PWA + plugin natif Capacitor Android)
+
+*(Note : le support `GOOGLE_ANDROID_CLIENT_ID` reste prêt côté `ms-identite` pour une future application mobile.)*
 
 ---
 

@@ -34,17 +34,14 @@ Ce fichier centralise l'ensemble de la documentation technique, fonctionnelle et
 
 ### C. Portail Web (`njanki/`) — Angular 22 · SSR · Tailwind CSS v4
 - Tableaux de bord dynamiques par rôle : `njanki/src/app/features/dashboard/views/`
-- Modules métier : `auth/`, `groupes/`, `reunions/`, `cotisations/`, `paiements/`, `penalites/`, `statistiques/`
+- Modules métier : `auth/` (OTP + Google Sign-In OIDC), `groupes/`, `reunions/`, `cotisations/`, `paiements/`, `penalites/`, `statistiques/`
 - Services réactifs : `njanki/src/app/core/services/`
 
-### D. Application Mobile (`njanki-mobile/`) — Ionic 9 · Angular 22 · Capacitor 8
-- Configuration Android : [njanki-mobile/capacitor.config.ts](./njanki-mobile/capacitor.config.ts) (`cm.njangi.app`, Gateway émulateur `http://10.0.2.2:9090`)
-- Pages : `login`, `register`, `creer-groupe`, `tabs` (`dashboard`, `cotisations`, `reunions`, `paiements`, `profil`)
-- Résilience 3G : `NetworkService` (`@capacitor/network`), `MobileAuthService` (`@capacitor/preferences`), file hors-ligne dans `MobileTontineStateService`.
-
-### E. Package Partagé (`shared/`)
-- `shared/models/` : Modèles TypeScript stricts (source unique de vérité à consommer par Web et Mobile).
+### D. Package Partagé (`shared/`)
+- `shared/models/` : Modèles TypeScript stricts (source unique de vérité).
 - `shared/ui/` : Composants Standalone réutilisables (`amount-badge`, `status-badge`, `role-badge`, `proof-preview`, `penalty-modal`).
+
+> *Note : l'application mobile (`njanki-mobile/`) a été retirée temporairement du workspace (disponible dans l'historique Git au commit `8f1ffc4`).*
 
 ---
 
@@ -53,7 +50,6 @@ Ce fichier centralise l'ensemble de la documentation technique, fonctionnelle et
 | Interface / Service | URL Locale |
 |---|---|
 | **Portail Web Angular** | `http://localhost:4200` |
-| **Application Mobile Ionic** | `http://localhost:8100` |
 | **Passerelle API (Gateway)** | `http://localhost:9090` |
 | **Dashboard Eureka Server** | `http://localhost:8761` |
 | **Swagger UI — `ms-identite`** | `http://localhost:8001/swagger-ui.html` |

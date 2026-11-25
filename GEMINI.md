@@ -12,7 +12,6 @@ Digitalisation de la gouvernance communautaire et de l'épargne rotative camerou
 |---|---|---|---|
 | Backend | `eureka-server/`, `api-gateway/`, `ms-*/` | Java 25 · Spring Boot 4.0 · Spring Cloud 2025.1 · Eureka · Kafka | Microservices métier consolidés, transactions ACID, événements |
 | Frontend Web | `njanki/` | Angular 22 · SSR · Tailwind CSS v4 | Portail web complet (dashboards par rôle, gestion) |
-| Mobile | `njanki-mobile/` | Ionic 9 · Angular 22 · Tailwind CSS v4 · Capacitor 8 | Application Android-first (offline partiel 3G) |
 | Partagé | `shared/` | TypeScript strict · Angular Standalone | Source unique de vérité pour DTOs (`models/`) et composants (`ui/`) |
 
 **Acteurs & Rôles dynamiques (un utilisateur possède un rôle par groupe) :**

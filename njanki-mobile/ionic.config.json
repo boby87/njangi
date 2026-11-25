@@ -1,7 +1,0 @@
-{
-  "name": "njanki-mobile",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "angular-standalone"
-}
