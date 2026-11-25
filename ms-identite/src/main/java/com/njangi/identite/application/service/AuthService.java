@@ -3,10 +3,12 @@ package com.njangi.identite.application.service;
 import com.njangi.identite.application.dto.*;
 import com.njangi.identite.domain.exception.BusinessException;
 import com.njangi.identite.domain.exception.NotFoundException;
+import com.njangi.identite.domain.model.SocialUserProfile;
 import com.njangi.identite.domain.model.StatutUtilisateur;
 import com.njangi.identite.domain.model.Telephone;
 import com.njangi.identite.domain.model.Utilisateur;
 import com.njangi.identite.domain.port.out.IdentiteEventPublisherPort;
+import com.njangi.identite.domain.port.out.SocialTokenVerifierPort;
 import com.njangi.identite.domain.port.out.UtilisateurRepositoryPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,19 +29,22 @@ public class AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final IdentiteEventPublisherPort eventPublisher;
+    private final SocialTokenVerifierPort socialTokenVerifier;
 
     public AuthService(
             UtilisateurRepositoryPort utilisateurRepository,
             OtpService otpService,
             JwtService jwtService,
             PasswordEncoder passwordEncoder,
-            IdentiteEventPublisherPort eventPublisher
+            IdentiteEventPublisherPort eventPublisher,
+            SocialTokenVerifierPort socialTokenVerifier
     ) {
         this.utilisateurRepository = utilisateurRepository;
         this.otpService = otpService;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
+        this.socialTokenVerifier = socialTokenVerifier;
     }
 
     @Transactional
@@ -172,48 +177,64 @@ public class AuthService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public SsoPublicConfigDto getSsoPublicConfig() {
+        return new SsoPublicConfigDto(
+                socialTokenVerifier.isGoogleConfigured(),
+                socialTokenVerifier.getPrimaryGoogleClientId(),
+                socialTokenVerifier.isDevFallbackEnabled()
+        );
+    }
+
     @Transactional
     public SocialLoginResponse connexionSociale(SocialLoginRequest request) {
-        String provider = request.provider().trim().toUpperCase();
-        if (!"GOOGLE".equals(provider) && !"FACEBOOK".equals(provider)) {
-            throw new BusinessException("Fournisseur social non supporté : " + provider + ". Utilisez 'GOOGLE' ou 'FACEBOOK'.");
-        }
+        // 0. Vérification cryptographique du jeton auprès du fournisseur SSO (Google OIDC JWKS)
+        SocialUserProfile verified = socialTokenVerifier.verifierEtExtraire(
+                request.provider(),
+                request.token(),
+                request.providerId(),
+                request.email(),
+                request.nom(),
+                request.prenom(),
+                request.photoUrl()
+        );
 
-        String providerId = request.providerId().trim();
-        String email = request.email() != null && !request.email().isBlank() ? request.email().trim().toLowerCase() : null;
+        String provider = verified.provider();
+        String providerId = verified.providerId();
+        String email = verified.email();
 
-        // 1. Chercher par providerAuth + providerId
+        // 1. Chercher par providerAuth + providerId (identifiant immuable 'sub')
         Utilisateur utilisateur = utilisateurRepository.trouverParProviderAuthEtProviderId(provider, providerId)
                 .orElse(null);
 
-        // 2. Si non trouvé, chercher par email si renseigné
-        if (utilisateur == null && email != null) {
+        // 2. Si non trouvé, lier au compte existant par email UNIQUEMENT si l'email est vérifié par le fournisseur (anti account-takeover)
+        if (utilisateur == null && email != null && verified.emailVerified()) {
             utilisateur = utilisateurRepository.trouverParEmail(email).orElse(null);
             if (utilisateur != null) {
                 utilisateur.setProviderAuth(provider);
                 utilisateur.setProviderId(providerId);
-                if (request.photoUrl() != null && (utilisateur.getPhotoUrl() == null || utilisateur.getPhotoUrl().isBlank())) {
-                    utilisateur.setPhotoUrl(request.photoUrl());
+                if (verified.photoUrl() != null && (utilisateur.getPhotoUrl() == null || utilisateur.getPhotoUrl().isBlank())) {
+                    utilisateur.setPhotoUrl(verified.photoUrl());
                 }
                 utilisateur = utilisateurRepository.sauvegarder(utilisateur);
-                log.info("Compte existant par email lié avec succès au profil social {} : ID={}", provider, utilisateur.getId());
+                log.info("Compte existant par email vérifié lié avec succès au profil SSO {} : ID={}", provider, utilisateur.getId());
             }
         }
 
-        // 3. Si toujours non trouvé, création automatique (JIT provisioning)
+        // 3. Si toujours non trouvé, création automatique (JIT provisioning) depuis les claims certifiés
         if (utilisateur == null) {
             utilisateur = new Utilisateur();
             utilisateur.setProviderAuth(provider);
             utilisateur.setProviderId(providerId);
             utilisateur.setEmail(email);
-            utilisateur.setNom(request.nom() != null && !request.nom().isBlank() ? request.nom().trim() : "Membre");
-            utilisateur.setPrenom(request.prenom() != null && !request.prenom().isBlank() ? request.prenom().trim() : provider);
-            utilisateur.setPhotoUrl(request.photoUrl());
+            utilisateur.setNom(verified.nom());
+            utilisateur.setPrenom(verified.prenom());
+            utilisateur.setPhotoUrl(verified.photoUrl());
             utilisateur.setStatut(StatutUtilisateur.ACTIF);
             utilisateur.setPays("Cameroun");
             utilisateur.setMotDePasseHash(passwordEncoder.encode(UUID.randomUUID().toString()));
             utilisateur = utilisateurRepository.sauvegarder(utilisateur);
-            log.info("Nouveau compte social créé avec succès via {} : ID={}", provider, utilisateur.getId());
+            log.info("Nouveau compte SSO créé avec succès via {} : ID={}", provider, utilisateur.getId());
             eventPublisher.publishUtilisateurInscrit(
                     utilisateur.getId(),
                     email != null ? email : providerId,

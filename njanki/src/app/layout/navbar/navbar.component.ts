@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
@@ -18,10 +18,28 @@ export class NavbarComponent {
   readonly tontineService = inject(TontineStateService);
 
   readonly utilisateur = this.authService.utilisateur;
+  readonly estModeDemo = this.authService.estModeDemo;
   readonly groupes = this.tontineService.groupes;
   readonly groupeActif = this.tontineService.groupeActif;
   readonly roleActif = this.tontineService.roleActif;
   readonly sessionActive = this.tontineService.sessionActive;
+
+  readonly nomAffiche = computed<string>(() => {
+    const u = this.utilisateur();
+    const prenom = (u.prenom || '').trim();
+    const nom = (u.nom || '').trim();
+    const isProviderPlaceholder = /^(GOOGLE|FACEBOOK)$/i.test(prenom);
+    if (isProviderPlaceholder) {
+      return nom && !/^membre$/i.test(nom) ? nom : u.email || 'Membre Njangi';
+    }
+    const complet = `${prenom} ${nom}`.trim();
+    return complet || u.email || u.telephone || 'Membre Njangi';
+  });
+
+  readonly sousTitreProfil = computed<string>(() => {
+    const u = this.utilisateur();
+    return u.telephone || u.email || 'Compte vérifié';
+  });
 
   onChangerGroupe(event: Event): void {
     const select = event.target as HTMLSelectElement;

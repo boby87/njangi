@@ -178,4 +178,82 @@ describe('AuthService', () => {
     expect(sessionStorage.getItem('njangi_web_session')).toBeNull();
     expect(navigateSpy).toHaveBeenCalledWith(['/login']);
   });
+
+  it('activates demo session with Jean-Paul Mbarga and navigates to /dashboard on connexionDemo', () => {
+    const navigateSpy = vi.spyOn(router, 'navigate');
+
+    service.connexionDemo();
+
+    expect(service.estConnecte()).toBe(true);
+    expect(service.estModeDemo()).toBe(true);
+    expect(service.utilisateur().id).toBe('usr-1');
+    expect(service.utilisateur().nom).toBe('Mbarga');
+    expect(service.adhesions().length).toBe(3);
+    expect(service.groupeActifId()).toBe('grp-1');
+    expect(navigateSpy).toHaveBeenCalledWith(['/dashboard']);
+  });
+
+  it('loads public SSO config from GET /auth/social/config', () => {
+    let configResult: { googleEnabled: boolean; googleClientId: string; devFallbackEnabled: boolean } | null = null;
+    service.chargerConfigSso().subscribe((cfg) => {
+      configResult = cfg;
+    });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/auth/social/config`);
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      success: true,
+      message: 'OK',
+      data: {
+        googleEnabled: true,
+        googleClientId: '12345-web.apps.googleusercontent.com',
+        devFallbackEnabled: false,
+      },
+    });
+
+    expect(configResult).toEqual({
+      googleEnabled: true,
+      googleClientId: '12345-web.apps.googleusercontent.com',
+      devFallbackEnabled: false,
+    });
+  });
+
+  it('sends only provider and Google ID token on connexionGoogleAvecToken', () => {
+    let socialResult: { succes: boolean; telephoneRequis: boolean } | null = null;
+    service.connexionGoogleAvecToken('signed.google.jwt.token').subscribe((res) => {
+      socialResult = res;
+    });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/auth/social/login`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      provider: 'GOOGLE',
+      token: 'signed.google.jwt.token',
+    });
+
+    req.flush({
+      success: true,
+      message: 'Connexion sociale réussie',
+      data: {
+        accessToken: 'njangi-jwt-after-google',
+        telephoneRequis: true,
+        utilisateur: {
+          id: 'usr-google-1',
+          email: 'mbarga@gmail.com',
+          nom: 'Mbarga',
+          prenom: 'Paul',
+          statut: 'ACTIF',
+        },
+      },
+    });
+
+    const adhReq = httpMock.expectOne(
+      `${environment.apiUrl}/membres/utilisateurs/usr-google-1/adhesions`
+    );
+    adhReq.flush([]);
+
+    expect(socialResult).toEqual({ succes: true, telephoneRequis: true });
+    expect(service.estConnecte()).toBe(true);
+    expect(service.utilisateur().email).toBe('mbarga@gmail.com');
+  });
 });

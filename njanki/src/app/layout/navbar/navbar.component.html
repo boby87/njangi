@@ -39,6 +39,13 @@
   <!-- Droite : Rôle actif, Session active & Profil -->
   <div class="flex items-center gap-3 sm:gap-4">
     
+    <!-- Badge Mode Démo si actif -->
+    @if (estModeDemo()) {
+      <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/35">
+        👑 Démo
+      </span>
+    }
+
     <!-- Rôle de l'utilisateur dans ce groupe spécifique -->
     <div class="flex items-center gap-2">
       <span class="text-xs text-slate-400 hidden xl:inline">Mon rôle :</span>
@@ -64,25 +71,24 @@
         class="w-9 h-9 rounded-xl object-cover border border-slate-700 shadow-inner"
       />
       <div class="hidden sm:block text-left">
-        <p class="text-xs font-semibold text-slate-200 leading-tight">
-          {{ utilisateur().prenom }} {{ utilisateur().nom }}
+        <p class="text-xs font-semibold text-slate-100 leading-tight">
+          {{ nomAffiche() }}
         </p>
-        <p class="text-[11px] text-slate-400 leading-none">
-          {{ utilisateur().telephone }}
+        <p class="text-[11px] text-slate-300 leading-none mt-0.5">
+          {{ sousTitreProfil() }}
         </p>
       </div>
     </div>
 
-    <!-- Bouton Déconnexion -->
+    <!-- Bouton Déconnexion (mobile uniquement — sur desktop il est dans la sidebar) -->
     <button 
       (click)="onDeconnecter()" 
       type="button"
       title="Se déconnecter de Njangi" 
-      class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-rose-300 bg-slate-800/80 hover:bg-rose-950/40 border border-slate-700/80 hover:border-rose-800/60 transition-all shadow-sm group">
-      <svg class="w-4 h-4 text-slate-400 group-hover:text-rose-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      class="md:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:text-rose-300 bg-slate-800/80 hover:bg-rose-950/40 border border-slate-700/80 hover:border-rose-800/60 transition-all shadow-sm group">
+      <svg class="w-4 h-4 text-slate-300 group-hover:text-rose-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
       </svg>
-      <span class="hidden md:inline">Déconnexion</span>
     </button>
 
   </div>

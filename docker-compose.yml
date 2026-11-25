@@ -89,6 +89,11 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       NJANGI_JWT_SECRET: ${NJANGI_JWT_SECRET:-NjangiPlateformeSecreteTresLonguePourHmacSha256Signature2026!}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_WEB_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID:-}
+      GOOGLE_ANDROID_CLIENT_ID: ${GOOGLE_ANDROID_CLIENT_ID:-}
+      # En production (LuxVps), définir NJANGI_SSO_ALLOW_DEV_FALLBACK=false
+      NJANGI_SSO_ALLOW_DEV_FALLBACK: ${NJANGI_SSO_ALLOW_DEV_FALLBACK:-true}
     depends_on:
       postgres:
         condition: service_healthy

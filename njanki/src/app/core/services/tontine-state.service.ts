@@ -818,15 +818,16 @@ export class TontineStateService {
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
       effect(() => {
-        if (this.authService.estConnecte()) {
+        if (this.authService.estConnecte() && !this.authService.estModeDemo()) {
           untracked(() => this.chargerDonneesReelles());
         }
       });
 
       effect(() => {
         const estConnecte = this.authService.estConnecte();
+        const estModeDemo = this.authService.estModeDemo();
         const groupeId = this.authService.groupeActifId();
-        if (estConnecte && groupeId) {
+        if (estConnecte && !estModeDemo && groupeId) {
           untracked(() => this.chargerDonneesGroupe(groupeId));
         }
       });

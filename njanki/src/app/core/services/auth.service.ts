@@ -14,8 +14,67 @@ import {
 import { environment } from '../../../environments/environment';
 
 const SESSION_STORAGE_KEY = 'njangi_web_session';
+const DEMO_TOKEN = 'njangi-demo-session';
 const DEFAULT_AVATAR_URL =
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fit=crop&w=256&h=256&q=80';
+
+const DEMO_MEMBRE: Membre = {
+  id: 'usr-1',
+  nom: 'Mbarga',
+  prenom: 'Jean-Paul',
+  telephone: '+237699123456',
+  email: 'jp.mbarga@njangi.cm',
+  avatarUrl: DEFAULT_AVATAR_URL,
+  ville: 'Douala',
+  pays: 'Cameroun',
+  dateInscription: '2025-01-15',
+  estVerifieKyc: true,
+};
+
+const DEMO_ADHESIONS: AdhesionGroupe[] = [
+  {
+    id: 'adh-1',
+    groupeId: 'grp-1',
+    groupeNom: 'Solidarité Douala Akwa',
+    membreId: 'usr-1',
+    utilisateurId: 'usr-1',
+    role: 'PRESIDENT',
+    statut: 'ACTIF',
+    ordrePassagePot: 1,
+    totalCotiseXaf: 350000,
+    totalPenalitesXaf: 0,
+    aRecuPot: false,
+    dateAdhesion: '2025-02-01',
+  },
+  {
+    id: 'adh-2',
+    groupeId: 'grp-2',
+    groupeNom: 'Njangi Diaspora Yaoundé',
+    membreId: 'usr-1',
+    utilisateurId: 'usr-1',
+    role: 'MEMBRE',
+    statut: 'ACTIF',
+    ordrePassagePot: 5,
+    totalCotiseXaf: 150000,
+    totalPenalitesXaf: 1000,
+    aRecuPot: true,
+    dateAdhesion: '2025-03-10',
+  },
+  {
+    id: 'adh-3',
+    groupeId: 'grp-3',
+    groupeNom: 'Tontine Jeunes Entrepreneurs',
+    membreId: 'usr-1',
+    utilisateurId: 'usr-1',
+    role: 'CREATEUR',
+    statut: 'ACTIF',
+    ordrePassagePot: 2,
+    totalCotiseXaf: 50000,
+    totalPenalitesXaf: 0,
+    aRecuPot: false,
+    dateAdhesion: '2026-01-05',
+  },
+];
 
 const GUEST_MEMBRE: Membre = {
   id: '',
@@ -71,10 +130,18 @@ interface BackendAdhesionGroupeDto {
 }
 
 export interface SocialLoginPayload {
-  providerId: string;
-  email: string;
-  nom: string;
-  prenom: string;
+  token?: string;
+  providerId?: string;
+  email?: string;
+  nom?: string;
+  prenom?: string;
+  photoUrl?: string;
+}
+
+export interface SsoPublicConfig {
+  googleEnabled: boolean;
+  googleClientId: string;
+  devFallbackEnabled: boolean;
 }
 
 @Injectable({
@@ -93,6 +160,7 @@ export class AuthService {
 
   readonly utilisateur = computed<Membre>(() => this.session().membre);
   readonly estConnecte = computed<boolean>(() => Boolean(this.session().token));
+  readonly estModeDemo = computed<boolean>(() => this.session().token === DEMO_TOKEN);
   readonly adhesions = computed<AdhesionGroupe[]>(() => this.session().adhesions);
   readonly groupeActifId = computed<string>(
     () => this.session().groupeActifId || this.session().adhesions[0]?.groupeId || ''
@@ -138,19 +206,61 @@ export class AuthService {
       .pipe(switchMap((res) => this.finaliserAuthentification(res.data)));
   }
 
+  chargerConfigSso(): Observable<SsoPublicConfig> {
+    return this.http.get<ApiResponse<SsoPublicConfig>>(`${this.authUrl}/social/config`).pipe(
+      map((res) => ({
+        googleEnabled: Boolean(res.data?.googleEnabled || environment.googleClientId),
+        googleClientId: environment.googleClientId || res.data?.googleClientId || '',
+        devFallbackEnabled: Boolean(res.data?.devFallbackEnabled),
+      })),
+      catchError(() =>
+        of({
+          googleEnabled: Boolean(environment.googleClientId),
+          googleClientId: environment.googleClientId || '',
+          devFallbackEnabled: !environment.production,
+        })
+      )
+    );
+  }
+
+  connexionGoogleAvecToken(idToken: string): Observable<{ succes: boolean; telephoneRequis: boolean }> {
+    return this.http
+      .post<ApiResponse<BackendSocialLoginResponse>>(`${this.authUrl}/social/login`, {
+        provider: 'GOOGLE',
+        token: idToken,
+      })
+      .pipe(
+        switchMap((res) => {
+          const data = res.data;
+          if (!data?.accessToken) {
+            return of({ succes: false, telephoneRequis: false });
+          }
+          const telephoneRequis = Boolean(data.telephoneRequis);
+          return this.finaliserAuthentification(data).pipe(
+            map((succes) => ({ succes, telephoneRequis }))
+          );
+        })
+      );
+  }
+
   connexionSociale(
     provider: 'GOOGLE' | 'FACEBOOK',
     payload?: SocialLoginPayload
   ): Observable<{ succes: boolean; telephoneRequis: boolean }> {
-    const body = {
-      provider,
-      token: '',
-      providerId: payload?.providerId || `${provider.toLowerCase()}-web-${Date.now()}`,
-      email: payload?.email || '',
-      nom: payload?.nom || '',
-      prenom: payload?.prenom || '',
-      photoUrl: '',
-    };
+    const body = payload?.token
+      ? {
+          provider,
+          token: payload.token,
+        }
+      : {
+          provider,
+          token: '',
+          providerId: payload?.providerId || `${provider.toLowerCase()}-web-${Date.now()}`,
+          email: payload?.email || '',
+          nom: payload?.nom || 'Njangi',
+          prenom: payload?.prenom || 'Membre',
+          photoUrl: payload?.photoUrl || '',
+        };
 
     return this.http
       .post<ApiResponse<BackendSocialLoginResponse>>(`${this.authUrl}/social/login`, body)
@@ -193,6 +303,18 @@ export class AuthService {
           return true;
         })
       );
+  }
+
+  connexionDemo(): void {
+    const demoSession: UtilisateurSession = {
+      membre: { ...DEMO_MEMBRE },
+      token: DEMO_TOKEN,
+      adhesions: DEMO_ADHESIONS.map((a) => ({ ...a })),
+      groupeActifId: 'grp-1',
+    };
+    this.session.set(demoSession);
+    this.sauvegarderSession(demoSession);
+    this.router.navigate(['/dashboard']);
   }
 
   deconnecter(): void {

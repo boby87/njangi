@@ -47,6 +47,8 @@ public class SecurityConfig {
                     "/api/v1/auth/otp/**",
                     "/api/v1/auth/social/login",
                     "/api/v1/auth/social/connexion",
+                    "/api/v1/auth/social/config",
+                    "/api/v1/auth/sso/config",
                     "/api/v1/auth/valider",
                     "/api/v1/auth/valider-token",
                     "/api/v1/paiements/webhooks/**",

@@ -48,3 +48,8 @@ ehthumbs.db
 logs/
 .temp/
 .tmp/
+
+# Secrets & Environment files
+.env
+.env.*
+!.env.example

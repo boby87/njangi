@@ -1,10 +1,23 @@
-import { Component, DestroyRef, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  OnInit,
+  PLATFORM_ID,
+  ViewChild,
+  signal,
+  computed,
+  inject,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ProblemDetail } from '@shared/models/api-response.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { GoogleSsoService } from '../../../core/services/google-sso.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -14,22 +27,33 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrl: './login.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly googleSsoService = inject(GoogleSsoService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly platformId = inject(PLATFORM_ID);
+
+  @ViewChild('googleBtnContainer')
+  private googleBtnContainer?: ElementRef<HTMLDivElement>;
+
+  readonly isDemoMode = !environment.production;
 
   // État du formulaire en Signal Forms purs
-  readonly telephoneOuEmail = signal<string>('+237699123456');
+  readonly telephoneOuEmail = signal<string>('');
   readonly codeOtp = signal<string>('');
   readonly etape = signal<'IDENTIFIANT' | 'OTP' | 'LIER_TELEPHONE'>('IDENTIFIANT');
   readonly messageErreur = signal<string>('');
+  readonly messageInfo = signal<string>('');
   readonly chargement = signal<boolean>(false);
 
-  // Authentification Sociale (Google & Facebook)
-  readonly isSocialLoading = signal<'GOOGLE' | 'FACEBOOK' | null>(null);
-  readonly telephoneLiaison = signal<string>('+237699123456');
+  // Authentification SSO Google OIDC
+  readonly isSocialLoading = signal<boolean>(false);
+  readonly googleOidcPret = signal<boolean>(false);
+  readonly googleDevFallbackActif = signal<boolean>(false);
+  readonly telephoneLiaison = signal<string>('');
   readonly codeOtpLiaison = signal<string>('');
+  readonly otpLiaisonEnvoye = signal<boolean>(false);
 
   // Validation réactive avec computed()
   readonly isIdentifiantValide = computed(() => {
@@ -46,6 +70,38 @@ export class LoginComponent {
     return (val.startsWith('+') && val.length >= 9) || val.length === 9;
   });
 
+  readonly isOtpLiaisonValide = computed(() => {
+    return this.codeOtpLiaison().trim().length === 6;
+  });
+
+  ngOnInit(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    this.googleSsoService.credential$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((idToken) => this.finaliserConnexionGoogleOidc(idToken));
+
+    this.authService
+      .chargerConfigSso()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((config) => {
+        this.googleDevFallbackActif.set(config.devFallbackEnabled);
+        if (config.googleEnabled && config.googleClientId) {
+          this.googleSsoService
+            .initialize(config.googleClientId)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((ready) => {
+              this.googleOidcPret.set(ready);
+              if (ready && this.googleBtnContainer?.nativeElement) {
+                this.googleSsoService.renderSignInButton(this.googleBtnContainer.nativeElement);
+              }
+            });
+        }
+      });
+  }
+
   onIdentifiantInput(val: string): void {
     this.telephoneOuEmail.set(val);
     this.messageErreur.set('');
@@ -59,6 +115,25 @@ export class LoginComponent {
   onTelephoneLiaisonInput(val: string): void {
     this.telephoneLiaison.set(val);
     this.messageErreur.set('');
+    this.messageInfo.set('');
+  }
+
+  onOtpLiaisonInput(val: string): void {
+    this.codeOtpLiaison.set(val);
+    this.messageErreur.set('');
+  }
+
+  remplirNumeroDemo(): void {
+    if (this.isDemoMode) {
+      this.telephoneOuEmail.set('+237699123456');
+      this.messageErreur.set('');
+    }
+  }
+
+  accederDemo(): void {
+    if (this.isDemoMode) {
+      this.authService.connexionDemo();
+    }
   }
 
   demanderOtp(): void {
@@ -78,7 +153,7 @@ export class LoginComponent {
       .subscribe({
         next: () => {
           this.chargement.set(false);
-          this.codeOtp.set('');
+          this.codeOtp.set(this.isDemoMode ? '123456' : '');
           this.etape.set('OTP');
         },
         error: (err: unknown) => {
@@ -123,18 +198,30 @@ export class LoginComponent {
       });
   }
 
-  connexionSociale(provider: 'GOOGLE' | 'FACEBOOK'): void {
+  connexionGoogleFallbackOuPrompt(): void {
     this.messageErreur.set('');
-    this.isSocialLoading.set(provider);
 
+    if (this.googleOidcPret()) {
+      this.googleSsoService.promptSignIn();
+      return;
+    }
+
+    if (!this.googleDevFallbackActif()) {
+      this.messageErreur.set(
+        'Google Sign-In nécessite la variable GOOGLE_CLIENT_ID côté serveur (voir SSO_GOOGLE_GUIDE.md).'
+      );
+      return;
+    }
+
+    this.isSocialLoading.set(true);
     this.authService
-      .connexionSociale(provider)
+      .connexionSociale('GOOGLE')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (resultat) => {
-          this.isSocialLoading.set(null);
+          this.isSocialLoading.set(false);
           if (!resultat.succes) {
-            this.messageErreur.set(`Échec de la connexion avec ${provider}.`);
+            this.messageErreur.set('Échec de la connexion avec Google.');
             return;
           }
           if (resultat.telephoneRequis) {
@@ -144,9 +231,74 @@ export class LoginComponent {
           }
         },
         error: (err: unknown) => {
-          this.isSocialLoading.set(null);
+          this.isSocialLoading.set(false);
           this.messageErreur.set(
-            this.extraireMessageErreur(err, `Impossible de se connecter via ${provider}.`)
+            this.extraireMessageErreur(err, 'Impossible de se connecter via Google.')
+          );
+        },
+      });
+  }
+
+  private finaliserConnexionGoogleOidc(idToken: string): void {
+    this.messageErreur.set('');
+    this.isSocialLoading.set(true);
+
+    this.authService
+      .connexionGoogleAvecToken(idToken)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (resultat) => {
+          this.isSocialLoading.set(false);
+          if (!resultat.succes) {
+            this.messageErreur.set('Vérification Google OIDC refusée par le serveur.');
+            return;
+          }
+          if (resultat.telephoneRequis) {
+            this.etape.set('LIER_TELEPHONE');
+          } else {
+            this.router.navigate(['/dashboard']);
+          }
+        },
+        error: (err: unknown) => {
+          this.isSocialLoading.set(false);
+          this.messageErreur.set(
+            this.extraireMessageErreur(
+              err,
+              'Impossible de valider votre compte Google auprès du serveur Njangi.'
+            )
+          );
+        },
+      });
+  }
+
+  demanderOtpLiaisonTelephone(): void {
+    if (!this.isTelephoneLiaisonValide()) {
+      this.messageErreur.set(
+        'Veuillez renseigner un numéro de téléphone valide (ex: +237699123456 ou +33612345678).'
+      );
+      return;
+    }
+
+    this.messageErreur.set('');
+    this.messageInfo.set('');
+    this.chargement.set(true);
+
+    this.authService
+      .demanderOtp(this.telephoneLiaison().trim())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.chargement.set(false);
+          this.otpLiaisonEnvoye.set(true);
+          this.codeOtpLiaison.set(this.isDemoMode ? '123456' : '');
+          this.messageInfo.set(
+            `Code OTP envoyé au ${this.telephoneLiaison().trim()}. Saisissez-le pour confirmer la liaison.`
+          );
+        },
+        error: (err: unknown) => {
+          this.chargement.set(false);
+          this.messageErreur.set(
+            this.extraireMessageErreur(err, "Impossible d'envoyer le code OTP de confirmation.")
           );
         },
       });
@@ -160,11 +312,21 @@ export class LoginComponent {
       return;
     }
 
+    if (!this.otpLiaisonEnvoye()) {
+      this.demanderOtpLiaisonTelephone();
+      return;
+    }
+
+    if (!this.isOtpLiaisonValide()) {
+      this.messageErreur.set('Veuillez saisir le code OTP à 6 chiffres reçu par SMS.');
+      return;
+    }
+
     this.messageErreur.set('');
     this.chargement.set(true);
 
     this.authService
-      .lierTelephone(this.telephoneLiaison().trim(), this.codeOtpLiaison().trim() || undefined)
+      .lierTelephone(this.telephoneLiaison().trim(), this.codeOtpLiaison().trim())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (succes) => {
@@ -185,13 +347,13 @@ export class LoginComponent {
   }
 
   ignorerLiaisonTelephone(): void {
-    // Permet d'accéder au tableau de bord en mode consultation
     this.router.navigate(['/dashboard']);
   }
 
   retourIdentifiant(): void {
     this.etape.set('IDENTIFIANT');
     this.messageErreur.set('');
+    this.messageInfo.set('');
   }
 
   private extraireMessageErreur(error: unknown, fallback: string): string {

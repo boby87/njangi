@@ -11,6 +11,7 @@ Ce fichier centralise l'ensemble de la documentation technique, fonctionnelle et
 - **[ARCHITECTURE_MIGRATION.md](./ARCHITECTURE_MIGRATION.md)** : Plan complet de consolidation des 9 anciens microservices vers les 4 microservices métier cibles, unification du contrat Kafka, durcissement sécurité JWT et montée vers Java 25 / Spring Boot 4.
 - **[cahier_des_charges_tontine.md](./cahier_des_charges_tontine.md)** : Spécification fonctionnelle et métier officielle (règles Njangi, Session vs Mandat, Siège Fixe vs Rotatif, multi-cotisations, sanctions).
 - **[TESTING_E2E.md](./TESTING_E2E.md)** : Guide des tests d'intégration bout-en-bout (9 phases fonctionnelles via API Gateway et Newman/Postman).
+- **[SSO_GOOGLE_GUIDE.md](./SSO_GOOGLE_GUIDE.md)** : Guide complet d'intégration Google Sign-In OIDC (vérification RS256 JWKS sur `ms-identite`, Google Identity Services Web, Capacitor Android, configuration Google Cloud Console).
 - **[walkthrough.md](./walkthrough.md)** : Historique de livraison initiale du prototype.
 - **[init-schemas.sql](./init-schemas.sql)** & **[docker-compose.yml](./docker-compose.yml)** : Initialisation PostgreSQL et orchestration conteneurisée.
 

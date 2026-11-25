@@ -5,7 +5,14 @@ import { Preferences } from '@capacitor/preferences';
 import { Observable, forkJoin, from, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { Membre, RoleMembre, StatutMembre } from '@shared/models/membre.model';
+import { environment } from '../../../environments/environment';
 import { MobileApiService } from './api.service';
+
+export interface MobileSsoPublicConfig {
+  googleEnabled: boolean;
+  googleClientId: string;
+  devFallbackEnabled: boolean;
+}
 
 export const TOKEN_KEY = 'njangi_auth_token';
 export const USER_KEY = 'njangi_current_user';
@@ -240,21 +247,73 @@ export class MobileAuthService {
     );
   }
 
+  chargerConfigSso(): Observable<MobileSsoPublicConfig> {
+    return this.apiService.get<MobileSsoPublicConfig>('/api/v1/auth/social/config').pipe(
+      map((res) => ({
+        googleEnabled: Boolean(res.data?.googleEnabled || environment.googleWebClientId),
+        googleClientId: environment.googleWebClientId || res.data?.googleClientId || '',
+        devFallbackEnabled: Boolean(res.data?.devFallbackEnabled),
+      })),
+      catchError(() =>
+        of({
+          googleEnabled: Boolean(environment.googleWebClientId),
+          googleClientId: environment.googleWebClientId || '',
+          devFallbackEnabled: !environment.production,
+        })
+      )
+    );
+  }
+
+  connexionGoogleAvecToken(
+    idToken: string
+  ): Observable<{ succes: boolean; telephoneRequis: boolean }> {
+    this.authError.set(null);
+
+    return this.apiService
+      .post<GatewaySocialLoginResponse>('/api/v1/auth/social/login', {
+        provider: 'GOOGLE',
+        token: idToken,
+      })
+      .pipe(
+        switchMap((res) => {
+          if (!res.success || !res.data?.accessToken || !res.data?.utilisateur) {
+            this.authError.set(res.message || 'Vérification Google OIDC refusée.');
+            return of({ succes: false, telephoneRequis: false });
+          }
+
+          const user = this.mapUtilisateurToMembre(res.data.utilisateur);
+          const telephoneRequis = !!res.data.telephoneRequis;
+          return this.persistSession(res.data.accessToken, user).pipe(
+            map(() => ({ succes: true, telephoneRequis }))
+          );
+        }),
+        catchError(() => {
+          this.authError.set('Impossible de valider la connexion Google auprès de la passerelle.');
+          return of({ succes: false, telephoneRequis: false });
+        })
+      );
+  }
+
   connexionSociale(
     provider: 'GOOGLE' | 'FACEBOOK',
     payload?: SocialAuthPayload
   ): Observable<{ succes: boolean; telephoneRequis: boolean }> {
     this.authError.set(null);
 
-    const requestBody = {
-      provider,
-      token: payload?.token ?? '',
-      providerId: payload?.providerId ?? `${provider.toLowerCase()}-${Date.now()}`,
-      email: payload?.email ?? '',
-      nom: payload?.nom ?? '',
-      prenom: payload?.prenom ?? '',
-      photoUrl: payload?.photoUrl ?? null,
-    };
+    const requestBody = payload?.token
+      ? {
+          provider,
+          token: payload.token,
+        }
+      : {
+          provider,
+          token: '',
+          providerId: payload?.providerId ?? `${provider.toLowerCase()}-${Date.now()}`,
+          email: payload?.email ?? '',
+          nom: payload?.nom ?? 'Njangi',
+          prenom: payload?.prenom ?? 'Membre',
+          photoUrl: payload?.photoUrl ?? null,
+        };
 
     return this.apiService
       .post<GatewaySocialLoginResponse>('/api/v1/auth/social/login', requestBody)

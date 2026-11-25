@@ -112,6 +112,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping({"/social/config", "/sso/config"})
+    @Operation(summary = "Configuration publique SSO", description = "Retourne le Google Client ID public et le statut SSO pour les applications Web et Mobile")
+    public ResponseEntity<ApiResponse<SsoPublicConfigDto>> ssoConfig() {
+        return ResponseEntity.ok(ApiResponse.success(authService.getSsoPublicConfig()));
+    }
+
     @PostMapping({"/social/connexion", "/social/login"})
     @Operation(summary = "Connexion ou inscription via Google ou Facebook", description = "Authentifie un utilisateur avec son compte Google ou Facebook et provisionne le compte automatiquement")
     @ApiResponses({

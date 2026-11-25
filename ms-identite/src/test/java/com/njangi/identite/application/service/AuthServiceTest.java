@@ -2,9 +2,11 @@ package com.njangi.identite.application.service;
 
 import com.njangi.identite.application.dto.*;
 import com.njangi.identite.domain.exception.BusinessException;
+import com.njangi.identite.domain.model.SocialUserProfile;
 import com.njangi.identite.domain.model.StatutUtilisateur;
 import com.njangi.identite.domain.model.Utilisateur;
 import com.njangi.identite.domain.port.out.IdentiteEventPublisherPort;
+import com.njangi.identite.domain.port.out.SocialTokenVerifierPort;
 import com.njangi.identite.domain.port.out.UtilisateurRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +37,8 @@ class AuthServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private IdentiteEventPublisherPort eventPublisher;
+    @Mock
+    private SocialTokenVerifierPort socialTokenVerifier;
 
     private AuthService authService;
 
@@ -45,7 +49,8 @@ class AuthServiceTest {
                 otpService,
                 jwtService,
                 passwordEncoder,
-                eventPublisher
+                eventPublisher,
+                socialTokenVerifier
         );
     }
 
@@ -169,18 +174,31 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("Connexion via Google avec création automatique (JIT provisioning)")
+    @DisplayName("Connexion via Google OIDC vérifié avec création automatique (JIT provisioning)")
     void testConnexionGoogleJitProvisioning() {
         SocialLoginRequest request = new SocialLoginRequest(
                 "GOOGLE",
-                "mock_google_id_token",
+                "signed.google.id.token",
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        SocialUserProfile verifiedProfile = new SocialUserProfile(
+                "GOOGLE",
                 "google-sub-12345",
                 "kamga.google@gmail.com",
+                true,
                 "Kamga",
                 "Eric",
                 "https://lh3.googleusercontent.com/photo.jpg"
         );
 
+        when(socialTokenVerifier.verifierEtExtraire(
+                eq("GOOGLE"), eq("signed.google.id.token"), isNull(), isNull(), isNull(), isNull(), isNull()
+        )).thenReturn(verifiedProfile);
         when(utilisateurRepository.trouverParProviderAuthEtProviderId("GOOGLE", "google-sub-12345")).thenReturn(Optional.empty());
         when(utilisateurRepository.trouverParEmail("kamga.google@gmail.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode(any(String.class))).thenReturn("random_hashed_pass");
@@ -197,9 +215,37 @@ class AuthServiceTest {
         assertNotNull(response);
         assertEquals("fake.jwt.google.token", response.accessToken());
         assertEquals("kamga.google@gmail.com", response.utilisateur().email());
+        assertEquals("Kamga", response.utilisateur().nom());
+        assertEquals("Eric", response.utilisateur().prenom());
         assertTrue(response.telephoneRequis(), "Le téléphone doit être requis pour un nouvel utilisateur Google");
         verify(eventPublisher).publishUtilisateurInscrit(any(UUID.class), eq("kamga.google@gmail.com"), eq("Kamga Eric"));
         verify(eventPublisher).publishUtilisateurConnecte(any(UUID.class), eq("GOOGLE:google-sub-12345"));
+    }
+
+    @Test
+    @DisplayName("Connexion Google OIDC ne fusionne pas un compte existant si email_verified=false (anti account-takeover)")
+    void testConnexionGoogleEmailNonVerifieNeFusionnePas() {
+        SocialLoginRequest request = new SocialLoginRequest("GOOGLE", "unverified.token", null, null, null, null, null);
+        SocialUserProfile unverifiedProfile = new SocialUserProfile(
+                "GOOGLE", "google-sub-999", "victime@njangi.cm", false, "Test", "User", null
+        );
+
+        when(socialTokenVerifier.verifierEtExtraire(
+                eq("GOOGLE"), eq("unverified.token"), isNull(), isNull(), isNull(), isNull(), isNull()
+        )).thenReturn(unverifiedProfile);
+        when(utilisateurRepository.trouverParProviderAuthEtProviderId("GOOGLE", "google-sub-999")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(any(String.class))).thenReturn("hashed");
+        when(utilisateurRepository.sauvegarder(any(Utilisateur.class))).thenAnswer(inv -> {
+            Utilisateur u = inv.getArgument(0);
+            u.setId(UUID.randomUUID());
+            return u;
+        });
+        when(jwtService.generateToken(any(Utilisateur.class))).thenReturn("new.jwt");
+        when(jwtService.getExpirationInSeconds()).thenReturn(86400L);
+
+        authService.connexionSociale(request);
+
+        verify(utilisateurRepository, never()).trouverParEmail(any());
     }
 
     @Test
@@ -215,6 +261,10 @@ class AuthServiceTest {
                 null
         );
 
+        SocialUserProfile verifiedFb = new SocialUserProfile(
+                "FACEBOOK", "fb-id-98765", "mbarga.fb@njangi.cm", true, "Mbarga", "Paul", null
+        );
+
         Utilisateur u = new Utilisateur();
         u.setId(UUID.randomUUID());
         u.setProviderAuth("FACEBOOK");
@@ -223,6 +273,10 @@ class AuthServiceTest {
         u.setTelephone("+237699123456");
         u.setStatut(StatutUtilisateur.ACTIF);
 
+        when(socialTokenVerifier.verifierEtExtraire(
+                eq("FACEBOOK"), eq("mock_fb_access_token"), eq("fb-id-98765"),
+                eq("mbarga.fb@njangi.cm"), eq("Mbarga"), eq("Paul"), isNull()
+        )).thenReturn(verifiedFb);
         when(utilisateurRepository.trouverParProviderAuthEtProviderId("FACEBOOK", "fb-id-98765")).thenReturn(Optional.of(u));
         when(jwtService.generateToken(u)).thenReturn("fake.jwt.fb.token");
         when(jwtService.getExpirationInSeconds()).thenReturn(86400L);

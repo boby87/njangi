@@ -52,6 +52,15 @@ njangi:
     expiration: ${NJANGI_JWT_EXPIRATION:${JWT_EXPIRATION:86400000}}
   otp:
     expiration-minutes: ${NJANGI_OTP_EXPIRATION_MINUTES:5}
+  sso:
+    # Sécurité : false par défaut (exige un vrai Google ID Token vérifié via JWKS).
+    # En développement local sans clé Google, définir NJANGI_SSO_ALLOW_DEV_FALLBACK=true.
+    allow-dev-fallback: ${NJANGI_SSO_ALLOW_DEV_FALLBACK:false}
+    google:
+      jwk-set-uri: ${GOOGLE_JWK_SET_URI:https://www.googleapis.com/oauth2/v3/certs}
+      client-id: ${GOOGLE_CLIENT_ID:}
+      web-client-id: ${GOOGLE_WEB_CLIENT_ID:}
+      android-client-id: ${GOOGLE_ANDROID_CLIENT_ID:}
 
 management:
   endpoints:

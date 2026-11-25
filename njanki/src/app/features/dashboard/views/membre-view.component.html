@@ -54,21 +54,21 @@
 
     <!-- Prochaine Réunion -->
     <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 glass-panel-hover">
-      <div class="flex items-center justify-between text-slate-400 mb-2">
+      <div class="flex items-center justify-between text-slate-300 mb-2">
         <span class="text-xs font-medium uppercase tracking-wider">Prochaine Réunion</span>
         <span class="text-lg">📅</span>
       </div>
       <div class="flex items-baseline gap-2">
         <span class="text-lg font-bold text-white font-heading">{{ prochaineReunion()?.dateReunion || '15 Septembre 2026' }}</span>
       </div>
-      <p class="text-xs text-slate-400 mt-2">
-        Siège : <strong class="text-slate-200">{{ prochaineReunion()?.hoteNom || 'Mme Ngo Bikoï' }}</strong>
+      <p class="text-xs text-slate-300 mt-2">
+        Siège : <strong class="text-white">{{ prochaineReunion()?.hoteNom || 'Mme Ngo Bikoï' }}</strong>
       </p>
     </div>
 
     <!-- Caisse totale du groupe (Transparence) -->
     <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 glass-panel-hover">
-      <div class="flex items-center justify-between text-slate-400 mb-2">
+      <div class="flex items-center justify-between text-slate-300 mb-2">
         <span class="text-xs font-medium uppercase tracking-wider">Transparence des Comptes</span>
         <span class="text-lg">🛡️</span>
       </div>
@@ -76,9 +76,9 @@
         <span class="text-2xl font-bold text-amber-400 font-heading">
           {{ stats().soldeTotal.toLocaleString('fr-FR') }}
         </span>
-        <span class="text-xs text-slate-400">XAF</span>
+        <span class="text-xs text-slate-300 font-medium">XAF</span>
       </div>
-      <p class="text-xs text-slate-400 mt-2">
+      <p class="text-xs text-slate-300 mt-2">
         Solde certifié en temps réel par le bureau
       </p>
     </div>
@@ -90,14 +90,14 @@
     <div class="flex items-center justify-between border-b border-slate-800 pb-3">
       <div>
         <h3 class="text-base font-bold text-white font-heading">Mes Cotisations de la Séance</h3>
-        <p class="text-xs text-slate-400 mt-0.5">Pot rotatif, caisse de secours et réserve</p>
+        <p class="text-xs text-slate-300 mt-0.5">Pot rotatif, caisse de secours et réserve</p>
       </div>
       <a routerLink="/cotisations" class="text-xs text-emerald-400 hover:text-emerald-300 font-semibold">
         Toutes les cotisations →
       </a>
     </div>
 
-    <div class="divide-y divide-slate-850">
+    <div class="divide-y divide-slate-800/80">
       @for (cot of mesCotisations(); track cot.id) {
         <div class="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
@@ -113,8 +113,8 @@
               </span>
               <app-status-badge [status]="cot.statut"></app-status-badge>
             </div>
-            <p class="text-xs text-slate-400 mt-1">
-              Échéance : <strong class="text-slate-300">{{ cot.dateEcheance }}</strong>
+            <p class="text-xs text-slate-300 mt-1">
+              Échéance : <strong class="text-slate-100">{{ cot.dateEcheance }}</strong>
               @if (cot.datePaiement) {
                 • Réglé le : <strong class="text-emerald-400">{{ cot.datePaiement }}</strong>
               }
@@ -132,8 +132,122 @@
             }
           </div>
         </div>
+      } @empty {
+        <div class="py-8 text-center flex flex-col items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="space-y-1">
+            <p class="text-sm font-semibold text-slate-100">Aucune cotisation en attente pour cette séance</p>
+            <p class="text-xs text-slate-300 max-w-md">
+              Vous êtes à jour ou l'appel de cotisations du bureau pour la prochaine réunion n'a pas encore été ouvert.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+            <a
+              routerLink="/paiements"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors">
+              Effectuer un versement anticipé
+            </a>
+            <a
+              routerLink="/cotisations"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors">
+              Consulter le calendrier du pot
+            </a>
+          </div>
+        </div>
       }
     </div>
+  </div>
+
+  <!-- Section complémentaire : Avancement de la collecte & Derniers mouvements certifiés -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- Avancement de la collecte & Répartition de la caisse -->
+    <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-white font-heading">Avancement de la Collecte</h3>
+          <p class="text-xs text-slate-300 mt-0.5">Répartition transparente des fonds du groupe</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-xs font-bold text-emerald-300">
+          {{ stats().tauxCollecte }}% collecté
+        </span>
+      </div>
+
+      <div class="space-y-2">
+        <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+          <div
+            class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-amber-400 transition-all duration-500"
+            [style.width.%]="stats().tauxCollecte">
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-xs text-slate-300">
+          <span>Collecté : <strong class="text-white">{{ stats().totalCollecte.toLocaleString('fr-FR') }} XAF</strong></span>
+          <span>Attendu : <strong class="text-slate-100">{{ stats().totalAttendu.toLocaleString('fr-FR') }} XAF</strong></span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+        <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+          <p class="text-[11px] uppercase tracking-wider text-slate-300 font-medium">Mobile Money (OM / MoMo)</p>
+          <p class="text-base font-bold text-emerald-400 font-heading mt-1">
+            {{ stats().soldeMobileMoney.toLocaleString('fr-FR') }} XAF
+          </p>
+          <p class="text-[11px] text-slate-300 mt-0.5">{{ pourcentageMobileMoney() }}% de la caisse</p>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+          <p class="text-[11px] uppercase tracking-wider text-slate-300 font-medium">Caisse Espèces (Reçus)</p>
+          <p class="text-base font-bold text-amber-400 font-heading mt-1">
+            {{ stats().soldeCash.toLocaleString('fr-FR') }} XAF
+          </p>
+          <p class="text-[11px] text-slate-300 mt-0.5">{{ pourcentageCash() }}% de la caisse</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Derniers mouvements certifiés -->
+    <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-white font-heading">Derniers Mouvements Certifiés</h3>
+          <p class="text-xs text-slate-300 mt-0.5">Journal immuable validé par le Trésorier</p>
+        </div>
+        <a routerLink="/paiements" class="text-xs text-emerald-400 hover:text-emerald-300 font-semibold">
+          Voir le journal →
+        </a>
+      </div>
+
+      <div class="divide-y divide-slate-800/80">
+        @for (pay of derniersMouvements(); track pay.id) {
+          <div class="py-3 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-white truncate">{{ pay.membreNom }}</p>
+              <p class="text-xs text-slate-300 mt-0.5">
+                @if (pay.modePaiement === 'MTN_MOMO') {
+                  MTN MoMo
+                } @else if (pay.modePaiement === 'ORANGE_MONEY') {
+                  Orange Money
+                } @else {
+                  Espèces (reçu signé)
+                }
+                • {{ pay.datePaiement }}
+              </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <app-amount-badge [amount]="pay.montantXaf" [variant]="pay.statut === 'VALIDE' ? 'success' : 'warning'" size="sm"></app-amount-badge>
+            </div>
+          </div>
+        } @empty {
+          <div class="py-6 text-center text-xs text-slate-300">
+            Aucun mouvement financier enregistré sur ce groupe pour le moment.
+          </div>
+        }
+      </div>
+    </div>
+
   </div>
 
 </div>
